@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django / Wagtail
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Env — TUYỆT ĐỐI không commit key thật
+.env
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

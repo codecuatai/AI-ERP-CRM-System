@@ -1,0 +1,20 @@
+{% extends "crm/base.html" %}
+{% block title %}{{ customer.full_name }} · AI CRM{% endblock %}
+{% block content %}
+<p><a class="link" href="{% url 'crm:dashboard' %}">← Danh sách khách hàng</a></p>
+<h1>{{ customer.full_name }}</h1>
+<section class="grid">
+  <div class="card"><div class="muted">Email / Điện thoại</div><p>{{ customer.email }}<br>{{ customer.phone|default:"Chưa cung cấp" }}</p></div>
+  <div class="card"><div class="muted">Công ty / Nguồn</div><p>{{ customer.company|default:"—" }}<br>{{ customer.source|default:"—" }}</p></div>
+  <div class="card"><div class="muted">Tổng chi tiêu</div><h2>{{ customer.total_spent }} ₫</h2></div>
+</section>
+<div class="card"><h2>Lịch sử tương tác</h2>
+  {% for item in interactions %}<p><strong>{{ item.get_kind_display }} · {{ item.subject }}</strong><br>{{ item.content }}<br><span class="muted">{{ item.occurred_at|date:"d/m/Y H:i" }}</span></p>{% empty %}<p class="muted">Chưa có tương tác. Thêm trong Wagtail Admin → Snippets → Lịch sử tương tác.</p>{% endfor %}
+</div>
+<div class="card">
+  <h2>Phân tích khách hàng</h2>
+  <p>Phân khúc: <strong>{{ customer.get_ai_segment_display }}</strong> · Điểm: <strong>{{ customer.ai_score }}/100</strong></p>
+  <form method="post" action="{% url 'crm:analyze_customer' customer.pk %}">{% csrf_token %}<button type="submit">Phân tích bằng AI</button></form>
+  {% for analysis in analyses %}<hr><p><strong>Nhận định ({{ analysis.get_segment_display }})</strong><br>{{ analysis.summary }}</p><p><strong>Đề xuất</strong><br>{{ analysis.recommendation }}</p><span class="muted">Nguồn: {{ analysis.provider }} · {{ analysis.created_at|date:"d/m/Y H:i" }}</span>{% empty %}<p class="muted">Chưa có kết quả phân tích.</p>{% endfor %}
+</div>
+{% endblock %}

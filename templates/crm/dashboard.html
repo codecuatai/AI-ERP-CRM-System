@@ -1,0 +1,20 @@
+{% extends "crm/base.html" %}
+{% block title %}Tổng quan · AI CRM{% endblock %}
+{% block content %}
+<h1>Quản lý khách hàng</h1>
+<p class="muted">Theo dõi khách hàng và phân tích nhu cầu với AI.</p>
+<section class="grid">
+  <div class="card"><div class="muted">Khách hàng đang hoạt động</div><h2>{{ customer_count }}</h2></div>
+  <div class="card"><div class="muted">Khách VIP</div><h2>{{ vip_count }}</h2></div>
+  <div class="card"><div class="muted">Chưa phân tích</div><h2>{{ unclassified_count }}</h2></div>
+</section>
+<div class="card">
+  <h2>Danh sách khách hàng</h2>
+  <table><thead><tr><th>Khách hàng</th><th>Công ty</th><th>Phân khúc AI</th><th>Điểm</th></tr></thead><tbody>
+  {% for customer in customers %}<tr>
+    <td><a class="link" href="{% url 'crm:customer_detail' customer.pk %}">{{ customer.full_name }}</a><br><span class="muted">{{ customer.email }}</span></td>
+    <td>{{ customer.company|default:"—" }}</td><td>{{ customer.get_ai_segment_display }}</td><td>{{ customer.ai_score }}/100</td>
+  </tr>{% empty %}<tr><td colspan="4">Chưa có dữ liệu. Thêm khách hàng trong Wagtail Admin → Snippets → Khách hàng.</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endblock %}
