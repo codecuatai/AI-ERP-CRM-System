@@ -1,0 +1,57 @@
+{% extends "crm/base.html" %}
+{% load humanize %}
+{% block title %}{{ customer.full_name }}{% endblock %}
+{% block content %}
+<nav aria-label="Điều hướng" class="breadcrumb-wrap"><a href="{% url 'crm:customers' %}">Khách hàng</a><span aria-hidden="true">/</span><span>{{ customer.full_name }}</span></nav>
+
+<section class="profile-card">
+  <div class="profile-main"><span class="profile-avatar">{{ customer.full_name|slice:":1"|upper }}</span><div><div class="eyebrow">HỒ SƠ KHÁCH HÀNG</div><h1>{{ customer.full_name }}</h1><p>{{ customer.company|default:"Khách hàng cá nhân" }} <span class="dot-separator">·</span> {{ customer.email }}</p></div></div>
+  <div class="profile-actions"><span class="status-pill {% if customer.is_active %}status-active{% else %}status-inactive{% endif %}"><span></span>{% if customer.is_active %}Đang hoạt động{% else %}Ngừng hoạt động{% endif %}</span><a class="button-secondary" href="/admin/snippets/crm/customer/">Chỉnh sửa hồ sơ</a></div>
+</section>
+
+<section class="my-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+  <article class="detail-stat"><span>Email</span><strong>{{ customer.email }}</strong><small>Địa chỉ liên hệ</small></article>
+  <article class="detail-stat"><span>Điện thoại</span><strong>{{ customer.phone|default:"Chưa cung cấp" }}</strong><small>Nguồn: {{ customer.source|default:"Chưa cập nhật" }}</small></article>
+  <article class="detail-stat"><span>Tổng chi tiêu</span><strong>{{ customer.total_spent|intcomma }} ₫</strong><small>Ghi nhận trong hồ sơ</small></article>
+</section>
+
+<section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(320px,5fr)]">
+  <div>
+    <article class="content-card">
+      <div class="content-card-heading"><div><h2>Lịch sử trao đổi</h2><p>Các lần liên hệ và nội dung đã ghi nhận.</p></div><a class="button-secondary" href="/admin/snippets/crm/interaction/">Quản lý trao đổi <span aria-hidden="true">↗</span></a></div>
+      <div class="timeline">
+        {% for item in interactions %}
+          <div class="timeline-item"><span class="timeline-marker">{% if item.kind == "EMAIL" %}@{% elif item.kind == "PHONE" %}☎{% elif item.kind == "MEETING" %}●{% else %}•{% endif %}</span><div class="timeline-content"><div class="timeline-heading"><strong>{{ item.subject }}</strong><time>{{ item.occurred_at|date:"d/m/Y · H:i" }}</time></div><span class="interaction-type">{{ item.get_kind_display }}</span><p>{{ item.content|linebreaksbr }}</p></div></div>
+        {% empty %}
+          <div class="empty-state compact"><span class="empty-icon">○</span><strong>Chưa có lịch sử trao đổi</strong><p>Ghi lại lần gọi, email hoặc gặp mặt để AI có thêm ngữ cảnh.</p><a href="/admin/snippets/crm/interaction/">Thêm trao đổi trong Wagtail Admin →</a></div>
+        {% endfor %}
+      </div>
+    </article>
+  </div>
+
+  <div>
+    <article class="ai-card">
+      <div class="ai-card-top"><span class="ai-spark">✦</span><div><div class="eyebrow">TRỢ LÝ AI</div><h2>Phân tích khách hàng</h2></div></div>
+      <p class="ai-intro">{% if has_public_requests %}AI chỉ phân tích nhu cầu đã được khách đồng ý; tên, email và số điện thoại không gửi đến Gemini.{% else %}AI phân tích hồ sơ nội bộ để đề xuất cách chăm sóc phù hợp.{% endif %}</p>
+      {% if can_run_ai_analysis %}
+        <form method="post" action="{% url 'crm:analyze_customer' customer.pk %}">{% csrf_token %}<button class="button-primary w-full" type="submit">✦ &nbsp; Phân tích ngay</button></form>
+      {% else %}
+        <p class="ai-consent-required">Khách chưa đồng ý phân tích AI. Bạn vẫn có thể tiếp nhận và phản hồi yêu cầu như bình thường.</p>
+      {% endif %}
+      {% if latest_analysis %}
+        <div class="ai-result">
+          <div class="result-heading"><span class="segment-badge segment-{{ latest_analysis.segment|lower }}">{{ latest_analysis.get_segment_display }}</span><span class="result-score">{{ latest_analysis.score }}<small>/100</small></span></div>
+          <div class="result-block"><h3>Nhận định</h3><p>{{ latest_analysis.summary }}</p></div>
+          <div class="recommendation-block"><h3>Đề xuất tiếp theo</h3><p>{{ latest_analysis.recommendation }}</p></div>
+          <div class="result-meta">Nguồn: {% if latest_analysis.provider == "gemini" %}Gemini{% else %}Phân tích cục bộ{% endif %} <span>·</span> {{ latest_analysis.created_at|date:"d/m/Y · H:i" }}</div>
+        </div>
+      {% else %}
+        <div class="ai-empty"><span>✦</span><strong>Chưa có phân tích</strong><p>Chọn nút phía trên để xem nhận định và đề xuất chăm sóc.</p></div>
+      {% endif %}
+    </article>
+    {% if analysis_history %}
+      <article class="content-card history-card"><div class="content-card-heading"><div><h2>Lần phân tích trước</h2><p>Lịch sử gần đây</p></div></div>{% for analysis in analysis_history %}<div class="history-row"><span class="segment-badge segment-{{ analysis.segment|lower }}">{{ analysis.get_segment_display }}</span><span>{{ analysis.score }}/100</span><time>{{ analysis.created_at|date:"d/m/Y" }}</time></div>{% endfor %}</article>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

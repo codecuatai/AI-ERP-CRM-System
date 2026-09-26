@@ -1,0 +1,47 @@
+{% extends "crm/base.html" %}
+{% load humanize %}
+{% block title %}Tổng quan{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow">TRUNG TÂM CÔNG VIỆC</div><h1>Chào {{ request.user.get_username }}</h1><p>Tổng quan nhanh về khách hàng và các yêu cầu cần được phản hồi.</p></div>
+  <a class="button-primary" href="{% url 'crm:customers' %}">Mở danh sách khách hàng <span aria-hidden="true">→</span></a>
+</section>
+
+<section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chỉ số CRM">
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}"><div class="stat-top"><span class="stat-icon icon-blue">♙</span><span class="stat-caption">KHÁCH HÀNG ĐANG HOẠT ĐỘNG</span></div><div class="stat-value">{{ customer_count|intcomma }}</div><div class="stat-note">Mở danh sách khách hàng <span aria-hidden="true">→</span></div></a>
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=VIP"><div class="stat-top"><span class="stat-icon icon-violet">★</span><span class="stat-caption">KHÁCH HÀNG VIP</span></div><div class="stat-value">{{ vip_count|intcomma }}</div><div class="stat-note">Xem nhóm khách hàng VIP <span aria-hidden="true">→</span></div></a>
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED"><div class="stat-top"><span class="stat-icon icon-amber">◷</span><span class="stat-caption">CHƯA ĐƯỢC PHÂN TÍCH</span></div><div class="stat-value">{{ unclassified_count|intcomma }}</div><div class="stat-note">Mở hồ sơ để chạy phân tích AI <span aria-hidden="true">→</span></div></a>
+  <a class="stat-card stat-link" href="{% url 'crm:lead_requests' %}?status=NEW"><div class="stat-top"><span class="stat-icon icon-green">✉</span><span class="stat-caption">YÊU CẦU MỚI</span></div><div class="stat-value">{{ new_lead_count|intcomma }}</div><div class="stat-note">Cần được nhân viên phản hồi <span aria-hidden="true">→</span></div></a>
+</section>
+
+<section class="quick-start-card" aria-labelledby="quick-start-title">
+  <div><span class="eyebrow">BẮT ĐẦU NHANH</span><h2 id="quick-start-title">Bạn muốn làm gì?</h2><p>Chọn đúng khu vực để không phải tìm mọi thứ trong cùng một màn hình.</p></div>
+  <div class="quick-start-actions">
+    <a class="quick-action" href="{% url 'crm:lead_requests' %}"><span class="quick-action-icon">01</span><span><strong>Tiếp nhận khách tiềm năng</strong><small>Xem yêu cầu tư vấn từ website</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="{% url 'crm:customers' %}"><span class="quick-action-icon">02</span><span><strong>Tìm một khách hàng</strong><small>Tìm hồ sơ, lịch sử trao đổi và phân tích</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="/admin/snippets/crm/customer/"><span class="quick-action-icon">03</span><span><strong>Thêm hoặc sửa dữ liệu</strong><small>Mở Wagtail để quản lý hồ sơ và tương tác</small></span><span class="quick-arrow">↗</span></a>
+  </div>
+</section>
+
+<section class="dashboard-panels">
+  <article class="content-card">
+    <div class="content-card-heading"><div><h2>Yêu cầu tư vấn gần đây</h2><p>Tiếp nhận và cập nhật trạng thái xử lý.</p></div><a class="text-link" href="{% url 'crm:lead_requests' %}">Xem tất cả <span aria-hidden="true">→</span></a></div>
+    <div class="dashboard-list">
+      {% for lead in recent_lead_requests %}
+        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' lead.customer_id %}"><span class="list-avatar">{{ lead.customer.full_name|slice:":1"|upper }}</span><span class="list-main"><strong>{{ lead.customer.full_name }}</strong><small>{{ lead.customer.company|default:lead.customer.email }} · {{ lead.created_at|date:"d/m/Y" }}</small></span><span class="request-status status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span><span class="quick-arrow">→</span></a>
+      {% empty %}<div class="dashboard-empty"><strong>Chưa có yêu cầu tư vấn</strong><p>Các yêu cầu khách gửi từ website sẽ xuất hiện tại đây.</p><a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu →</a></div>{% endfor %}
+    </div>
+  </article>
+
+  <article class="content-card">
+    <div class="content-card-heading"><div><h2>Chờ phân tích AI</h2><p>Hồ sơ chưa có phân khúc và điểm tiềm năng.</p></div><a class="text-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED">Xem tất cả <span aria-hidden="true">→</span></a></div>
+    <div class="dashboard-list">
+      {% for customer in unclassified_customers %}
+        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' customer.pk %}"><span class="list-avatar">{{ customer.full_name|slice:":1"|upper }}</span><span class="list-main"><strong>{{ customer.full_name }}</strong><small>{{ customer.company|default:customer.email }}</small></span><span class="list-action">Phân tích <span aria-hidden="true">→</span></span></a>
+      {% empty %}<div class="dashboard-empty"><strong>Mọi hồ sơ đã có kết quả</strong><p>Không còn khách hàng nào đang chờ phân tích.</p><a href="{% url 'crm:customers' %}">Duyệt danh sách khách hàng →</a></div>{% endfor %}
+    </div>
+  </article>
+</section>
+
+<p class="page-hint">Tổng chi tiêu được ghi nhận trong hồ sơ hiện tại: <strong>{{ total_spent|intcomma }} ₫</strong>. Đây không phải báo cáo doanh thu.</p>
+{% endblock %}

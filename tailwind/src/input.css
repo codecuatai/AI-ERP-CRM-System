@@ -1,0 +1,474 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-canvas font-sans text-ink antialiased; }
+  button, input, select { font: inherit; }
+  a { @apply no-underline; }
+}
+
+@layer components {
+  .app-shell { @apply min-h-screen; }
+  .sidebar { @apply fixed inset-y-0 left-0 z-20 hidden w-[252px] flex-col border-r border-line bg-white px-5 py-6 lg:flex; }
+  .brand { @apply mb-11 flex items-center gap-3 text-ink; }
+  .brand-mark { @apply grid h-10 w-10 place-items-center rounded-xl bg-brand text-lg font-black text-white; }
+  .brand strong, .brand small, .account-row strong, .account-row small { @apply block; }
+  .brand strong { @apply text-sm font-bold; }
+  .brand small { @apply mt-0.5 text-xs text-muted; }
+  .nav-caption, .eyebrow { @apply text-[10px] font-bold tracking-[.14em] text-muted; }
+  .nav-caption { @apply mb-3 px-2; }
+  .sidebar .nav-link, .mobile-menu .nav-link { @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-slate-600 transition; }
+  .sidebar .nav-link:hover, .mobile-menu .nav-link:hover { @apply bg-slate-50 text-ink; }
+  .sidebar .nav-link.active { @apply bg-violet-50 font-semibold text-brand; }
+  .nav-symbol { @apply grid h-5 w-5 place-items-center text-base; }
+  .help-card { @apply mb-4 rounded-xl border border-violet-100 bg-violet-50/70 p-3; }
+  .help-card strong, .help-card small { @apply block; }
+  .help-card strong { @apply mb-1 mt-2 text-xs; }
+  .help-card small { @apply text-[10px] leading-relaxed text-slate-500; }
+  .help-dot { @apply inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100; }
+  .account-row { @apply mt-3 flex items-center gap-2.5 border-t border-line px-1 pt-4; }
+  .account-avatar, .customer-avatar, .profile-avatar { @apply inline-grid shrink-0 place-items-center rounded-full bg-violet-100 font-semibold text-violet-700; }
+  .account-avatar { @apply h-9 w-9 text-xs; }
+  .account-row strong { @apply text-xs; }
+  .account-row small { @apply mt-0.5 text-[10px] text-muted; }
+  .main-column { @apply min-h-screen lg:ml-[252px]; }
+  .topbar { @apply sticky top-0 z-10 flex h-[62px] items-center gap-3 border-b border-line bg-white/90 px-4 backdrop-blur md:px-8; }
+  .topbar-label { @apply text-xs text-slate-500; }
+  .page-content { @apply mx-auto max-w-[1440px] px-4 pb-5 pt-7 md:px-8 md:pt-9; }
+  .page-footer { @apply px-4 pb-6 text-[10px] text-slate-400 md:px-8; }
+  .page-heading { @apply mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end; }
+  .page-heading h1, .profile-main h1 { @apply mb-1 mt-2 text-[26px] font-semibold tracking-tight text-ink md:text-[30px]; }
+  .page-heading p, .profile-main p { @apply m-0 text-xs leading-relaxed text-slate-500; }
+  .wave { @apply text-xl; }
+  .button-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-200; }
+  .button-secondary { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50; }
+  .stat-card { @apply min-h-[140px] rounded-xl border border-line bg-white p-4 shadow-card; }
+  .stat-top { @apply flex items-center gap-2.5; }
+  .stat-icon { @apply grid h-9 w-9 place-items-center rounded-xl text-base; }
+  .icon-blue { @apply bg-blue-50 text-blue-600; }
+  .icon-violet { @apply bg-violet-50 text-violet-600; }
+  .icon-amber { @apply bg-amber-50 text-amber-600; }
+  .icon-green { @apply bg-emerald-50 text-emerald-600; }
+  .stat-caption { @apply text-[9px] font-bold tracking-[.1em] text-slate-400; }
+  .stat-value { @apply mt-3 text-[26px] font-semibold tracking-tight; }
+  .stat-currency { @apply text-xl; }
+  .stat-currency small { @apply text-xs font-normal text-muted; }
+  .stat-note { @apply mt-0.5 text-[10px] text-slate-400; }
+  .content-card { @apply overflow-hidden rounded-xl border border-line bg-white shadow-card; }
+  .content-card-heading { @apply flex items-center justify-between gap-3 px-5 pb-4 pt-5; }
+  .content-card-heading h2, .ai-card h2 { @apply m-0 text-sm font-semibold tracking-tight; }
+  .content-card-heading p { @apply mb-0 mt-1 text-[11px] text-muted; }
+  .count-pill { @apply whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-1.5 text-[10px] text-slate-500; }
+  .filter-bar { @apply flex flex-col gap-2.5 border-b border-line px-4 pb-4 sm:flex-row sm:items-center md:px-5; }
+  .search-box { @apply flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 px-3 text-slate-400 focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-50 sm:max-w-md; }
+  .search-box input { @apply w-full border-0 bg-transparent py-2.5 text-xs text-ink outline-none placeholder:text-slate-400; }
+  .segment-select { @apply min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-600 outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-50 sm:w-48; }
+  .table-wrap { @apply overflow-x-auto; }
+  .customer-table { @apply w-full min-w-[810px] border-collapse text-left text-xs; }
+  .customer-table thead th { @apply border-b border-line bg-slate-50/70 px-4 py-3 text-[9px] font-bold tracking-[.08em] text-slate-400; }
+  .customer-table tbody td { @apply border-b border-slate-100 px-4 py-3.5 text-slate-600; }
+  .customer-cell { @apply flex min-w-[205px] items-center gap-2.5; }
+  .customer-avatar { @apply h-9 w-9 text-xs; }
+  .customer-name { @apply block text-xs font-semibold text-slate-800 hover:text-brand; }
+  .customer-cell small { @apply mt-1 block text-[10px] text-slate-400; }
+  .segment-badge { @apply inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold; }
+  .segment-vip { @apply bg-amber-50 text-amber-700; }
+  .segment-potential { @apply bg-blue-50 text-blue-700; }
+  .segment-hibernating { @apply bg-slate-100 text-slate-600; }
+  .segment-churn_risk { @apply bg-rose-50 text-rose-700; }
+  .segment-unclassified { @apply bg-slate-100 text-slate-500; }
+  .score-cell { @apply flex min-w-[110px] items-center gap-2; }
+  .score-track { @apply h-1.5 w-16 overflow-hidden rounded-full bg-slate-100; }
+  .score-fill { @apply h-full rounded-full bg-brand; }
+  .score-label { @apply text-[11px] font-semibold text-slate-600; }
+  .money-cell { @apply whitespace-nowrap font-medium text-slate-700; }
+  .row-action { @apply whitespace-nowrap text-[11px] font-semibold text-brand hover:text-violet-800; }
+  .empty-state { @apply flex flex-col items-center px-5 py-10 text-center; }
+  .empty-state strong { @apply mt-2 text-xs font-semibold text-slate-700; }
+  .empty-state p { @apply mb-2 mt-1 text-[11px] text-slate-500; }
+  .empty-state a { @apply text-[11px] font-semibold text-brand; }
+  .empty-icon { @apply grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-xl text-slate-500; }
+  .page-hint { @apply my-4 text-[11px] text-slate-400; }
+  .breadcrumb-wrap { @apply mb-4 flex items-center gap-2 text-[11px] text-slate-400; }
+  .breadcrumb-wrap a { @apply text-slate-600 hover:text-brand; }
+  .profile-card { @apply flex flex-col justify-between gap-4 rounded-xl border border-line bg-white p-5 shadow-card md:flex-row md:items-center; }
+  .profile-main { @apply flex items-center gap-4; }
+  .profile-avatar { @apply h-14 w-14 text-xl; }
+  .profile-main h1 { @apply text-xl md:text-2xl; }
+  .profile-actions { @apply flex flex-col items-start gap-3 sm:flex-row sm:items-center; }
+  .status-pill { @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[10px]; }
+  .status-pill span { @apply h-1.5 w-1.5 rounded-full; }
+  .status-active { @apply bg-emerald-50 text-emerald-700; }
+  .status-active span { @apply bg-emerald-500; }
+  .status-inactive { @apply bg-slate-100 text-slate-600; }
+  .status-inactive span { @apply bg-slate-400; }
+  .detail-stat { @apply min-h-[105px] rounded-xl border border-line bg-white p-4 shadow-card; }
+  .detail-stat span, .detail-stat strong, .detail-stat small { @apply block; }
+  .detail-stat span { @apply text-[10px] text-muted; }
+  .detail-stat strong { @apply mt-2 text-xs font-semibold text-slate-700; }
+  .detail-stat small { @apply mt-1 text-[10px] text-slate-400; }
+  .timeline { @apply px-5 pb-4; }
+  .timeline-item { @apply flex gap-3; }
+  .timeline-item + .timeline-item { @apply mt-1; }
+  .timeline-marker { @apply relative z-[1] grid h-8 w-8 shrink-0 place-items-center rounded-full border-[3px] border-white bg-violet-50 text-xs text-brand; }
+  .timeline-item:not(:last-child) .timeline-marker::after { content:""; @apply absolute left-1/2 top-6 -z-10 h-12 w-px -translate-x-1/2 bg-slate-200; }
+  .timeline-content { @apply min-w-0 flex-1 border-b border-slate-100 pb-4 pt-0.5; }
+  .timeline-item:last-child .timeline-content { @apply border-0; }
+  .timeline-heading { @apply flex items-start justify-between gap-2; }
+  .timeline-heading strong { @apply text-xs font-semibold text-slate-700; }
+  .timeline-heading time, .history-row time { @apply whitespace-nowrap text-[10px] text-slate-400; }
+  .interaction-type { @apply mt-1 inline-block text-[10px] text-brand; }
+  .timeline-content p { @apply mb-0 mt-2 text-[11px] leading-relaxed text-slate-500; }
+  .empty-state.compact { @apply py-7; }
+  .ai-card { @apply rounded-xl border border-violet-100 bg-white p-5 shadow-card; }
+  .ai-card-top { @apply flex items-center gap-2.5; }
+  .ai-spark { @apply grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-lg text-brand; }
+  .ai-card h2 { @apply mt-1; }
+  .ai-intro { @apply my-3 text-[11px] leading-relaxed text-slate-500; }
+  .ai-result { @apply mt-4 border-t border-line pt-4; }
+  .result-heading { @apply flex items-center justify-between; }
+  .result-score { @apply text-lg font-semibold text-slate-700; }
+  .result-score small { @apply text-[10px] font-normal text-slate-400; }
+  .result-block, .recommendation-block { @apply mt-4; }
+  .result-block h3, .recommendation-block h3 { @apply mb-1 text-[10px] font-semibold text-slate-500; }
+  .result-block p, .recommendation-block p { @apply m-0 text-[11px] leading-relaxed text-slate-600; }
+  .recommendation-block { @apply rounded-lg bg-violet-50/70 p-3; }
+  .recommendation-block h3 { @apply text-violet-700; }
+  .result-meta { @apply mt-3 text-[9px] text-slate-400; }
+  .ai-empty { @apply mt-4 flex flex-col items-center rounded-lg bg-slate-50 px-3 py-5 text-center; }
+  .ai-empty span { @apply text-lg text-violet-500; }
+  .ai-empty strong { @apply mt-1.5 text-[11px] font-semibold text-slate-600; }
+  .ai-empty p { @apply mb-0 mt-1 max-w-[220px] text-[10px] leading-relaxed text-slate-400; }
+  .history-card { @apply mt-4 pb-1; }
+  .history-row { @apply flex items-center justify-between border-t border-slate-100 px-4 py-2.5; }
+  .history-row > span:nth-child(2) { @apply text-[10px] text-slate-500; }
+  .message { @apply mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-800; }
+  .stat-link { @apply block text-inherit transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-float; }
+  .stat-link .stat-note { @apply text-slate-500; }
+  .quick-start-card { @apply mt-5 grid grid-cols-1 gap-5 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-5 md:p-6 xl:grid-cols-[.8fr_1.2fr]; }
+  .quick-start-card h2 { @apply mb-2 mt-2 text-lg font-semibold tracking-tight text-slate-900; }
+  .quick-start-card > div:first-child > p { @apply max-w-sm text-xs leading-relaxed text-slate-500; }
+  .quick-start-actions { @apply grid grid-cols-1 gap-2 sm:grid-cols-3; }
+  .quick-action { @apply flex min-w-0 items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-3 transition hover:border-violet-200 hover:shadow-card; }
+  .quick-action-icon { @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-[10px] font-bold text-violet-700; }
+  .quick-action strong, .quick-action small { @apply block; }
+  .quick-action strong { @apply text-[11px] font-semibold text-slate-800; }
+  .quick-action small { @apply mt-1 text-[9px] leading-relaxed text-slate-500; }
+  .quick-arrow { @apply ml-auto shrink-0 text-sm text-violet-600; }
+  .dashboard-panels { @apply mt-5 grid grid-cols-1 items-start gap-4 2xl:grid-cols-2; }
+  .text-link { @apply whitespace-nowrap text-[11px] font-semibold text-violet-700 hover:text-violet-900; }
+  .text-link span { @apply ml-1; }
+  .dashboard-list { @apply px-4 pb-2; }
+  .dashboard-list-row { @apply flex min-w-0 items-center gap-3 border-t border-slate-100 py-3 first:border-0; }
+  .dashboard-list-row:hover .list-main strong { @apply text-violet-700; }
+  .list-avatar { @apply grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600; }
+  .list-main { @apply min-w-0 flex-1; }
+  .list-main strong, .list-main small { @apply block truncate; }
+  .list-main strong { @apply text-xs font-semibold text-slate-800; }
+  .list-main small { @apply mt-1 text-[10px] text-slate-500; }
+  .list-action { @apply whitespace-nowrap text-[10px] font-semibold text-violet-700; }
+  .request-status { @apply inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold; }
+  .status-new { @apply bg-amber-50 text-amber-800; }
+  .status-contacted { @apply bg-blue-50 text-blue-700; }
+  .status-completed { @apply bg-emerald-50 text-emerald-700; }
+  .dashboard-empty { @apply border-t border-slate-100 px-2 py-7 text-center; }
+  .dashboard-empty strong { @apply text-xs font-semibold text-slate-700; }
+  .dashboard-empty p { @apply mb-2 mt-1 text-[10px] text-slate-500; }
+  .dashboard-empty a { @apply text-[10px] font-semibold text-violet-700; }
+  .pagination { @apply flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 text-[11px] text-slate-500; }
+  .pagination .is-disabled { @apply pointer-events-none opacity-45; }
+  .lead-queue { @apply divide-y divide-slate-100; }
+  .lead-card { @apply p-4 transition hover:bg-slate-50/70 sm:p-5; }
+  .lead-card-top, .lead-person, .lead-card-bottom, .lead-status-form { @apply flex items-center gap-3; }
+  .lead-card-top, .lead-card-bottom { @apply flex-wrap justify-between; }
+  .lead-person { @apply min-w-0; }
+  .lead-person > div { @apply min-w-0; }
+  .lead-person small { @apply mt-1 block truncate text-[10px] text-slate-500; }
+  .lead-card-top time { @apply text-[10px] text-slate-500; }
+  .lead-card-body { @apply my-4 rounded-lg bg-slate-50 px-4 py-3; }
+  .lead-tags { @apply flex flex-wrap items-center gap-x-3 gap-y-1; }
+  .consent-indicator { @apply rounded-full px-2 py-1 text-[9px] font-medium; }
+  .consent-granted { @apply bg-emerald-50 text-emerald-700; }
+  .consent-not-granted { @apply bg-slate-200 text-slate-600; }
+  .lead-card-body p { @apply mb-0 mt-1.5 whitespace-pre-line text-xs leading-relaxed text-slate-700; }
+  .lead-status-form { @apply ml-auto flex-wrap; }
+  .status-select { @apply min-h-9 rounded-lg border border-slate-200 bg-white px-3 text-[11px] text-slate-700 outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-50; }
+  @media (max-width: 639px) {
+    .lead-status-form { @apply ml-0 w-full; }
+    .lead-status-form select { @apply min-w-0 flex-1; }
+  }
+  .public-shell { @apply min-h-screen bg-canvas text-ink; background-image:radial-gradient(ellipse at top,rgba(98,91,246,.09),transparent 48%); }
+  .public-topbar { @apply mx-auto flex max-w-6xl items-center justify-between px-5 py-5 md:px-8; }
+  .public-secure-label { @apply rounded-full border border-emerald-100 bg-white/80 px-3 py-2 text-[10px] font-medium text-emerald-700; }
+  .public-secure-label span { @apply mr-1 text-[8px] text-emerald-500; }
+  .public-main { @apply mx-auto flex max-w-[720px] justify-center px-4 pb-8 pt-5 md:px-8 md:pt-10; }
+  .public-card { @apply w-full rounded-2xl border border-white bg-white/95 p-5 shadow-float sm:p-8; }
+  .public-card-heading { @apply mb-7; }
+  .public-eyebrow { @apply text-[10px] font-bold tracking-[.16em] text-brand; }
+  .public-card h1 { @apply mb-2 mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl; }
+  .public-card-heading p, .success-card > p { @apply m-0 text-sm leading-relaxed text-slate-500; }
+  .public-form { @apply flex flex-col gap-5; }
+  .form-grid { @apply grid grid-cols-1 gap-5 sm:grid-cols-2; }
+  .form-field { @apply min-w-0; }
+  .form-label { @apply mb-2 block text-xs font-semibold text-slate-700; }
+  .form-label span { @apply text-rose-500; }
+  .field-help { @apply mb-0 mt-1.5 text-[10px] leading-relaxed text-slate-400; }
+  .form-input { @apply block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-xs text-ink outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:ring-4 focus:ring-violet-50; }
+  textarea.form-input { @apply resize-y; }
+  .field-error { @apply mb-0 mt-1.5 text-[11px] text-rose-600; }
+  .form-error-summary { @apply mb-5 rounded-lg border border-rose-100 bg-rose-50 px-4 py-3 text-xs text-rose-700; }
+  .consent-box { @apply rounded-lg border border-slate-200 bg-slate-50 p-4; }
+  .consent-required { @apply border-violet-100 bg-violet-50/50; }
+  .consent-optional { @apply border-slate-200 bg-white; }
+  .consent-label { @apply flex cursor-pointer items-start gap-3 text-[11px] leading-relaxed text-slate-600; }
+  .consent-checkbox { @apply mt-0.5 shrink-0; }
+  .consent-checkbox input { @apply h-4 w-4 accent-brand; }
+  .consent-label b { @apply text-rose-500; }
+  .consent-explainer { @apply mb-0 mt-2 pl-7 text-[10px] leading-relaxed text-slate-500; }
+  .consent-explainer a { @apply font-semibold text-brand underline underline-offset-2; }
+  .form-submit { @apply w-full py-3 text-sm; }
+  .privacy-note { @apply -mt-2 mb-0 text-center text-[10px] leading-relaxed text-slate-400; }
+  .form-honeypot-wrap { @apply absolute -left-[10000px] h-px w-px overflow-hidden; }
+  .public-footer { @apply mx-auto max-w-6xl px-5 pb-8 text-center text-[10px] text-slate-400 md:px-8; }
+  .success-card { @apply flex flex-col items-center py-12 text-center; }
+  .success-icon { @apply mb-5 grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-2xl font-semibold text-emerald-600; }
+  .success-card .button-secondary { @apply mt-7; }
+  .privacy-card { @apply w-full rounded-2xl border border-white bg-white/95 p-5 shadow-float sm:p-9; }
+  .privacy-card h1 { @apply mb-2 mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl; }
+  .privacy-back { @apply mb-8 block text-xs font-semibold text-brand; }
+  .privacy-lead { @apply mb-8 text-sm leading-relaxed text-slate-500; }
+  .privacy-section { @apply border-t border-slate-100 py-5; }
+  .privacy-section h2 { @apply mb-2 text-sm font-semibold text-slate-800; }
+  .privacy-section p, .privacy-section li { @apply text-xs leading-relaxed text-slate-600; }
+  .privacy-section ul { @apply space-y-2 pl-5; }
+  .privacy-section a { @apply font-semibold text-brand underline underline-offset-2; }
+  .privacy-warning, .privacy-demo-note { @apply rounded-lg border border-amber-100 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-800; }
+  .privacy-demo-note { @apply mt-5 mb-0; }
+  .privacy-section code { @apply rounded bg-slate-100 px-1 py-0.5; }
+  .ai-consent-required { @apply mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800; }
+  .landing-main { @apply w-full; }
+  .landing-header { @apply sticky top-0 z-20 mx-auto flex max-w-[1320px] items-center justify-between border-b border-slate-200/70 bg-[#f8f9fc]/90 px-5 py-4 backdrop-blur-xl md:px-10; }
+  .landing-brand { @apply flex items-center gap-2.5 text-slate-900; }
+  .landing-brand strong, .landing-brand small { @apply block; }
+  .landing-brand strong { @apply text-sm font-bold tracking-tight; }
+  .landing-brand small { @apply mt-1 text-[8px] font-semibold tracking-[.14em] text-slate-400; }
+  .landing-brand-mark { @apply grid h-10 w-10 place-items-center rounded-xl bg-slate-900 text-sm font-bold text-white; box-shadow:0 7px 16px rgba(15,23,42,.16); }
+  .landing-nav-links { @apply items-center gap-8 text-xs font-medium text-slate-500; }
+  .landing-nav-links a { @apply transition hover:text-slate-900; }
+  .landing-nav-cta { @apply inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-[11px] font-semibold text-white transition hover:bg-brand; }
+  .landing-content { @apply mx-auto max-w-[1320px]; }
+  .landing-hero { @apply grid min-h-[610px] grid-cols-1 items-center gap-12 px-5 py-14 md:px-10 lg:grid-cols-[1fr_1fr] lg:gap-8 lg:py-16; }
+  .hero-copy { @apply max-w-[570px]; }
+  .hero-kicker { @apply inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/80 px-3 py-2 text-[9px] font-bold tracking-[.1em] text-violet-700; }
+  .hero-kicker span, .visual-caption-dot { @apply h-1.5 w-1.5 rounded-full bg-emerald-500; box-shadow:0 0 0 4px rgba(16,185,129,.12); }
+  .hero-copy h1 { @apply mb-5 mt-6 max-w-[560px] text-[42px] font-semibold leading-[1.07] tracking-[-.045em] text-slate-900 sm:text-[54px] lg:text-[60px]; }
+  .hero-copy h1 em, .section-heading h2 em, .contact-copy h2 em { @apply not-italic text-brand; }
+  .hero-lead { @apply max-w-[500px] text-sm leading-7 text-slate-500; }
+  .hero-actions { @apply mt-7 flex flex-wrap items-center gap-5; }
+  .hero-primary { @apply rounded-full px-5 py-3 text-[11px]; }
+  .hero-text-link { @apply text-[11px] font-semibold text-slate-600 transition hover:text-brand; }
+  .hero-text-link span { @apply ml-1 text-brand; }
+  .hero-note { @apply mt-8 flex max-w-[420px] items-center gap-2.5 text-[10px] leading-relaxed text-slate-400; }
+  .hero-note-icon { @apply grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600; }
+  .hero-visual { @apply relative mx-auto h-[430px] w-full max-w-[570px] overflow-hidden rounded-[28px] border border-slate-700/30 bg-slate-950 sm:h-[490px]; background-image:radial-gradient(ellipse at 50% 48%,rgba(98,91,246,.32),transparent 42%),linear-gradient(145deg,#111827,#0b1220 72%); box-shadow:0 35px 80px rgba(30,41,59,.2); }
+  .visual-glow { @apply absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/10 blur-3xl; }
+  .visual-caption { @apply absolute left-6 top-6 flex items-center gap-2 text-[8px] font-bold tracking-[.15em] text-slate-400; }
+  .visual-center { @apply absolute left-1/2 top-1/2 z-[2] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-white/10 bg-slate-900/90 text-center; box-shadow:0 0 0 12px rgba(255,255,255,.025),0 0 50px rgba(98,91,246,.24); }
+  .visual-center-mark { @apply mb-1 grid h-8 w-8 place-items-center rounded-lg bg-brand text-xs font-bold text-white; }
+  .visual-center strong { @apply text-xs leading-tight text-white; }
+  .visual-center small { @apply mt-2 text-[7px] font-semibold tracking-[.17em] text-slate-500; }
+  .visual-orbit { @apply absolute left-1/2 top-1/2 rounded-full border border-dashed border-white/10; transform:translate(-50%,-50%); }
+  .orbit-one { @apply h-[250px] w-[250px]; }
+  .orbit-two { @apply h-[370px] w-[370px]; }
+  .visual-node { @apply absolute z-[3] flex items-center gap-2.5 rounded-xl border border-white/10 bg-slate-900/90 px-3 py-2.5; box-shadow:0 12px 30px rgba(0,0,0,.22); }
+  .visual-node small, .visual-node strong { @apply block; }
+  .visual-node small { @apply mb-1 text-[7px] font-semibold tracking-[.13em] text-slate-500; }
+  .visual-node strong { @apply text-[9px] font-semibold text-slate-100; }
+  .node-customer { @apply left-[5%] top-[27%]; }
+  .node-operations { @apply right-[4%] top-[36%]; }
+  .node-data { @apply bottom-[16%] left-[23%]; }
+  .node-icon { @apply grid h-8 w-8 place-items-center rounded-lg text-xs; }
+  .node-purple { @apply bg-violet-500/15 text-violet-300; }
+  .node-green { @apply bg-emerald-500/15 text-emerald-300; }
+  .node-orange { @apply bg-orange-500/15 text-orange-300; }
+  .orbit-point { @apply absolute z-[1] h-2 w-2 rounded-full bg-violet-300; box-shadow:0 0 16px rgba(167,139,250,.95); }
+  .point-one { @apply left-[27%] top-[47%]; }
+  .point-two { @apply right-[23%] top-[57%] bg-emerald-300; }
+  .point-three { @apply left-[53%] top-[21%] bg-orange-300; }
+  .visual-footnote { @apply absolute bottom-5 right-6 text-[8px] text-slate-500; }
+  .landing-trust-strip { @apply mx-5 flex flex-wrap items-center justify-center gap-4 border-y border-slate-200/80 px-3 py-5 text-center text-[8px] font-bold tracking-[.12em] text-slate-400 md:mx-10 md:gap-8; }
+  .landing-trust-strip i { @apply h-1 w-1 rounded-full bg-brand/50; }
+  .landing-section { @apply px-5 py-20 md:px-10 md:py-24; }
+  .section-heading { @apply mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end; }
+  .section-kicker { @apply text-[9px] font-bold tracking-[.16em] text-brand; }
+  .section-heading h2, .contact-copy h2 { @apply mb-0 mt-3 text-3xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-[40px]; }
+  .section-heading > p { @apply mb-1 max-w-[360px] text-xs leading-relaxed text-slate-500; }
+  .solutions-grid { @apply grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4; }
+  .solution-card { @apply relative min-h-[260px] rounded-2xl border border-slate-200/80 bg-white p-5 transition duration-200 hover:-translate-y-1 hover:shadow-card; }
+  .solution-icon { @apply mb-7 grid h-10 w-10 place-items-center rounded-xl text-base; }
+  .solution-purple .solution-icon { @apply bg-violet-50 text-violet-600; }
+  .solution-green .solution-icon { @apply bg-emerald-50 text-emerald-600; }
+  .solution-orange .solution-icon { @apply bg-orange-50 text-orange-600; }
+  .solution-blue .solution-icon { @apply bg-sky-50 text-sky-600; }
+  .solution-number { @apply block text-[8px] font-bold tracking-[.12em] text-slate-400; }
+  .solution-card h3 { @apply mb-2 mt-2 text-sm font-semibold text-slate-800; }
+  .solution-card p { @apply mb-5 text-[10px] leading-relaxed text-slate-500; }
+  .solution-card a { @apply absolute bottom-5 text-[9px] font-semibold text-slate-600 hover:text-brand; }
+  .solution-card a span { @apply ml-1 text-brand; }
+  .solutions-bottom { @apply mt-5 flex flex-col items-start gap-3 rounded-xl bg-violet-50/80 p-4 sm:flex-row sm:items-center; }
+  .solutions-bottom-mark { @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-brand; }
+  .solutions-bottom p { @apply m-0 flex-1 text-[10px] text-slate-500; }
+  .solutions-bottom strong { @apply text-slate-700; }
+  .solutions-bottom a { @apply text-[10px] font-semibold text-brand; }
+  .solutions-bottom a span { @apply ml-1; }
+  .approach-section { @apply bg-slate-950 px-5 py-20 text-white md:px-10 md:py-24; background-image:radial-gradient(ellipse at 15% 25%,rgba(98,91,246,.22),transparent 38%); }
+  .approach-inner { @apply mx-auto grid max-w-[1240px] grid-cols-1 gap-12 lg:grid-cols-[.85fr_1.15fr] lg:gap-24; }
+  .section-kicker-light { @apply text-violet-300; }
+  .approach-intro h2 { @apply mb-3 mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-[38px]; }
+  .approach-intro > p { @apply max-w-[350px] text-xs leading-relaxed text-slate-400; }
+  .approach-link { @apply mt-5 inline-flex gap-2 text-[10px] font-semibold text-violet-300 hover:text-white; }
+  .approach-steps { @apply flex flex-col; }
+  .approach-step { @apply flex gap-5 border-b border-white/10 py-5 first:pt-0 last:border-0; }
+  .approach-step > span { @apply pt-1 text-[10px] font-semibold tracking-widest text-violet-300; }
+  .approach-step h3 { @apply mb-1 text-sm font-semibold text-white; }
+  .approach-step p { @apply mb-0 text-[10px] leading-relaxed text-slate-400; }
+  .contact-section { @apply grid grid-cols-1 gap-9 bg-[#f0f1f7] px-5 py-20 md:px-10 md:py-24 lg:grid-cols-[.8fr_1.2fr] lg:gap-16; }
+  .contact-copy { @apply py-2; }
+  .contact-copy > p { @apply mt-4 max-w-[400px] text-xs leading-relaxed text-slate-500; }
+  .contact-promise { @apply mt-6 flex max-w-[400px] gap-3 rounded-xl border border-emerald-100 bg-white/70 p-4; }
+  .contact-promise > span { @apply grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-600; }
+  .contact-promise p { @apply m-0 text-[10px] leading-relaxed text-slate-500; }
+  .contact-promise strong { @apply text-slate-700; }
+  .contact-detail { @apply mt-6 flex items-center gap-3; }
+  .contact-detail-icon { @apply grid h-9 w-9 place-items-center rounded-lg bg-white text-brand; }
+  .contact-detail small, .contact-detail strong { @apply block; }
+  .contact-detail small { @apply text-[8px] font-bold tracking-[.1em] text-slate-400; }
+  .contact-detail strong { @apply mt-1 text-[11px] text-slate-700; }
+  .contact-form-card { @apply rounded-2xl border border-white bg-white p-5 shadow-card sm:p-7; }
+  .contact-form-heading { @apply mb-5; }
+  .contact-form-heading h3 { @apply mb-1 mt-3 text-lg font-semibold text-slate-900; }
+  .contact-form-heading p { @apply mb-0 text-[10px] text-slate-400; }
+  .form-step { @apply inline-flex items-center gap-2 text-[8px] font-bold tracking-widest text-brand; }
+  .form-step i { @apply h-px w-6 bg-violet-200; }
+  .landing-footer { @apply mx-auto flex max-w-[1320px] flex-col items-start gap-4 border-t border-slate-200 px-5 py-6 sm:flex-row sm:items-center sm:justify-between md:px-10; }
+  .footer-brand .landing-brand-mark { @apply h-8 w-8 rounded-lg text-[10px]; }
+  .footer-brand strong { @apply text-xs; }
+  .landing-footer > span { @apply text-[9px] text-slate-400; }
+  .landing-footer > a:last-child { @apply text-[9px] font-semibold text-slate-500 hover:text-brand; }
+  @media (max-width: 767px) {
+    .landing-nav-links { display:none; }
+    .landing-header { min-height:68px; }
+    .landing-nav-cta { padding:.65rem .85rem; font-size:10px; }
+    .landing-hero { min-height:0; gap:2.5rem; }
+    .hero-copy h1 { font-size:clamp(2.55rem,11vw,3.25rem); }
+    .hero-visual { height:390px; }
+    .visual-node { padding:.5rem .6rem; gap:.45rem; }
+    .visual-node strong { font-size:8px; }
+    .node-customer { left:2%; }
+    .node-operations { right:2%; }
+    .node-data { left:12%; bottom:12%; }
+    .orbit-two { height:310px; width:310px; }
+    .orbit-one { height:220px; width:220px; }
+  }
+
+  /* Readability pass: keep the hierarchy, but avoid tiny utility-sized copy. */
+  .app-shell .nav-caption,
+  .app-shell .eyebrow,
+  .app-shell .stat-caption,
+  .app-shell .count-pill,
+  .app-shell .segment-badge,
+  .app-shell .status-pill,
+  .app-shell .request-status { font-size: .75rem; }
+  .app-shell .sidebar .nav-link,
+  .app-shell .mobile-menu .nav-link,
+  .app-shell .topbar-label,
+  .app-shell .button-primary,
+  .app-shell .button-secondary,
+  .app-shell .filter-bar input,
+  .app-shell .filter-bar select,
+  .app-shell .customer-table tbody td,
+  .app-shell .customer-name,
+  .app-shell .detail-stat strong,
+  .app-shell .timeline-heading strong,
+  .app-shell .timeline-content p,
+  .app-shell .ai-intro,
+  .app-shell .result-block p,
+  .app-shell .recommendation-block p,
+  .app-shell .lead-card-body p { font-size: .875rem; }
+  .app-shell .page-heading h1 { font-size: 2rem; }
+  .app-shell .profile-main h1 { font-size: 1.75rem; }
+  .app-shell .content-card-heading h2,
+  .app-shell .ai-card h2 { font-size: 1.125rem; }
+  .app-shell .page-heading p,
+  .app-shell .profile-main p,
+  .app-shell .content-card-heading p,
+  .app-shell .stat-note,
+  .app-shell .help-card small,
+  .app-shell .account-row small,
+  .app-shell .customer-cell small,
+  .app-shell .detail-stat span,
+  .app-shell .detail-stat small,
+  .app-shell .timeline-heading time,
+  .app-shell .history-row time,
+  .app-shell .interaction-type,
+  .app-shell .result-block h3,
+  .app-shell .recommendation-block h3,
+  .app-shell .result-score small,
+  .app-shell .page-hint,
+  .app-shell .breadcrumb-wrap,
+  .app-shell .list-main small,
+  .app-shell .lead-person small,
+  .app-shell .lead-card-top time,
+  .app-shell .pagination,
+  .app-shell .status-select { font-size: .8125rem; }
+  .app-shell .button-primary,
+  .app-shell .button-secondary,
+  .app-shell .pagination .button-secondary,
+  .app-shell .lead-status-form .button-secondary { min-height: 2.75rem; }
+  .app-shell .customer-table thead th { font-size: .75rem; }
+  .app-shell .score-label,
+  .app-shell .row-action,
+  .app-shell .text-link,
+  .app-shell .list-action,
+  .app-shell .quick-action strong { font-size: .8125rem; }
+  .app-shell .quick-action small,
+  .app-shell .dashboard-empty p,
+  .app-shell .dashboard-empty a,
+  .app-shell .consent-indicator { font-size: .75rem; }
+  .app-shell .result-meta,
+  .app-shell .page-footer,
+  .app-shell .ai-empty p,
+  .app-shell .ai-empty strong { font-size: .75rem; }
+
+  .public-shell .public-secure-label,
+  .public-shell .public-eyebrow,
+  .public-shell .section-kicker,
+  .public-shell .hero-kicker,
+  .public-shell .solution-number,
+  .public-shell .visual-caption,
+  .public-shell .visual-footnote,
+  .public-shell .form-step,
+  .public-shell .form-label,
+  .public-shell .consent-label,
+  .public-shell .field-help,
+  .public-shell .consent-explainer,
+  .public-shell .privacy-note,
+  .public-shell .landing-nav-links,
+  .public-shell .landing-nav-cta,
+  .public-shell .hero-note,
+  .public-shell .landing-trust-strip,
+  .public-shell .solution-card p,
+  .public-shell .approach-step p,
+  .public-shell .contact-promise p,
+  .public-shell .contact-form-heading p,
+  .public-shell .landing-footer > span { font-size: .8125rem; }
+  .public-shell .form-input,
+  .public-shell .form-submit,
+  .public-shell .contact-copy > p,
+  .public-shell .contact-detail strong,
+  .public-shell .contact-section .button-primary { font-size: .9375rem; }
+  .public-shell .field-error,
+  .public-shell .contact-detail small,
+  .public-shell .landing-footer > a:last-child { font-size: .75rem; }
+}

@@ -1,1 +1,1 @@
-"""App CRM — AI ERP/CRM với Wagtail CMS (Day 6: Hệ thống Kinh doanh Thông minh)."""
+"""Ứng dụng CRM cho doanh nghiệp cung cấp giải pháp chuyển đổi số."""

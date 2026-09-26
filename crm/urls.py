@@ -3,7 +3,12 @@ from . import views
 
 app_name = "crm"
 urlpatterns = [
+    path("dang-ky-tu-van/", views.public_lead_request, name="lead_request"),
+    path("da-gui-yeu-cau/", views.public_lead_request_success, name="lead_request_success"),
     path("", views.dashboard, name="dashboard"),
+    path("customers/", views.customer_list, name="customers"),
     path("customers/<int:pk>/", views.customer_detail, name="customer_detail"),
     path("customers/<int:pk>/analyze/", views.analyze_customer_view, name="analyze_customer"),
+    path("yeu-cau/", views.lead_request_list, name="lead_requests"),
+    path("yeu-cau/<int:pk>/trang-thai/", views.update_lead_request_status, name="update_lead_request_status"),
 ]

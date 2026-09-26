@@ -1,0 +1,2 @@
+# Set the project root here so Pyrefly can discover the project's .venv.
+project-includes = ["config", "crm"]

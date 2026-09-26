@@ -1,6 +1,6 @@
-"""Tạo dữ liệu khách hàng mẫu để trình diễn AI CRM.
-- Tạo 8 khách hàng mẫu phong phú phân khúc
-- Tạo 15 lịch sử tương tác (email, phone, meeting)
+"""Tạo dữ liệu khách hàng mẫu cho CRM doanh nghiệp chuyển đổi số.
+- Tạo khách hàng mẫu ở nhiều phân khúc
+- Tạo lịch sử tương tác (email, phone, meeting)
 - Tạo sẵn 2 bản ghi phân tích để minh họa giao diện ngay khi khởi động
 """
 from django.core.management.base import BaseCommand
@@ -8,7 +8,7 @@ from crm.models import Customer, Interaction, AIAnalysis
 
 
 class Command(BaseCommand):
-    help = "Tạo dữ liệu mẫu nhanh cho buổi demo AI CRM (không tạo tài khoản đăng nhập)"
+    help = "Tạo dữ liệu mẫu nhanh cho buổi demo CRM chuyển đổi số (không tạo tài khoản đăng nhập)"
 
     def handle(self, *args, **options):
         # Dữ liệu khách hàng mẫu

@@ -4,4 +4,4 @@ from django.apps import AppConfig
 class CrmConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "crm"
-    verbose_name = "AI ERP / CRM"
+    verbose_name = "Quản lý khách hàng"

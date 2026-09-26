@@ -1,0 +1,13 @@
+{% extends "crm/public_base.html" %}
+{% block title %}Gửi yêu cầu tư vấn{% endblock %}
+{% block content %}
+<section class="public-card">
+  <div class="public-card-heading">
+    <span class="public-eyebrow">KẾT NỐI VỚI CHÚNG TÔI</span>
+    <h1>Chúng tôi có thể giúp gì cho bạn?</h1>
+    <p>Chọn nhóm giải pháp, mô tả nhu cầu. Nhân viên sẽ tiếp nhận và liên hệ lại để chuẩn bị tư vấn phù hợp.</p>
+  </div>
+
+  {% include "crm/includes/lead_request_form.html" %}
+</section>
+{% endblock %}

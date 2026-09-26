@@ -1,0 +1,95 @@
+{% extends "crm/public_base.html" %}
+{% block title %}Giải pháp chuyển đổi số{% endblock %}
+{% block main_class %}landing-main{% endblock %}
+{% block public_header %}
+<header class="landing-header">
+  <a class="landing-brand" href="#dau-trang" aria-label="{{ brand_name }} — đầu trang">
+    <span class="landing-brand-mark">D</span>
+    <span><strong>{{ brand_name }}</strong><small>GIẢI PHÁP SỐ DOANH NGHIỆP</small></span>
+  </a>
+  <nav class="landing-nav-links" aria-label="Điều hướng chính">
+    <a href="#giai-phap">Giải pháp</a>
+    <a href="#cach-lam">Cách chúng tôi làm</a>
+    <a href="#lien-he">Liên hệ</a>
+  </nav>
+  <a class="landing-nav-cta" href="#lien-he">Trao đổi nhu cầu <span aria-hidden="true">↗</span></a>
+</header>
+{% endblock %}
+{% block content %}
+<div id="dau-trang" class="landing-content">
+    <section class="landing-hero">
+      <div class="hero-copy">
+        <span class="hero-kicker"><span></span> ĐỒNG HÀNH CÙNG DOANH NGHIỆP ĐANG PHÁT TRIỂN</span>
+        <h1>Công nghệ nên giúp công việc <em>trôi chảy hơn.</em></h1>
+        <p class="hero-lead">Kết nối quy trình bán hàng, quản lý vận hành và dữ liệu trên những giải pháp phù hợp với cách doanh nghiệp bạn đang làm việc.</p>
+        <div class="hero-actions">
+          <a class="button-primary hero-primary" href="#lien-he">Bắt đầu cuộc trao đổi <span aria-hidden="true">→</span></a>
+          <a class="hero-text-link" href="#giai-phap">Khám phá giải pháp <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hero-note"><span class="hero-note-icon" aria-hidden="true">✓</span><span>Tư vấn theo nhu cầu thực tế, bắt đầu từ vấn đề bạn muốn giải quyết.</span></div>
+      </div>
+
+      <div class="hero-visual" aria-label="Minh họa các hệ thống doanh nghiệp được kết nối">
+        <div class="visual-glow"></div>
+        <div class="visual-caption"><span class="visual-caption-dot"></span> MỘT HỆ THỐNG KẾT NỐI</div>
+        <div class="visual-center"><span class="visual-center-mark">D</span><strong>Dữ liệu<br>liền mạch</strong><small>DOANH NGHIỆP</small></div>
+        <div class="visual-node node-customer"><span class="node-icon node-purple">♙</span><span><small>QUAN HỆ</small><strong>Khách hàng</strong></span></div>
+        <div class="visual-node node-operations"><span class="node-icon node-green">▤</span><span><small>VẬN HÀNH</small><strong>Kho &amp; bán hàng</strong></span></div>
+        <div class="visual-node node-data"><span class="node-icon node-orange">⌘</span><span><small>HẠ TẦNG</small><strong>Dữ liệu &amp; hệ thống</strong></span></div>
+        <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
+        <span class="orbit-point point-one"></span><span class="orbit-point point-two"></span><span class="orbit-point point-three"></span>
+        <p class="visual-footnote">Minh họa các mảng giải pháp có thể kết nối</p>
+      </div>
+    </section>
+
+    <section class="landing-trust-strip" aria-label="Nguyên tắc tư vấn">
+      <span>HIỂU QUY TRÌNH TRƯỚC</span><i></i><span>CHỌN GIẢI PHÁP PHÙ HỢP</span><i></i><span>ĐỒNG HÀNH KHI TRIỂN KHAI</span>
+    </section>
+
+    <section class="landing-section solutions-section" id="giai-phap">
+      <div class="section-heading">
+        <div><span class="section-kicker">GIẢI PHÁP</span><h2>Những mảnh ghép cho<br>một vận hành <em>gọn hơn.</em></h2></div>
+        <p>Không phải doanh nghiệp nào cũng cần cùng một bộ công cụ. Hãy bắt đầu từ điểm nghẽn đang làm đội ngũ mất thời gian nhất.</p>
+      </div>
+      <div class="solutions-grid">
+        <article class="solution-card solution-purple"><span class="solution-icon">♙</span><span class="solution-number">01 / KHÁCH HÀNG</span><h3>CRM &amp; chăm sóc khách hàng</h3><p>Quản lý đầu mối, lịch sử tư vấn và cơ hội bán hàng trong một hồ sơ dễ theo dõi.</p><a href="#lien-he">Trao đổi về CRM <span>↗</span></a></article>
+        <article class="solution-card solution-green"><span class="solution-icon">▤</span><span class="solution-number">02 / VẬN HÀNH</span><h3>Quản lý kho &amp; bán hàng</h3><p>Kết nối luồng bán hàng với hàng hóa để đội ngũ nắm thông tin nhất quán hơn.</p><a href="#lien-he">Trao đổi về vận hành <span>↗</span></a></article>
+        <article class="solution-card solution-orange"><span class="solution-icon">⌘</span><span class="solution-number">03 / HẠ TẦNG</span><h3>Máy chủ &amp; sao lưu dữ liệu</h3><p>Rà soát nền tảng lưu trữ, sao lưu và hạ tầng phù hợp với nhu cầu doanh nghiệp.</p><a href="#lien-he">Trao đổi về hạ tầng <span>↗</span></a></article>
+        <article class="solution-card solution-blue"><span class="solution-icon">⤳</span><span class="solution-number">04 / TÍCH HỢP</span><h3>Kết nối các hệ thống</h3><p>Giảm nhập liệu lặp lại bằng cách xem xét cách các công cụ hiện tại trao đổi dữ liệu.</p><a href="#lien-he">Trao đổi về tích hợp <span>↗</span></a></article>
+      </div>
+      <div class="solutions-bottom"><span class="solutions-bottom-mark">✳</span><p>Chưa chắc nên bắt đầu ở đâu? <strong>Hãy kể cho chúng tôi vấn đề bạn đang gặp.</strong></p><a href="#lien-he">Nhận tư vấn ban đầu <span>→</span></a></div>
+    </section>
+
+    <section class="approach-section" id="cach-lam">
+      <div class="approach-inner">
+        <div class="approach-intro"><span class="section-kicker section-kicker-light">CÁCH CHÚNG TÔI LÀM</span><h2>Bắt đầu từ bài toán.<br>Không bắt đầu từ phần mềm.</h2><p>Một giải pháp có ích phải phù hợp với con người và quy trình sử dụng nó.</p><a href="#lien-he" class="approach-link">Kể cho chúng tôi nghe <span>→</span></a></div>
+        <div class="approach-steps">
+          <article class="approach-step"><span>01</span><div><h3>Lắng nghe hiện trạng</h3><p>Tìm hiểu cách đội ngũ đang làm việc và điều gì cần được cải thiện trước.</p></div></article>
+          <article class="approach-step"><span>02</span><div><h3>Đề xuất hướng phù hợp</h3><p>Thảo luận lựa chọn, phạm vi và các hệ thống cần phối hợp với nhau.</p></div></article>
+          <article class="approach-step"><span>03</span><div><h3>Triển khai có đồng hành</h3><p>Thống nhất cách đưa giải pháp vào quy trình và hỗ trợ đội ngũ tiếp nhận.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="lien-he">
+      <div class="contact-copy">
+        <span class="section-kicker">BẮT ĐẦU TỪ MỘT CUỘC TRAO ĐỔI</span>
+        <h2>Chia sẻ điều bạn muốn <em>cải thiện.</em></h2>
+        <p>Chọn nhóm giải pháp và chia sẻ nhu cầu. Đội ngũ sẽ xem xét yêu cầu, sau đó liên hệ để trao đổi bước tiếp theo.</p>
+        <div class="contact-promise"><span>✓</span><p><strong>Không có quy trình bán hàng tự động.</strong><br>Thông tin được nhân viên xem và phản hồi trực tiếp.</p></div>
+        {% if contact_email %}<div class="contact-detail"><span class="contact-detail-icon">✉</span><span><small>EMAIL LIÊN HỆ</small><strong>{{ contact_email }}</strong></span></div>{% endif %}
+      </div>
+      <div class="contact-form-card">
+        <div class="contact-form-heading"><span class="form-step">01 <i></i> 02</span><h3>Gửi yêu cầu tư vấn</h3><p>Các trường có dấu * là bắt buộc.</p></div>
+        {% include "crm/includes/lead_request_form.html" with submit_label="Gửi thông tin cho đội ngũ" %}
+      </div>
+    </section>
+</div>
+{% endblock %}
+{% block public_footer %}
+<footer class="landing-footer">
+  <a class="landing-brand footer-brand" href="#dau-trang"><span class="landing-brand-mark">D</span><span><strong>{{ brand_name }}</strong><small>GIẢI PHÁP SỐ DOANH NGHIỆP</small></span></a>
+  <span>© {% now "Y" %} {{ brand_name }} · Trang giới thiệu bản demo AI CRM</span>
+  <a href="{% url 'crm:lead_request' %}">Mở form riêng <span>↗</span></a>
+</footer>
+{% endblock %}

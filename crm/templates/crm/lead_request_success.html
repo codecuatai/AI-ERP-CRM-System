@@ -1,0 +1,11 @@
+{% extends "crm/public_base.html" %}
+{% block title %}Đã nhận yêu cầu{% endblock %}
+{% block content %}
+<section class="public-card success-card" role="status">
+  <span class="success-icon" aria-hidden="true">✓</span>
+  <span class="public-eyebrow">GỬI THÀNH CÔNG</span>
+  <h1>Cảm ơn bạn đã liên hệ</h1>
+  <p>Yêu cầu đã được ghi nhận. Nhân viên sẽ xem thông tin và liên hệ lại theo địa chỉ bạn cung cấp.</p>
+  <a class="button-secondary" href="{% url 'crm:lead_request' %}">Gửi yêu cầu khác</a>
+</section>
+{% endblock %}

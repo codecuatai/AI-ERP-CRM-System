@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <title>{% block title %}Liên hệ{% endblock %} · {{ brand_name|default:"DigiFlow" }}</title>
+  <link href="{% static 'crm/css/app.css' %}" rel="stylesheet">
+</head>
+<body class="public-shell">
+  {% block public_header %}<header class="public-topbar">
+    <a class="brand mb-0" href="{% url 'landing_page' %}" aria-label="{{ brand_name|default:'DigiFlow' }} — trang chủ">
+      <span class="brand-mark">D</span><span><strong>{{ brand_name|default:"DigiFlow" }}</strong><small>Giải pháp số doanh nghiệp</small></span>
+    </a>
+    <span class="public-secure-label"><span aria-hidden="true">●</span> Kênh tiếp nhận yêu cầu</span>
+  </header>{% endblock %}
+  <main class="{% block main_class %}public-main{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  {% block public_footer %}<footer class="public-footer">Chỉ cung cấp thông tin cần thiết để chúng tôi phản hồi yêu cầu của bạn.</footer>{% endblock %}
+</body>
+</html>

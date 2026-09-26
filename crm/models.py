@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.snippets.models import register_snippet
 
@@ -93,3 +94,61 @@ class AIAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.customer.full_name} — {self.get_segment_display()} ({self.created_at:%Y-%m-%d})"
+
+
+@register_snippet
+class LeadRequest(models.Model):
+    class SolutionInterest(models.TextChoices):
+        CRM = "CRM", "CRM & chăm sóc khách hàng"
+        ERP = "ERP", "Quản lý kho & bán hàng"
+        INFRASTRUCTURE = "INFRASTRUCTURE", "Máy chủ & sao lưu dữ liệu"
+        INTEGRATION = "INTEGRATION", "Tích hợp hệ thống"
+        AI = "AI", "AI & tự động hóa"
+        OTHER = "OTHER", "Nhu cầu khác / chưa xác định"
+
+    class Status(models.TextChoices):
+        NEW = "NEW", "Mới gửi"
+        CONTACTED = "CONTACTED", "Đã liên hệ"
+        COMPLETED = "COMPLETED", "Đã xử lý"
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="lead_requests",
+        verbose_name="Khách hàng",
+    )
+    solution_interest = models.CharField(
+        "Giải pháp quan tâm",
+        max_length=20,
+        choices=SolutionInterest.choices,
+        default=SolutionInterest.OTHER,
+    )
+    request_text = models.TextField("Nhu cầu khách hàng")
+    status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.NEW)
+    consent_at = models.DateTimeField("Thời điểm đồng ý", default=timezone.now, editable=False)
+    consent_version = models.CharField("Phiên bản nội dung đồng ý", max_length=20, default="v2", editable=False)
+    ai_processing_consent = models.BooleanField("Đồng ý phân tích AI", default=False)
+    ai_processing_consent_at = models.DateTimeField("Thời điểm đồng ý phân tích AI", null=True, blank=True, editable=False)
+    ai_processing_consent_version = models.CharField("Phiên bản đồng ý phân tích AI", max_length=20, default="v1", editable=False)
+    created_at = models.DateTimeField("Thời điểm gửi", auto_now_add=True)
+
+    panels = [
+        FieldPanel("customer"),
+        FieldPanel("solution_interest"),
+        FieldPanel("request_text", read_only=True),
+        FieldPanel("status"),
+        FieldPanel("consent_at", read_only=True),
+        FieldPanel("consent_version", read_only=True),
+        FieldPanel("ai_processing_consent", read_only=True),
+        FieldPanel("ai_processing_consent_at", read_only=True),
+        FieldPanel("ai_processing_consent_version", read_only=True),
+        FieldPanel("created_at", read_only=True),
+    ]
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Yêu cầu tư vấn"
+        verbose_name_plural = "Yêu cầu tư vấn"
+
+    def __str__(self):
+        return f"{self.customer.full_name} — {self.get_status_display()} ({self.created_at:%Y-%m-%d})"

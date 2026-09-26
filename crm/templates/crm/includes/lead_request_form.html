@@ -1,0 +1,49 @@
+{% if form.non_field_errors %}<div class="form-error-summary" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<form method="post" class="public-form" novalidate>
+  {% csrf_token %}
+  <div class="form-grid">
+    <div class="form-field">
+      <label class="form-label" for="id_full_name">{{ form.full_name.label }} <span>*</span></label>
+      {{ form.full_name }}
+      {% for error in form.full_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="id_email">{{ form.email.label }} <span>*</span></label>
+      {{ form.email }}
+      {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="id_phone">{{ form.phone.label }}</label>
+      {{ form.phone }}
+      {% for error in form.phone.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="id_company">{{ form.company.label }}</label>
+      {{ form.company }}
+      {% for error in form.company.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </div>
+  </div>
+  <div class="form-field">
+    <label class="form-label" for="id_solution_interest">{{ form.solution_interest.label }} <span>*</span></label>
+    {{ form.solution_interest }}
+    {% for error in form.solution_interest.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+  <div class="form-field">
+    <label class="form-label" for="id_request_text">{{ form.request_text.label }} <span>*</span></label>
+    {{ form.request_text }}
+    {% for error in form.request_text.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    <p class="field-help">Không gửi mật khẩu, thông tin sức khỏe, dữ liệu cá nhân nhạy cảm hoặc bí mật kinh doanh. Nếu bật AI, nội dung nhu cầu đã chọn có thể được gửi tới Google Gemini.</p>
+  </div>
+  <div class="consent-box consent-required">
+    <label class="consent-label" for="id_consent"><span class="consent-checkbox">{{ form.consent }}</span><span>{{ form.consent.label }} <b>*</b></span></label>
+    {% for error in form.consent.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    <p class="consent-explainer">Chỉ dùng để tiếp nhận, lưu và phản hồi yêu cầu này. Xem <a href="{% url 'privacy_notice' %}" target="_blank" rel="noopener">Thông báo quyền riêng tư</a> về loại dữ liệu, thời hạn lưu và cách thực hiện quyền của bạn.</p>
+  </div>
+  <div class="consent-box consent-optional">
+    <label class="consent-label" for="id_ai_processing_consent"><span class="consent-checkbox">{{ form.ai_processing_consent }}</span><span>{{ form.ai_processing_consent.label }}</span></label>
+    {% for error in form.ai_processing_consent.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+  <div class="form-honeypot-wrap" aria-hidden="true">{{ form.website }}</div>
+  <button class="button-primary form-submit" type="submit">{{ submit_label|default:"Gửi yêu cầu tư vấn" }} <span aria-hidden="true">→</span></button>
+  <p class="privacy-note">Nhân viên sẽ xem và phản hồi thủ công. Không có email, tin nhắn hay phân tích AI nào tự chạy khi gửi form.</p>
+</form>
