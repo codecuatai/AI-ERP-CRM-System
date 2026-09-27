@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Case, IntegerField, Max, Q, Sum, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -58,6 +58,7 @@ def dashboard(request):
         "upcoming_tasks": open_tasks.filter(due_at__gt=today).order_by("due_at")[:5],
         "overdue_task_count": open_tasks.filter(due_at__lt=today).count(),
         "today_task_count": open_tasks.filter(due_at=today).count(),
+        "open_task_count": open_tasks.count(),
     }
     return render(request, "crm/dashboard.html", context)
 
@@ -466,13 +467,22 @@ def save_public_lead_request(data):
     with transaction.atomic():
         customer = Customer.objects.filter(email__iexact=data["email"]).first()
         if customer is None:
-            customer = Customer.objects.create(
-                full_name=data["full_name"],
-                email=data["email"],
-                phone=data["phone"],
-                company=data["company"],
-                source="Website",
-            )
+            try:
+                # The nested atomic block creates a savepoint, so a concurrent
+                # submission can lose the unique-email race without breaking
+                # the outer transaction that records the lead.
+                with transaction.atomic():
+                    customer = Customer.objects.create(
+                        full_name=data["full_name"],
+                        email=data["email"],
+                        phone=data["phone"],
+                        company=data["company"],
+                        source="Website",
+                    )
+            except IntegrityError:
+                customer = Customer.objects.filter(email__iexact=data["email"]).first()
+                if customer is None:
+                    raise
 
         LeadRequest.objects.create(
             customer=customer,

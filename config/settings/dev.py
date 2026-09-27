@@ -4,6 +4,7 @@ Settings cho môi trường phát triển.
 """
 import os
 from pathlib import Path
+from django.core.management.utils import get_random_secret_key
 from .base import *  # noqa: F403, F401
 
 # Load .env file
@@ -29,10 +30,7 @@ PUBLIC_DATA_RETENTION_NOTICE = os.environ.get(
 )
 
 # ── Security ─────────────────────────────────────────────────
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-dev-key-please-change-in-production-52xgn8q",
-)
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "").strip() or get_random_secret_key()
 
 DEBUG = True
 
@@ -42,7 +40,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",  # noqa: F405
+        "NAME": os.environ.get("DJANGO_DATABASE_PATH", BASE_DIR / "db.sqlite3"),  # noqa: F405
     }
 }
 

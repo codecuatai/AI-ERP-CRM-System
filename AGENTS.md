@@ -38,7 +38,8 @@ Các file quan trọng:
 | `crm/test_*.py`, `crm/tests.py` | Test AI, view và form lead |
 | `crm/management/commands/seed_crm_data.py` | Dữ liệu demo |
 | `setup_cms_homepage`, `setup_crm_groups` | Khởi tạo trang chủ CMS và nhóm quyền CRM |
-| `config/settings/dev.py` | SQLite, `.env`, Gemini, môi trường local |
+| `config/settings/dev.py` | SQLite, `.env`, Gemini, môi trường local; tự sinh secret nếu thiếu |
+| `config/settings/prod.py` | Profile deploy: yêu cầu secret/host/origin/HTTPS/email hợp lệ và bật secure cookies/HSTS |
 | `PUBLIC_SITE_URL`, `EMAIL_*` | Domain link phản hồi và cấu hình SMTP; local mặc định in email ra terminal |
 | `tailwind/` | Nguồn Tailwind và lệnh build CSS |
 | `.github/workflows/ci.yml` | CI cho backend và frontend |
@@ -66,7 +67,6 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
-python manage.py makemigrations crm
 python manage.py migrate
 python manage.py setup_cms_homepage
 python manage.py setup_crm_groups
@@ -79,6 +79,7 @@ python manage.py runserver
 
 ```powershell
 python manage.py check
+python manage.py makemigrations --check --dry-run
 python manage.py test
 ```
 
@@ -97,6 +98,7 @@ npm run css:build
 - `CareTask`, hàng đợi ưu tiên, email draft có người duyệt, CMS landing page, SnippetViewSet, CSV và báo cáo cơ bản đã có.
 - Chạy `setup_crm_groups` sau migrate; chỉ tài khoản được gán nhóm và có quyền mới truy cập màn hình CRM. Follow-up email cần người dùng staff và quyền quản lý lead.
 - AI không tự gửi email/tin nhắn; draft chỉ được lưu thành tương tác khi nhân viên chủ động xác nhận đã gửi bên ngoài.
+- Trước khi nhận dữ liệu thật từ internet, cần triển khai giới hạn request cho form công khai tại reverse proxy/CDN/WAF; profile production hiện vẫn dùng SQLite, cần database/backup bền vững phù hợp tải thực tế.
 - Hướng phát triển kế tiếp được theo dõi trong `docs/lo-trinh-tinh-nang.md`; cập nhật tài liệu đó khi trạng thái roadmap thay đổi.
 - Giữ phạm vi CRM, không thêm kế toán, kho, nhân sự, thanh toán hoặc xử lý nền nếu nhiệm vụ không yêu cầu.
 
@@ -126,4 +128,4 @@ main  ←  feature branch / bugfix branch
 - Ưu tiên **Squash and merge** để lịch sử `main` gọn.
 - Sau khi merge, xóa nhánh nhiệm vụ.
 
-CI chỉ cần chạy khi có Pull Request vào `main` và khi có commit mới trên `main`. Các kiểm tra bắt buộc gồm Django check, migration check, test tự động và build frontend.
+CI chạy khi có Pull Request vào `main` và khi có commit mới trên `main`. Các kiểm tra gồm Django check, migration check, test tự động, build frontend, pip-audit và npm audit.

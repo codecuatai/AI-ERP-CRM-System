@@ -1,92 +1,99 @@
-# Dàn ý báo cáo nộp — CRM thông minh cho doanh nghiệp chuyển đổi số
+# Dàn ý báo cáo — CRM thông minh cho doanh nghiệp chuyển đổi số
 
 **Đề tài:** Xây dựng hệ thống CRM thông minh tích hợp AI hỗ trợ quản lý và chăm sóc khách hàng cho doanh nghiệp cung cấp giải pháp chuyển đổi số  
 **Môn:** Hệ thống Kinh doanh Thông minh — Day 6  
-**Ràng buộc:** Tối đa 1 lần nộp  
+**Ràng buộc:** Tối đa 1 lần nộp
 
----
+> Tài liệu này là dàn ý để hoàn thiện báo cáo và chụp ảnh minh chứng. Không ghi kết quả kiểm thử trực tiếp trên máy hay kết quả gọi Gemini online nếu chưa thực sự chạy và xác nhận.
 
 ## 1. Mở đầu
-- **Bối cảnh:** Doanh nghiệp cung cấp giải pháp chuyển đổi số thường phải tư vấn, demo, triển khai và chăm sóc nhiều khách hàng B2B cùng lúc. Nếu dữ liệu khách hàng và lịch sử trao đổi nằm rời rạc, nhân viên khó xác định khách hàng nào cần ưu tiên và nên thực hiện bước chăm sóc nào tiếp theo.
-- **Mục tiêu:**
-  1. Xây dựng hệ thống CRM trên nền tảng Wagtail CMS để quản lý khách hàng doanh nghiệp và lịch sử tư vấn/triển khai giải pháp.
-  2. Tích hợp AI (Google Gemini) để phân khúc khách hàng, chấm điểm tiềm năng và đề xuất hành động chăm sóc.
-  3. Xây dựng Frontend Dashboard để nhân viên kinh doanh theo dõi khách hàng và kết quả AI.
-  4. Có cơ chế fallback bằng quy tắc cục bộ khi thiếu API key hoặc dịch vụ AI gặp sự cố.
-- **Phạm vi:** Trọng tâm vào luồng CRM của doanh nghiệp chuyển đổi số: Quản trị khách hàng và tương tác → Đánh giá nhu cầu/tiềm năng → Đề xuất chăm sóc. Dự án không triển khai kế toán, tồn kho, nhân sự hoặc toàn bộ ERP.
 
----
+- **Bối cảnh:** Doanh nghiệp cung cấp giải pháp chuyển đổi số tư vấn khách hàng B2B về CRM, quản lý kho/POS, hạ tầng máy chủ, sao lưu và tích hợp hệ thống. Thông tin rời rạc khiến nhân viên khó biết ai cần ưu tiên và bước chăm sóc tiếp theo là gì.
+- **Mục tiêu:** tập trung hồ sơ và tương tác; thu nhận nhu cầu; hỗ trợ phân loại/chấm điểm khách hàng bằng Gemini hoặc rules fallback; chuyển đề xuất được nhân viên duyệt thành việc chăm sóc theo dõi được.
+- **Phạm vi:** CRM cốt lõi trên Wagtail/Django, không phải ERP đầy đủ; không có kế toán, kho, nhân sự hay thanh toán.
 
 ## 2. Cơ sở lý thuyết
-- **2.1 ERP vs CRM:** So sánh tổng quan, lý do lựa chọn phân hệ CRM làm trọng tâm trong bài toán quản lý khách hàng của doanh nghiệp chuyển đổi số.
-- **2.2 Wagtail CMS & Django:**
-  - Vì sao chọn Wagtail: Giao diện quản trị hiện đại, tính năng Snippets (`@register_snippet`) cho phép quản lý thực thể phi cấu trúc trang linh hoạt.
-  - Tổ chức Panel: `FieldPanel`, `MultiFieldPanel` giúp cấu trúc form nhập liệu trực quan.
-- **2.3 Mô hình AI và cơ chế tích hợp:**
-  - Google Gemini API (`google-genai>=1.0.0`), model `gemini-3.5-flash-lite`.
-  - Structured Output với `response_mime_type="application/json"`.
-  - Cơ chế Fallback quy tắc cục bộ (`_rule_based_analysis`) đảm bảo ứng dụng không crash khi API gặp sự cố.
 
----
+1. So sánh ERP và CRM; lý do chọn bài toán CRM cho doanh nghiệp chuyển đổi số.
+2. Django xử lý nghiệp vụ và Wagtail quản trị Pages, Snippets, quyền người dùng.
+3. Google Gemini SDK (`google-genai`) với structured JSON response; rules fallback đảm bảo luồng demo không phụ thuộc API.
+4. Consent theo mục đích, giới hạn dữ liệu gửi AI và nguyên tắc người dùng duyệt trước hành động.
 
-## 3. Phân tích và Thiết kế hệ thống
-- **3.1 Kiến trúc dữ liệu (Data Architecture):**
-  - `Customer`: Thông tin định danh, doanh thu lũy kế (`total_spent`), kết quả AI cache (`ai_segment`, `ai_score`); được tạo từ form website hoặc Wagtail Admin.
-  - `Interaction`: Lịch sử tương tác (Email, Điện thoại, Gặp mặt, Khác) theo quan hệ 1—n với Customer.
-  - `LeadRequest`: Nhóm giải pháp, nội dung nhu cầu, trạng thái; consent tiếp nhận và consent AI tùy chọn được lưu tách biệt cùng dấu thời gian/phiên bản.
-  - `AIAnalysis`: Bản ghi lịch sử mỗi lần AI phân tích (Audit log gồm phân khúc, điểm, nhận định, đề xuất, nguồn provider).
-- **3.2 Luồng xử lý dữ liệu (Data Flow):**
-  - `Khách gửi form → Customer + LeadRequest + Interaction lưu DB → Nhân viên xem trong Wagtail → Nếu có consent AI thì bấm phân tích → AI Service (Gemini/Rules) → AIAnalysis & cập nhật Customer → Dashboard`.
-- **3.3 Thiết kế giao diện (UI/UX):**
-  - Landing page công khai tại `/` giới thiệu doanh nghiệp/giải pháp và form thu thập yêu cầu; khu vực nhân viên tách riêng tại `/crm/`.
-  - Trang Dashboard dùng Django Templates và Tailwind CSS: thống kê, tìm kiếm/lọc, bảng khách hàng và điểm tiềm năng.
-  - Trang chi tiết: hồ sơ, timeline trao đổi, nút phân tích AI, kết quả và lịch sử phân tích.
-  - Form tư vấn công khai: có lựa chọn giải pháp, thu nhu cầu; consent nhận/phản hồi bắt buộc và consent AI tùy chọn, không gộp mục đích. Có trang thông báo quyền riêng tư mẫu.
+## 3. Phân tích và thiết kế hệ thống
 
----
+### 3.1 Mô hình dữ liệu chính
 
-## 4. Triển khai hệ thống (Kèm ảnh chụp màn hình minh họa)
-- **4.1 Khởi tạo dự án & Môi trường:**
-  - Cấu hình `config/settings/base.py`, `config/settings/dev.py`, quản lý secret qua `.env`.
-  - Thư viện: `wagtail>=7.0`, `google-genai>=1.0.0`, `python-dotenv>=1.0.0`.
-- **4.2 Xây dựng Models & Snippets:**
-  - Trích xuất code `Customer`, `Interaction`, `LeadRequest`, `AIAnalysis` trong `crm/models.py`.
-- **4.3 Tích hợp AI Service & Fallback:**
-  - Trích xuất hàm `analyze_customer` và `_rule_based_analysis` trong `crm/services/ai_service.py`.
-  - Kỹ thuật prompt engineering định dạng JSON cho bài toán phân tích CRM.
-- **4.4 Giao diện người dùng:**
-  - Templates `crm/templates/crm/landing_page.html`, `crm/templates/crm/lead_request.html`, `crm/templates/crm/dashboard.html` và `crm/templates/crm/customer_detail.html`.
-- **4.5 Tự động hóa Seed dữ liệu:**
-  - Lệnh `python manage.py seed_crm_data` nạp dữ liệu giả lập; tạo tài khoản riêng bằng `python manage.py createsuperuser`.
-- **4.6 Kiểm thử và CI:**
-  - Test Django nằm trong `crm/tests.py`, `crm/test_ai_service.py` và `crm/test_views.py`.
-  - GitHub Actions tại `.github/workflows/ci.yml` chạy trên Pull Request hoặc push vào `main`, kiểm tra Python 3.11/3.12, migration, Django check, test backend và build Tailwind.
+- `Customer`: doanh nghiệp/đầu mối liên hệ, nguồn, ghi chú, tổng chi tiêu, trạng thái và kết quả phân tích mới nhất.
+- `LeadRequest`: nhóm giải pháp, nội dung nhu cầu, trạng thái và consent tiếp nhận/AI được lưu riêng.
+- `Interaction`: lịch sử trao đổi gắn với một khách hàng.
+- `LeadFollowUp` và `LeadFollowUpResponse`: link bổ sung thông tin có hạn dùng/dùng một lần/thu hồi; phản hồi cùng consent AI riêng.
+- `AIAnalysis`: lịch sử từng lần phân tích, phân khúc, điểm, nhận định, khuyến nghị và provider.
+- `CareTask`: việc chăm sóc gắn với khách hàng, người phụ trách, hạn, ưu tiên và trạng thái.
+- `LandingPage`: trang chủ biên tập được bằng Wagtail.
 
----
+### 3.2 Luồng nghiệp vụ
 
-## 5. Kiểm thử và Đánh giá
+```text
+Khách gửi form công khai
+  → Customer + LeadRequest + Interaction
+  → Nhân viên xem/cập nhật lead trong CRM hoặc Wagtail
+  → (tùy chọn) gửi link hỏi thêm có thời hạn
+  → phản hồi được lưu; chỉ dùng cho AI nếu có consent riêng
+  → nhân viên chủ động chạy phân tích Gemini / rules fallback
+  → AIAnalysis + kết quả trên hồ sơ
+  → nhân viên xem xét, xác nhận và tạo CareTask
+  → theo dõi việc quá hạn / hôm nay / sắp tới trên dashboard
+```
 
-| Kịch bản kiểm thử | Thao tác thực hiện | Kết quả mong đợi | Kết quả thực tế |
-|---|---|---|---|
-| **KT1: Quản trị Wagtail** | Đăng nhập Admin, tạo mới Customer và 2 Interaction | Bản ghi hiển thị đầy đủ trong Snippets | Django check và migration đã đạt; cần chụp ảnh thao tác Admin trước khi nộp |
-| **KT2: Phân tích AI (Online)** | Cấu hình `GEMINI_API_KEY`, bấm "Phân tích bằng AI" | Trả về phân khúc, điểm, đề xuất với provider `gemini` | Chưa chạy vì môi trường kiểm thử chưa cấu hình API key |
-| **KT3: Fallback (Offline)** | Bỏ trống `GEMINI_API_KEY`, bấm phân tích | Hệ thống dùng rule-based, thông báo rõ ràng, không crash | Đã đạt trong test tự động; provider `rules` |
-| **KT4: Lưu vết lịch sử** | Phân tích nhiều lần cho 1 khách hàng | `AIAnalysis` lưu từng lần, Customer cập nhật giá trị mới nhất | Luồng code đã có; cần kiểm tra thủ công hoặc bổ sung test riêng |
-| **KT5: Form tư vấn công khai** | Gửi form, bỏ consent bắt buộc, bật/tắt consent AI, email trùng, honeypot | Consent AI lưu riêng; không đồng ý vẫn tiếp nhận lead nhưng chặn AI; từ chối consent nhận thiếu/bot; không tạo Customer trùng | Kiểm tra bằng test tự động |
-| **KT6: Giới hạn dữ liệu AI** | Chỉ đồng ý một lead trong nhiều yêu cầu và chạy phân tích | Prompt Gemini chỉ có nội dung/nhóm giải pháp đã đồng ý; không có định danh hoặc yêu cầu chưa đồng ý | Đã đạt trong test tự động |
+### 3.3 Giao diện và quyền
 
-Lần kiểm tra sau khi hoàn thiện form: **23 test đạt**, `python manage.py check` đạt, `makemigrations --check --dry-run` không phát hiện migration thiếu và Tailwind build thành công. Gemini online chưa được xác nhận vì chưa dùng API key thật.
+- Trang công khai `/`: landing page Wagtail, nhóm giải pháp, form tư vấn và trang quyền riêng tư.
+- Khu vực nhân viên `/crm/`: dashboard, danh bạ, hồ sơ, hàng đợi ưu tiên, hộp thư lead, việc chăm sóc, báo cáo và CSV.
+- Wagtail Admin `/admin/`: Pages và Snippets; quyền CRM được gom theo nhóm Nhân viên/Quản lý, endpoint nghiệp vụ kiểm tra quyền tương ứng.
+- Frontend dùng Django Templates và Tailwind CSS; giao diện responsive.
 
----
+## 4. Triển khai
 
-## 6. Kết luận và Hướng phát triển
-- **Kết quả cần xác nhận:** Bổ sung ảnh giao diện và một lần chạy Gemini online nếu có API key trước khi nộp.
-- **Hạn chế:** Hiện tại mô hình chỉ phân tích đơn lẻ từng khách hàng; chưa có tác vụ nền (Celery/Cron) phân tích hàng loạt.
-- **Hướng phát triển:** Tích hợp sinh email phản hồi tự động theo ngữ cảnh, dự báo rời bỏ nâng cao bằng học máy (Scikit-learn), kết nối đa kênh (Zalo OA / Webhook).
+1. Python 3.11/3.12, `requirements.txt`, `.env.example`; SQLite mặc định cho local.
+2. `crm/models.py`, migration được commit; tạo homepage mẫu bằng `setup_cms_homepage`, nhóm quyền bằng `setup_crm_groups`, dữ liệu demo bằng `seed_crm_data`.
+3. `crm/services/ai_service.py`: Gemini có kiểm tra kết quả và fallback rules.
+4. `crm/services/email_draft_service.py`: soạn nháp; người dùng tự duyệt, không tự gửi.
+5. Profile production ở `config/settings/prod.py`: yêu cầu secret mạnh, host rõ ràng, HTTPS URL, secure cookies/HSTS; người triển khai còn phải cấu hình SMTP, HTTPS, database bền vững và backup.
+6. `.github/workflows/ci.yml`: matrix Python 3.11/3.12, migration check, Django check, test và Tailwind build.
 
----
+## 5. Kiểm thử và đánh giá
+
+Chạy tại thư mục có `manage.py`:
+
+```bash
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test
+```
+
+Các test tự động trong `crm/tests.py`, `crm/test_*.py` bao phủ form/consent, luồng lead/follow-up, quyền truy cập, việc chăm sóc, xuất dữ liệu và AI fallback. Số lượng test có thể thay đổi theo code; lấy kết quả mới từ lần chạy ngay trước khi nộp, không giữ số cũ trong báo cáo.
+
+| Kịch bản | Cách xác nhận | Bằng chứng cần chuẩn bị |
+|---|---|---|
+| Wagtail/CMS | Đăng nhập, sửa trang chủ, quản lý Snippets | Ảnh Pages và Snippets |
+| Lead công khai | Gửi form, thử consent bắt buộc/tùy chọn, email lặp, honeypot | Lead và hồ sơ tương ứng |
+| CRM nội bộ | Tìm/lọc khách, cập nhật lead, xem hồ sơ và timeline | Dashboard, danh bạ, hồ sơ |
+| Follow-up | Gửi email console, trả lời, thử dùng lại/thu hồi/hết hạn link | Email terminal và trạng thái phản hồi |
+| AI fallback | Để trống `GEMINI_API_KEY`, phân tích khách đủ điều kiện | Provider `rules` và bản ghi `AIAnalysis` |
+| AI online | Chỉ chạy khi có API key được cấp và cho phép | Kết quả thực tế; không đưa key vào ảnh/báo cáo |
+| Việc chăm sóc | Tạo, sửa/hoàn tất; kiểm tra hạn trên dashboard | Việc liên kết khách hàng và dashboard |
+| Production settings | Cấu hình env staging an toàn, chạy `check --deploy` | Output kiểm tra và cấu hình đã che secret |
+
+Ghi lại kết quả thực tế: ngày chạy, phiên bản Python, lệnh, số test thành công/thất bại, kết quả CI và vấn đề còn lại. Chưa gọi Gemini online nếu không có key; không dùng thông tin khách hàng thật trong demo.
+
+## 6. Kết luận và hướng phát triển
+
+- Đánh giá luồng CRM từ tiếp nhận nhu cầu đến phân tích, người duyệt và việc theo dõi.
+- Nêu rõ giới hạn: SQLite cho demo; fallback là heuristics minh họa; chưa có tác vụ nền, nhập CSV hoặc triển khai PostgreSQL cấu hình sẵn.
+- Hướng phát triển: nhập CSV có preview/validation, lọc báo cáo theo thời gian, PostgreSQL và backup/monitoring trước khi triển khai thực tế.
 
 ## Phụ lục
-- Danh sách câu lệnh triển khai dự án (Windows PowerShell).
-- Mẫu Prompt AI phân tích khách hàng.
-- Tài khoản demo: tự tạo bằng `python manage.py createsuperuser`; không ghi mật khẩu thật vào báo cáo công khai.
+
+- Các lệnh setup và chạy app: xem [README](../README.md#bắt-đầu-nhanh).
+- Tính năng đã có/còn thiếu: xem [roadmap](lo-trinh-tinh-nang.md).
+- Không ghi mật khẩu/tài khoản demo, API key, token follow-up hay dữ liệu cá nhân thật vào báo cáo công khai.
