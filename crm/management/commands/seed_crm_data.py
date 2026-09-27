@@ -174,11 +174,11 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f"Thành công! Đã tạo {count_c} khách hàng mới và {count_i} tương tác."
+            f"Created {count_c} new customers and {count_i} interactions."
         ))
         self.stdout.write(self.style.SUCCESS(
-            "Có sẵn 4 khách hàng chưa phân tích để bạn trình diễn nút 'Phân tích bằng AI'!"
+            "Four demo customers are ready for AI analysis."
         ))
         self.stdout.write(self.style.SUCCESS(
-            "Đã chuẩn bị việc chăm sóc mẫu gồm việc quá hạn, đến hạn hôm nay và sắp tới."
+            "Demo care tasks include overdue, due-today, and upcoming items."
         ))

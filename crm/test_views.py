@@ -54,6 +54,9 @@ class CRMViewTests(TestCase):
         response = self.client.get(reverse("crm:dashboard"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "KHÔNG GIAN LÀM VIỆC CRM")
+        self.assertContains(response, "Xem khách cần ưu tiên")
+        self.assertContains(response, "Việc đang mở")
         self.assertContains(response, "Bạn muốn làm gì?")
         self.assertContains(response, "Yêu cầu tư vấn gần đây")
         self.assertContains(response, reverse("crm:customers"))

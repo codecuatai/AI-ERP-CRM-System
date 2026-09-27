@@ -137,6 +137,8 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
+python manage.py setup_cms_homepage
+python manage.py setup_crm_groups
 python manage.py seed_crm_data
 python manage.py createsuperuser
 python manage.py runserver
@@ -154,7 +156,7 @@ Migration ban đầu đã được lưu trong dự án nên cài mới chỉ c�
 
 ## Truy cập ứng dụng
 
-Sau khi chạy `runserver`, mở. Dashboard và hồ sơ yêu cầu đăng nhập; nếu chưa đăng nhập, Django chuyển bạn đến trang đăng nhập Wagtail:
+Sau khi chạy `runserver`, mở một trong các địa chỉ dưới đây. Dashboard và hồ sơ yêu cầu đăng nhập; nếu chưa đăng nhập, Django chuyển bạn đến trang đăng nhập Wagtail:
 
 | Địa chỉ | Chức năng |
 |---|---|
@@ -205,6 +207,25 @@ LEAD_FOLLOW_UP_LINK_TTL_DAYS=7
 
 Thay giá trị mẫu bằng domain HTTPS và thông tin SMTP của đơn vị; không commit thông tin xác thực. Nhân viên phải chủ động bấm gửi—khách nộp form landing page không tự nhận email follow-up. Link chỉ nhận một phản hồi, hết hạn theo `LEAD_FOLLOW_UP_LINK_TTL_DAYS`, và có thể thu hồi trước khi khách trả lời. `PUBLIC_SITE_URL` phải là domain do đơn vị vận hành kiểm soát.
 
+## Cấu hình production tối thiểu
+
+`config.settings.dev` chỉ dành cho local (`DEBUG=True`, SQLite). Khi triển khai, đặt biến môi trường `DJANGO_SETTINGS_MODULE=config.settings.prod` ở nền tảng hosting và cung cấp:
+
+```dotenv
+DJANGO_SECRET_KEY=<chuỗi ngẫu nhiên riêng, ít nhất 50 ký tự>
+DJANGO_ALLOWED_HOSTS=crm.example.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://crm.example.com
+PUBLIC_SITE_URL=https://crm.example.com
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=<tài khoản SMTP>
+EMAIL_HOST_PASSWORD=<mật khẩu SMTP>
+EMAIL_USE_TLS=true
+```
+
+Profile production từ chối secret yếu/thiếu, wildcard host, URL public không HTTPS, host/CSRF origin không khớp và backend email console; đồng thời bật cookie bảo mật, HTTPS redirect và HSTS. Cần cấu hình HTTPS tại proxy/hosting, đặt đúng host/origin và dùng database có lưu trữ bền vững. Nếu proxy kết thúc TLS, chỉ đặt `DJANGO_BEHIND_TLS_PROXY=true` khi proxy tin cậy luôn ghi đè `X-Forwarded-Proto` và app không thể truy cập trực tiếp từ client ngoài. Profile hiện vẫn dùng SQLite như bản demo; chỉ triển khai với volume bền vững và tải nhỏ. Với môi trường production nhiều người dùng, hãy cấu hình PostgreSQL riêng và backup database/media trước khi nhận dữ liệu thật. Không dùng file `.env` trong repo để chứa secret production.
+
 ## Demo trong 5 phút
 
 1. Mở [Landing page](http://127.0.0.1:8000/) và gửi yêu cầu ở khu vực liên hệ cuối trang.
@@ -226,7 +247,7 @@ Thay giá trị mẫu bằng domain HTTPS và thông tin SMTP của đơn vị; 
 Lệnh `python manage.py seed_crm_data` tạo dữ liệu phục vụ trình diễn:
 
 - 6 khách hàng mẫu thuộc nhiều bối cảnh khác nhau.
-- 12 lịch sử tương tác gồm email, điện thoại và gặp mặt.
+- 10 lịch sử tương tác gồm email, điện thoại và gặp mặt.
 - 2 bản ghi `AIAnalysis` có sẵn để Dashboard và hồ sơ hiển thị ngay.
 - 4 khách hàng chưa có phân tích để trình diễn nút **Phân tích ngay**.
 - 3 việc chăm sóc mẫu gồm một việc quá hạn, một việc đến hạn hôm nay và một việc sắp tới.
@@ -356,10 +377,11 @@ main ← feature/* hoặc fix/*
 
 GitHub Actions nằm tại `.github/workflows/ci.yml` và tự chạy khi có Pull Request vào `main` hoặc commit mới trên `main`.
 
-CI kiểm tra hai phần:
+CI kiểm tra backend, giao diện và lỗ hổng dependency:
 
 - **Backend:** cài Python 3.11 và 3.12, kiểm tra migration đã được commit, migrate database, chạy `manage.py check` và toàn bộ test Django.
 - **Frontend:** cài Node.js 20, chạy `npm ci` và build Tailwind CSS.
+- **Dependency security:** `pip-audit` kiểm tra thư viện Python (trên Python 3.12) và `npm audit --audit-level=high` kiểm tra package frontend.
 
 Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. Trên GitHub nên bật bảo vệ nhánh `main`, bắt buộc Pull Request và yêu cầu cả hai job CI hoàn thành thành công trước khi merge.
 
@@ -397,12 +419,13 @@ Có thể chạy các test tự động của form bằng `python manage.py test
 
 ## Giới hạn và hướng phát triển
 
-Đây là phiên bản demo/chạy local nên có một số giới hạn:
+Đây là phiên bản đồ án/demo nên có một số giới hạn:
 
-- Dùng SQLite và `DEBUG=True`, chưa cấu hình cho môi trường production.
+- Mặc định local dùng SQLite và `DEBUG=True`; có profile production riêng, nhưng vẫn cần người triển khai cấu hình HTTPS, SMTP, database bền vững và backup.
 - Chưa có phân tích hàng loạt, tác vụ nền hoặc lập lịch tự động.
 - Rules fallback là logic minh họa dựa trên tổng chi tiêu, số tương tác và từ khóa.
-- Chưa có phân quyền nghiệp vụ chi tiết ngoài yêu cầu đăng nhập.
+- Đã có nhóm quyền CRM Nhân viên/CRM Quản lý và kiểm tra quyền tại các màn hình/nghiệp vụ; chưa có ma trận phân quyền cấu hình linh hoạt theo từng trường dữ liệu.
+- Form công khai chưa có rate limit/WAF tích hợp; trước khi mở internet nhận dữ liệu thật cần bật giới hạn request tại reverse proxy/CDN/WAF.
 
 Roadmap chi tiết, có phân biệt tính năng đã triển khai và phần còn thiếu, nằm tại [docs/lo-trinh-tinh-nang.md](docs/lo-trinh-tinh-nang.md). Phần bổ sung thiết thực tiếp theo là nhập CSV có kiểm tra/xem trước và mở rộng báo cáo theo thời gian.
 

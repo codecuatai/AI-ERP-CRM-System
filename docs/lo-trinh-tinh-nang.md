@@ -27,7 +27,7 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 
-AI tạo bản nháp email dựa trên hồ sơ, các tương tác gần đây và mục tiêu chăm sóc. Nhân viên có thể sửa, sao chép hoặc bỏ bản nháp.
+AI tạo bản nháp email theo mục tiêu chăm sóc và dữ liệu được phép dùng trong luồng hiện tại; nhân viên có thể sửa, sao chép hoặc bỏ bản nháp. Không nên mô tả rằng tính năng luôn sử dụng lịch sử tương tác gần đây: email draft giới hạn ngữ cảnh theo service và consent.
 
 - Chọn mục tiêu: cảm ơn, hỏi thăm, nhắc lịch, gửi báo giá hoặc chăm sóc lại.
 - Cho phép chọn giọng văn và độ dài.

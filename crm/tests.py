@@ -95,6 +95,15 @@ class PublicLeadRequestTests(TestCase):
         self.assertEqual(Interaction.objects.count(), 1)
         self.assertEqual(Customer.objects.get().full_name, "Tên đã lưu")
 
+    def test_repeat_email_reuses_customer_case_insensitively(self):
+        Customer.objects.create(full_name="Tên đã lưu", email="MINHANH@EXAMPLE.COM", source="Admin")
+        response = self.client.post(self.url, self.payload)
+
+        self.assertRedirects(response, reverse("crm:lead_request_success"))
+        self.assertEqual(Customer.objects.count(), 1)
+        self.assertEqual(LeadRequest.objects.count(), 1)
+        self.assertEqual(Customer.objects.get().full_name, "Tên đã lưu")
+
     def test_honeypot_submission_is_rejected(self):
         payload = {**self.payload, "website": "spam"}
         response = self.client.post(self.url, payload)

@@ -2,9 +2,11 @@
 {% load humanize %}
 {% block title %}Tổng quan{% endblock %}
 {% block content %}
-<section class="page-heading">
-  <div><div class="eyebrow">TRUNG TÂM CÔNG VIỆC</div><h1>Chào {{ request.user.get_username }}</h1><p>Tổng quan nhanh về khách hàng và các yêu cầu cần được phản hồi.</p></div>
-  <a class="button-primary" href="{% url 'crm:customers' %}">Mở danh sách khách hàng <span aria-hidden="true">→</span></a>
+<section class="dashboard-hero" aria-labelledby="dashboard-title">
+  <div class="dashboard-hero-copy"><span class="dashboard-hero-kicker"><span aria-hidden="true">✦</span> KHÔNG GIAN LÀM VIỆC CRM</span><h1 id="dashboard-title">Chào {{ request.user.get_username }}<span>.</span></h1><p>Mọi khách hàng và việc cần chăm sóc, gói gọn trong một nơi.</p>
+    <div class="dashboard-hero-actions"><a class="dashboard-hero-primary" href="{% url 'crm:priority_customers' %}">Xem khách cần ưu tiên <span aria-hidden="true">→</span></a><a class="dashboard-hero-secondary" href="{% url 'crm:customers' %}">Mở danh bạ</a></div>
+  </div>
+  <div class="dashboard-hero-glance" aria-label="Tóm tắt công việc"><div class="hero-glance-item"><span>Việc đang mở</span><strong>{{ open_task_count }}</strong></div><div class="hero-glance-divider"></div><div class="hero-glance-item hero-glance-alert"><span>Quá hạn</span><strong>{{ overdue_task_count }}</strong></div><p>Ưu tiên xử lý việc quá hạn trước.</p></div>
 </section>
 
 <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chỉ số CRM">
