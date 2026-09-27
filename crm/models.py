@@ -1,11 +1,22 @@
+from typing import TYPE_CHECKING
+
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.snippets.models import register_snippet
 
+if TYPE_CHECKING:
+    from django.db.models.fields.related_descriptors import RelatedManager
+
 
 @register_snippet
 class Customer(models.Model):
+    if TYPE_CHECKING:
+        interactions: RelatedManager["Interaction"]
+        ai_analyses: RelatedManager["AIAnalysis"]
+        lead_requests: RelatedManager["LeadRequest"]
+
     class Segment(models.TextChoices):
         UNCLASSIFIED = "UNCLASSIFIED", "Chưa phân loại"
         VIP = "VIP", "VIP"
@@ -81,6 +92,9 @@ class AIAnalysis(models.Model):
     provider = models.CharField("Nguồn phân tích", max_length=30, default="rules")
     created_at = models.DateTimeField("Thời điểm phân tích", auto_now_add=True)
 
+    if TYPE_CHECKING:
+        def get_segment_display(self) -> str: ...
+
     panels = [
         FieldPanel("customer"), FieldPanel("segment", read_only=True),
         FieldPanel("score", read_only=True), FieldPanel("summary", read_only=True),
@@ -98,6 +112,9 @@ class AIAnalysis(models.Model):
 
 @register_snippet
 class LeadRequest(models.Model):
+    if TYPE_CHECKING:
+        follow_ups: RelatedManager["LeadFollowUp"]
+
     class SolutionInterest(models.TextChoices):
         CRM = "CRM", "CRM & chăm sóc khách hàng"
         ERP = "ERP", "Quản lý kho & bán hàng"
@@ -132,6 +149,11 @@ class LeadRequest(models.Model):
     ai_processing_consent_version = models.CharField("Phiên bản đồng ý phân tích AI", max_length=20, default="v1", editable=False)
     created_at = models.DateTimeField("Thời điểm gửi", auto_now_add=True)
 
+    if TYPE_CHECKING:
+        def get_solution_interest_display(self) -> str: ...
+
+        def get_status_display(self) -> str: ...
+
     panels = [
         FieldPanel("customer"),
         FieldPanel("solution_interest"),
@@ -152,3 +174,90 @@ class LeadRequest(models.Model):
 
     def __str__(self):
         return f"{self.customer.full_name} — {self.get_status_display()} ({self.created_at:%Y-%m-%d})"
+
+
+class LeadFollowUp(models.Model):
+    if TYPE_CHECKING:
+        def get_status_display(self) -> str: ...
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Đang chuẩn bị"
+        SENT = "SENT", "Đã gửi"
+        FAILED = "FAILED", "Gửi thất bại"
+        ANSWERED = "ANSWERED", "Đã phản hồi"
+        EXPIRED = "EXPIRED", "Hết hạn"
+        REVOKED = "REVOKED", "Đã thu hồi"
+
+    lead_request = models.ForeignKey(
+        LeadRequest,
+        on_delete=models.CASCADE,
+        related_name="follow_ups",
+        verbose_name="Yêu cầu tư vấn",
+    )
+    question_text = models.TextField("Nội dung email hỏi thêm", max_length=2000)
+    token_hash = models.CharField("Mã truy cập đã mã hóa", max_length=64, blank=True, editable=False)
+    status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.PENDING)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="lead_follow_ups",
+        verbose_name="Nhân viên gửi",
+    )
+    created_at = models.DateTimeField("Ngày tạo", auto_now_add=True)
+    sent_at = models.DateTimeField("Ngày gửi", null=True, blank=True)
+    expires_at = models.DateTimeField("Link hết hạn lúc")
+    responded_at = models.DateTimeField("Ngày khách phản hồi", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Yêu cầu bổ sung thông tin"
+        verbose_name_plural = "Yêu cầu bổ sung thông tin"
+
+    def __str__(self):
+        return f"Bổ sung thông tin — {self.lead_request.customer.full_name} ({self.created_at:%Y-%m-%d})"
+
+
+class LeadFollowUpResponse(models.Model):
+    if TYPE_CHECKING:
+        def get_implementation_timing_display(self) -> str: ...
+
+    class ImplementationTiming(models.TextChoices):
+        EXPLORING = "EXPLORING", "Đang tìm hiểu"
+        WITHIN_MONTH = "WITHIN_MONTH", "Trong vòng 1 tháng"
+        ONE_TO_THREE_MONTHS = "ONE_TO_THREE_MONTHS", "Trong 1–3 tháng"
+        LATER = "LATER", "Sau 3 tháng"
+
+    follow_up = models.OneToOneField(
+        LeadFollowUp,
+        on_delete=models.CASCADE,
+        related_name="response",
+        verbose_name="Yêu cầu bổ sung",
+    )
+    current_challenge = models.TextField("Khó khăn hiện tại", max_length=2000)
+    desired_outcome = models.TextField("Kết quả mong muốn", max_length=2000, blank=True)
+    implementation_timing = models.CharField(
+        "Thời điểm dự kiến",
+        max_length=24,
+        choices=ImplementationTiming.choices,
+        blank=True,
+    )
+    preferred_contact_time = models.CharField("Thời gian tiện liên hệ", max_length=120, blank=True)
+    ai_processing_consent = models.BooleanField("Đồng ý phân tích AI", default=False)
+    ai_processing_consent_at = models.DateTimeField("Thời điểm đồng ý AI", null=True, blank=True, editable=False)
+    ai_processing_consent_version = models.CharField(
+        "Phiên bản đồng ý AI",
+        max_length=20,
+        default="followup-v1",
+        editable=False,
+    )
+    submitted_at = models.DateTimeField("Thời điểm gửi phản hồi", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-submitted_at"]
+        verbose_name = "Phản hồi bổ sung của khách hàng"
+        verbose_name_plural = "Phản hồi bổ sung của khách hàng"
+
+    def __str__(self):
+        return f"Phản hồi — {self.follow_up.lead_request.customer.full_name} ({self.submitted_at:%Y-%m-%d})"

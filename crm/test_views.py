@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -7,7 +7,7 @@ from crm.models import AIAnalysis, Customer, LeadRequest
 
 class CRMViewTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user(
+        self.user = User.objects.create_user(
             username="crm-tester",
             password="test-password-123",
         )

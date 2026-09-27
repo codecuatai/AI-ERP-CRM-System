@@ -28,15 +28,16 @@ Các file quan trọng:
 
 | File/thư mục | Vai trò |
 |---|---|
-| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `AIAnalysis` |
-| `crm/forms.py` | Form yêu cầu tư vấn công khai, consent và honeypot |
-| `crm/views.py` | Form công khai, Dashboard, hồ sơ khách hàng, endpoint phân tích |
+| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `LeadFollowUp`, `LeadFollowUpResponse`, `AIAnalysis` |
+| `crm/forms.py` | Form yêu cầu tư vấn, soạn email follow-up, phản hồi và consent |
+| `crm/views.py` | Form công khai/follow-up, gửi email, Dashboard, hồ sơ và endpoint phân tích |
 | `crm/services/ai_service.py` | Gemini và `_rule_based_analysis()` |
 | `crm/templates/crm/` | Form công khai, Dashboard, hồ sơ và layout |
 | `crm/migrations/` | Migration database phải được commit |
 | `crm/test_*.py`, `crm/tests.py` | Test AI, view và form lead |
 | `crm/management/commands/seed_crm_data.py` | Dữ liệu demo |
 | `config/settings/dev.py` | SQLite, `.env`, Gemini, môi trường local |
+| `PUBLIC_SITE_URL`, `EMAIL_*` | Domain link phản hồi và cấu hình SMTP; local mặc định in email ra terminal |
 | `tailwind/` | Nguồn Tailwind và lệnh build CSS |
 | `.github/workflows/ci.yml` | CI cho backend và frontend |
 | `README.md` | Tài liệu người dùng và mô tả dự án |

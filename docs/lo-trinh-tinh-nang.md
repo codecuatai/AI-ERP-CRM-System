@@ -9,6 +9,7 @@ Theo README và mã nguồn hiện tại, dự án đã có:
 - Quản lý khách hàng bằng Wagtail: thông tin liên hệ, công ty, nguồn, ghi chú, chi tiêu và trạng thái.
 - Landing page giới thiệu giải pháp với form tư vấn công khai: phân loại nhóm giải pháp, thu nhu cầu, tách consent tiếp nhận/phản hồi và consent AI tùy chọn; CRM lưu riêng dấu thời gian/phiên bản. Lead không đồng ý AI vẫn được tiếp nhận, nhưng phân tích bị chặn.
 - Ghi lịch sử tương tác: email, điện thoại, gặp mặt hoặc hình thức khác.
+- Nhân viên chủ động gửi email hỏi thêm cho lead; khách trả lời form qua link có hạn dùng, dùng một lần và có thể thu hồi. CRM lưu phản hồi trong hồ sơ và ghi nhận riêng consent AI cho từng phản hồi.
 - Dashboard tổng quan; danh bạ khách hàng tìm kiếm/lọc/phân trang riêng; hộp thư yêu cầu tư vấn tìm kiếm, lọc trạng thái và cập nhật tiến độ riêng.
 - Hồ sơ khách hàng với timeline tương tác và lịch sử phân tích.
 - Phân tích từng khách hàng bằng Gemini hoặc rules fallback; lưu phân khúc, điểm, nhận định và đề xuất.
@@ -78,7 +79,7 @@ Chỉ nên biểu diễn chỉ số mà dữ liệu hiện có hỗ trợ; chưa
 
 | Giai đoạn | Nội dung | Kết quả nhìn thấy khi demo |
 |---|---|---|
-| Đã có | Form tiếp nhận công khai và ghi nhận đồng ý | Khách gửi yêu cầu; nhân viên xem trong Wagtail và CRM |
+| Đã có | Form tiếp nhận, email follow-up do nhân viên gửi và form phản hồi bảo mật | Nhân viên gửi link; khách bổ sung thông tin; CRM lưu phản hồi và consent |
 | 1 | Việc chăm sóc, hạn hoàn thành và trạng thái | Tạo việc từ hồ sơ khách hàng; xem việc hôm nay/quá hạn |
 | 2 | Trợ lý soạn email có người duyệt | AI tạo bản nháp theo ngữ cảnh; nhân viên duyệt trước khi ghi nhận đã gửi |
 | 3 | Hàng đợi khách hàng cần ưu tiên | Dashboard giải thích khách hàng nào cần chăm sóc trước và vì sao |

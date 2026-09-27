@@ -1,0 +1,32 @@
+{% extends "crm/public_base.html" %}
+{% block title %}{% if state == "form" %}Bổ sung thông tin tư vấn{% else %}Thông tin biểu mẫu{% endif %}{% endblock %}
+{% block content %}
+<section class="public-card follow-up-public-card">
+  {% if state == "form" %}
+    <div class="public-card-heading">
+      <span class="public-eyebrow">BỔ SUNG THÔNG TIN TƯ VẤN</span>
+      <h1>Chia sẻ thêm về nhu cầu của bạn</h1>
+      <p>{{ follow_up.question_text }}</p>
+    </div>
+    <form method="post" class="public-follow-up-form">
+      {% csrf_token %}
+      {% for field in form %}
+        {% if field.name != "ai_processing_consent" %}
+          <div class="form-field"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span>*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+      {% endfor %}
+      <div class="consent-box consent-optional"><label class="consent-label" for="id_ai_processing_consent"><span class="consent-checkbox">{{ form.ai_processing_consent }}</span><span>{{ form.ai_processing_consent.label }}</span></label>{% for error in form.ai_processing_consent.errors %}<p class="field-error">{{ error }}</p>{% endfor %}<p class="consent-explainer">Lựa chọn này không ảnh hưởng đến việc nhân viên tiếp nhận và phản hồi. Xem <a href="{% url 'privacy_notice' %}" target="_blank" rel="noopener">Thông báo quyền riêng tư</a>.</p></div>
+      <button class="button-primary form-submit" type="submit">Gửi thông tin bổ sung <span aria-hidden="true">→</span></button>
+      <p class="privacy-note">Link này dùng một lần và sẽ hết hạn vào {{ follow_up.expires_at|date:"d/m/Y · H:i" }}.</p>
+    </form>
+  {% elif state == "answered" %}
+    <div class="success-card" role="status"><span class="success-icon" aria-hidden="true">✓</span><span class="public-eyebrow">ĐÃ GỬI PHẢN HỒI</span><h1>Cảm ơn bạn đã bổ sung thông tin</h1><p>Nhân viên phụ trách sẽ xem phản hồi và liên hệ lại nếu cần.</p></div>
+  {% elif state == "expired" %}
+    <div class="follow-up-link-state" role="status"><span class="public-eyebrow">LINK ĐÃ HẾT HẠN</span><h1>Biểu mẫu không còn nhận phản hồi</h1><p>Vui lòng liên hệ nhân viên đã gửi email để được cấp link mới.</p></div>
+  {% elif state == "unavailable" %}
+    <div class="follow-up-link-state" role="status"><span class="public-eyebrow">LINK KHÔNG KHẢ DỤNG</span><h1>Biểu mẫu đã đóng</h1><p>Link đã được thu hồi hoặc không còn nhận phản hồi. Vui lòng liên hệ lại nhân viên phụ trách.</p></div>
+  {% else %}
+    <div class="follow-up-link-state" role="status"><span class="public-eyebrow">KHÔNG TÌM THẤY BIỂU MẪU</span><h1>Link không hợp lệ</h1><p>Kiểm tra lại đường dẫn trong email hoặc liên hệ nhân viên đã gửi biểu mẫu.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

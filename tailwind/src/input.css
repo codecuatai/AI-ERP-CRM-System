@@ -192,6 +192,22 @@
   .consent-granted { @apply bg-emerald-50 text-emerald-700; }
   .consent-not-granted { @apply bg-slate-200 text-slate-600; }
   .lead-card-body p { @apply mb-0 mt-1.5 whitespace-pre-line text-xs leading-relaxed text-slate-700; }
+  .lead-card-actions { @apply mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3; }
+  .follow-up-layout { @apply grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(320px,5fr)]; }
+  .follow-up-original { @apply mx-5 rounded-lg bg-slate-50 p-4; }
+  .follow-up-original p { @apply mb-0 mt-2 whitespace-pre-line text-xs leading-relaxed text-slate-600; }
+  .follow-up-compose-form { @apply p-5; }
+  .follow-up-actions { @apply flex flex-wrap gap-2; }
+  .follow-up-history { @apply divide-y divide-slate-100 px-5; }
+  .follow-up-history-item { @apply py-4 first:pt-0; }
+  .follow-up-history-heading { @apply flex items-start justify-between gap-3 text-xs; }
+  .follow-up-history-heading strong { @apply text-slate-700; }
+  .follow-up-history-heading time, .follow-up-history-item > small { @apply text-[10px] text-slate-400; }
+  .follow-up-link-actions { @apply mt-2 flex flex-wrap items-center justify-between gap-2; }
+  .follow-up-history-item > p { @apply my-2 whitespace-pre-line text-xs leading-relaxed text-slate-600; }
+  .follow-up-response-summary { @apply mt-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3; }
+  .follow-up-response-summary p { @apply mb-1 mt-2 whitespace-pre-line text-xs leading-relaxed text-slate-700; }
+  .follow-up-response-summary small { @apply text-[10px] text-slate-500; }
   .lead-status-form { @apply ml-auto flex-wrap; }
   .status-select { @apply min-h-9 rounded-lg border border-slate-200 bg-white px-3 text-[11px] text-slate-700 outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-50; }
   @media (max-width: 639px) {
@@ -208,6 +224,11 @@
   .public-eyebrow { @apply text-[10px] font-bold tracking-[.16em] text-brand; }
   .public-card h1 { @apply mb-2 mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl; }
   .public-card-heading p, .success-card > p { @apply m-0 text-sm leading-relaxed text-slate-500; }
+  .follow-up-public-card { @apply max-w-2xl; }
+  .public-follow-up-form { @apply space-y-5; }
+  .follow-up-link-state { @apply py-8 text-center; }
+  .follow-up-link-state h1 { @apply mb-2 mt-3 text-2xl font-semibold tracking-tight text-ink; }
+  .follow-up-link-state p { @apply mx-auto max-w-lg text-sm leading-relaxed text-slate-500; }
   .public-form { @apply flex flex-col gap-5; }
   .form-grid { @apply grid grid-cols-1 gap-5 sm:grid-cols-2; }
   .form-field { @apply min-w-0; }

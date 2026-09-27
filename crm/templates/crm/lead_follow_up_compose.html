@@ -1,0 +1,42 @@
+{% extends "crm/base.html" %}
+{% block title %}Gửi form bổ sung{% endblock %}
+{% block content %}
+<nav aria-label="Điều hướng" class="breadcrumb-wrap"><a href="{% url 'crm:lead_requests' %}">Yêu cầu tư vấn</a><span aria-hidden="true">/</span><span>Gửi form bổ sung</span></nav>
+
+<section class="page-heading">
+  <div><div class="eyebrow">LIÊN HỆ KHÁCH HÀNG</div><h1>Gửi form hỏi thêm</h1><p>Email chỉ được gửi khi bạn xác nhận bên dưới.</p></div>
+  <a class="button-secondary" href="{% url 'crm:lead_requests' %}">← Quay lại danh sách</a>
+</section>
+
+<div class="follow-up-layout">
+  <section class="content-card">
+    <div class="content-card-heading"><div><h2>{{ lead_request.customer.full_name }}</h2><p>{{ lead_request.customer.company|default:"Chưa cung cấp công ty" }} · {{ lead_request.customer.email }}</p></div><span class="request-status status-{{ lead_request.status|lower }}">{{ lead_request.get_status_display }}</span></div>
+    <div class="follow-up-original"><span class="eyebrow">YÊU CẦU BAN ĐẦU · {{ lead_request.get_solution_interest_display }}</span><p>{{ lead_request.request_text|linebreaksbr }}</p></div>
+
+    <form method="post" class="follow-up-compose-form">
+      {% csrf_token %}
+      <div class="form-field"><label class="form-label" for="id_question_text">{{ form.question_text.label }}</label>{{ form.question_text }}{% for error in form.question_text.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>
+      <p class="page-hint">Email gửi đến {{ lead_request.customer.email }} sẽ có link riêng, hết hạn sau {{ follow_up_ttl_days }} ngày. Môi trường local chỉ in email ra terminal.</p>
+      <div class="follow-up-actions"><button class="button-primary" type="submit">Gửi email hỏi thêm</button><a class="button-secondary" href="{% url 'crm:lead_requests' %}">Hủy</a></div>
+    </form>
+  </section>
+
+  <section class="content-card">
+    <div class="content-card-heading"><div><h2>Lịch sử hỏi thêm</h2><p>Các link đã gửi và phản hồi nhận được.</p></div><span class="count-pill">{{ follow_ups|length }} lần</span></div>
+    <div class="follow-up-history">
+      {% for item in follow_ups %}
+        <article class="follow-up-history-item">
+          <div class="follow-up-history-heading"><strong>{{ item.get_status_display }}</strong><time>{% if item.sent_at %}{{ item.sent_at|date:"d/m/Y · H:i" }}{% else %}{{ item.created_at|date:"d/m/Y · H:i" }}{% endif %}</time></div>
+          <p>{{ item.question_text }}</p>
+          {% if item.response %}
+            <div class="follow-up-response-summary"><span class="eyebrow">PHẢN HỒI KHÁCH · {{ item.response.submitted_at|date:"d/m/Y · H:i" }}</span><p><strong>Khó khăn:</strong> {{ item.response.current_challenge|linebreaksbr }}</p><p><strong>Kết quả mong muốn:</strong> {{ item.response.desired_outcome|default:"Chưa cung cấp"|linebreaksbr }}</p><small>Dự kiến: {{ item.response.get_implementation_timing_display|default:"Chưa xác định" }} · Liên hệ: {{ item.response.preferred_contact_time|default:"Chưa cung cấp" }} · {% if item.response.ai_processing_consent %}Đồng ý AI{% else %}Chưa đồng ý AI{% endif %}</small></div>
+          {% endif %}
+          {% if item.status == "SENT" %}<div class="follow-up-link-actions"><small>Link hết hạn: {{ item.expires_at|date:"d/m/Y · H:i" }}</small><form method="post" action="{% url 'crm:revoke_lead_follow_up' lead_request.pk item.pk %}">{% csrf_token %}<button class="text-link" type="submit">Thu hồi link</button></form></div>{% endif %}
+        </article>
+      {% empty %}
+        <div class="empty-state compact"><span class="empty-icon">✉</span><strong>Chưa gửi form bổ sung</strong><p>Soạn câu hỏi bên trái rồi gửi khi đã sẵn sàng.</p></div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

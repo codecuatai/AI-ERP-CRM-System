@@ -8,14 +8,16 @@
 
 Trong bối cảnh này, khách hàng trong database là các doanh nghiệp đang tìm hiểu, mua hoặc sử dụng giải pháp chuyển đổi số. Nhân viên kinh doanh cần theo dõi nhu cầu, lịch sử trao đổi, giá trị đã chi tiêu và dấu hiệu cần chăm sóc tiếp. AI hỗ trợ trả lời câu hỏi: **khách hàng nào cần được ưu tiên và bước chăm sóc tiếp theo nên là gì?**
 
-Khách chủ động gửi nhu cầu qua form công khai; hệ thống lưu yêu cầu và tạo hồ sơ khách hàng nếu email chưa có. Nhân viên làm việc theo các khu vực riêng: **Tổng quan** để xem việc cần chú ý, **Yêu cầu tư vấn** để tiếp nhận và cập nhật trạng thái, **Khách hàng** để tìm hồ sơ và xem lịch sử. Wagtail CMS dùng để quản lý dữ liệu chi tiết. Từ hồ sơ, nhân viên có thể bấm **Phân tích ngay** nếu khách đã đồng ý xử lý AI. Phần phân tích gọi Google Gemini khi có API key; nếu API không có hoặc gặp lỗi, hệ thống tự chuyển sang quy tắc cục bộ để ứng dụng vẫn hoạt động.
+Khách chủ động gửi nhu cầu qua form công khai; hệ thống lưu yêu cầu và tạo hồ sơ khách hàng nếu email chưa có. Nhân viên làm việc theo các khu vực riêng: **Tổng quan** để xem việc cần chú ý, **Yêu cầu tư vấn** để tiếp nhận và cập nhật trạng thái, **Khách hàng** để tìm hồ sơ và xem lịch sử. Từ một lead, nhân viên có thể chủ động gửi email kèm link bảo mật để khách bổ sung thông tin; phản hồi được lưu vào CRM và chỉ được đưa vào phân tích AI nếu khách đồng ý riêng. Wagtail CMS dùng để quản lý dữ liệu chi tiết. Phần phân tích gọi Google Gemini khi có API key; nếu API không có hoặc gặp lỗi, hệ thống tự chuyển sang quy tắc cục bộ để ứng dụng vẫn hoạt động.
 
 Đây là một đồ án tập trung vào luồng CRM cốt lõi, không phải hệ thống ERP hay hệ thống quản lý toàn bộ quy trình triển khai chuyển đổi số. Phạm vi chính là:
 
 ```text
-Khách gửi form → Wagtail nhận LeadRequest → Nhân viên xem hồ sơ
-                                             ↓
-                                  Phân tích AI → Đề xuất chăm sóc
+Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
+                                      ↓
+                    Khách trả lời link bảo mật → CRM lưu phản hồi
+                                      ↓
+                       AI phân tích nếu khách đã consent riêng
 ```
 
 ### Mục tiêu của dự án
@@ -34,6 +36,7 @@ Khách gửi form → Wagtail nhận LeadRequest → Nhân viên xem hồ sơ
 - [Bắt đầu nhanh](#bắt-đầu-nhanh)
 - [Truy cập ứng dụng](#truy-cập-ứng-dụng)
 - [Cấu hình Gemini tùy chọn](#cấu-hình-gemini-tùy-chọn)
+- [Gửi email hỏi thêm thông tin](#gửi-email-hỏi-thêm-thông-tin)
 - [Demo trong 5 phút](#demo-trong-5-phút)
 - [Dữ liệu mẫu](#dữ-liệu-mẫu)
 - [Cách phân tích AI hoạt động](#cách-phân-tích-ai-hoạt-động)
@@ -54,6 +57,9 @@ Khách gửi form → Wagtail nhận LeadRequest → Nhân viên xem hồ sơ
 - **Consent tách mục đích:** đồng ý tiếp nhận/phản hồi là bắt buộc; đồng ý AI là tùy chọn, được lưu riêng cùng thời điểm/phiên bản. Lead không đồng ý AI vẫn được tiếp nhận nhưng không thể chạy phân tích.
 - **Thông báo quyền riêng tư:** có trang riêng nêu dữ liệu, mục đích, AI/Gemini, thời hạn demo và cách liên hệ; cấu hình đơn vị thật trước khi thu dữ liệu thật.
 - **Quản lý tương tác:** ghi lại email, điện thoại, gặp mặt hoặc hình thức khác; mỗi tương tác thuộc về một khách hàng.
+- **Email hỏi thêm thông tin:** nhân viên chủ động gửi form follow-up từ lead; khách trả lời bằng link bảo mật, hết hạn và chỉ dùng để gửi một lần.
+- **Lưu phản hồi theo lead:** CRM lưu câu trả lời, trạng thái email và hiển thị phản hồi trên trang yêu cầu/hồ sơ khách hàng.
+- **Consent AI riêng cho phản hồi:** câu trả lời bổ sung chỉ được AI phân tích nếu khách đồng ý ngay trên form đó.
 - **Dashboard:** hiển thị tổng khách hàng đang hoạt động, số khách hàng VIP, số khách hàng chưa phân tích và tổng chi tiêu.
 - **Tìm kiếm và lọc:** tìm theo tên, email, công ty; lọc theo phân khúc AI.
 - **Hồ sơ khách hàng:** xem thông tin liên hệ, tổng chi tiêu, timeline trao đổi, kết quả AI mới nhất và lịch sử các lần phân tích trước.
@@ -70,6 +76,8 @@ Các phân khúc được hỗ trợ: **Chưa phân loại**, **VIP**, **Tiềm 
 | `Customer` | Hồ sơ khách hàng | Thông tin liên hệ, công ty, nguồn, ghi chú, tổng chi tiêu, trạng thái, phân khúc và điểm AI mới nhất |
 | `Interaction` | Lịch sử trao đổi | Khách hàng, hình thức, chủ đề, nội dung và thời điểm; quan hệ nhiều-một với `Customer` |
 | `LeadRequest` | Yêu cầu gửi từ form công khai | Nhóm giải pháp, nhu cầu, trạng thái, consent tiếp nhận và consent AI riêng kèm dấu thời gian/phiên bản |
+| `LeadFollowUp` | Email hỏi thêm do nhân viên chủ động gửi | Câu hỏi, nhân viên gửi, hash token, hạn trả lời, trạng thái gửi/phản hồi/thu hồi |
+| `LeadFollowUpResponse` | Câu trả lời từ form follow-up | Khó khăn, kết quả mong muốn, thời điểm triển khai, thời gian liên hệ và consent AI riêng |
 | `AIAnalysis` | Lịch sử phân tích | Khách hàng, phân khúc, điểm, nhận định, đề xuất, nguồn phân tích và thời điểm; lưu lại mỗi lần bấm phân tích |
 
 `Customer.ai_segment` và `Customer.ai_score` lưu kết quả mới nhất để Dashboard lọc/hiển thị nhanh. Các bản ghi `AIAnalysis` giữ lịch sử cũ để có thể xem lại.
@@ -158,6 +166,27 @@ Có thể lấy API key tại [Google AI Studio](https://aistudio.google.com/). 
 
 Không có `GEMINI_API_KEY` cũng không sao: phân tích vẫn chạy bằng rules fallback và kết quả vẫn được lưu.
 
+## Gửi email hỏi thêm thông tin
+
+Mặc định môi trường phát triển dùng `django.core.mail.backends.console.EmailBackend`, nên không gửi email thật. Khi nhân viên bấm **Gửi form hỏi thêm** tại `/crm/yeu-cau/`, email được in trong terminal chạy Django. Mở URL trong email để thử form trả lời.
+
+Để gửi email thật, cấu hình trong `.env`:
+
+```dotenv
+PUBLIC_SITE_URL=https://crm.example.com
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your-smtp-user
+EMAIL_HOST_PASSWORD=your-smtp-password
+EMAIL_USE_TLS=true
+EMAIL_USE_SSL=false
+DEFAULT_FROM_EMAIL=DigiFlow <no-reply@example.com>
+LEAD_FOLLOW_UP_LINK_TTL_DAYS=7
+```
+
+Thay giá trị mẫu bằng domain HTTPS và thông tin SMTP của đơn vị; không commit thông tin xác thực. Nhân viên phải chủ động bấm gửi—khách nộp form landing page không tự nhận email follow-up. Link chỉ nhận một phản hồi, hết hạn theo `LEAD_FOLLOW_UP_LINK_TTL_DAYS`, và có thể thu hồi trước khi khách trả lời. `PUBLIC_SITE_URL` phải là domain do đơn vị vận hành kiểm soát.
+
 ## Demo trong 5 phút
 
 1. Mở [Landing page](http://127.0.0.1:8000/) và gửi yêu cầu ở khu vực liên hệ cuối trang.
@@ -165,7 +194,9 @@ Không có `GEMINI_API_KEY` cũng không sao: phân tích vẫn chạy bằng ru
 3. Mở [Hộp thư yêu cầu tư vấn](http://127.0.0.1:8000/crm/yeu-cau/) để xem yêu cầu, nhóm giải pháp khách quan tâm và cập nhật trạng thái.
 4. Mở hồ sơ khách hàng từ yêu cầu hoặc tìm trong [Danh sách khách hàng](http://127.0.0.1:8000/crm/customers/); lịch sử trao đổi và phân tích nằm trong hồ sơ riêng.
 5. Nếu khách đã bật đồng ý phân tích AI trên form, chọn **Phân tích ngay**. Nếu không, yêu cầu vẫn được lưu và nhân viên vẫn có thể phản hồi, nhưng phân tích AI sẽ không chạy.
-6. Kiểm tra phân khúc, điểm tiềm năng, nhận định và đề xuất hành động.
+6. Trên lead, chọn **Gửi form hỏi thêm**, chỉnh nội dung email nếu cần rồi gửi. Khi phát triển local, email được in ở terminal; mở link để thử form phản hồi.
+7. Phản hồi xuất hiện trong lịch sử yêu cầu và timeline khách hàng. Khách có thể chọn consent AI riêng cho câu trả lời follow-up.
+8. Chọn **Phân tích ngay** để xem phân khúc, điểm tiềm năng, nhận định và đề xuất hành động.
 
 Để kiểm tra fallback, để trống `GEMINI_API_KEY`, khởi động lại server và phân tích lại.
 
@@ -184,7 +215,7 @@ Lệnh seed dùng email và chủ đề tương tác để tránh tạo trùng k
 
 Khi nhân viên bấm **Phân tích ngay**:
 
-1. Với lead từ form công khai, chỉ những yêu cầu đã bật consent AI mới được đưa vào phân tích; không đồng ý thì backend chặn cả thao tác phân tích. Dữ liệu gửi Gemini chỉ gồm nhóm giải pháp và nội dung yêu cầu được đồng ý, không gồm tên/email/số điện thoại.
+1. Với lead từ form công khai, chỉ yêu cầu ban đầu hoặc phản hồi follow-up có consent AI riêng mới được đưa vào phân tích. Prompt không gồm tên/email/số điện thoại hoặc khung giờ liên hệ; nội dung khách tự nhập vẫn có thể chứa thông tin nhận diện.
 2. Với hồ sơ nội bộ không có lead công khai, hệ thống dùng tối đa 20 tương tác gần nhất theo luồng demo.
 3. Nếu có `GEMINI_API_KEY`, dữ liệu được gửi đến model trong `GEMINI_MODEL` với yêu cầu trả về JSON.
 4. Kết quả Gemini được kiểm tra: phân khúc phải hợp lệ, điểm được giới hạn trong khoảng 0–100, nội dung được cắt theo giới hạn lưu trữ.
@@ -208,11 +239,11 @@ Rules chỉ là cơ chế dự phòng minh họa; Gemini có thể trả thêm c
 |---|---|
 | `config/` | Cấu hình Django/Wagtail và URL |
 | `crm/` | Model, form, view, dịch vụ AI, test và lệnh seed |
-| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `AIAnalysis` |
-| `crm/forms.py` | Form yêu cầu tư vấn công khai và kiểm tra đồng ý/honeypot |
+| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `LeadFollowUp`, `LeadFollowUpResponse`, `AIAnalysis` |
+| `crm/forms.py` | Form tư vấn công khai, email follow-up và phản hồi của khách |
 | `crm/migrations/` | Migration database của dự án |
-| `crm/test_*.py`, `crm/tests.py` | Test AI, view và form tiếp nhận lead |
-| `crm/templates/crm/` | Landing page công khai, form tư vấn và giao diện CRM nội bộ |
+| `crm/test_*.py`, `crm/tests.py` | Test AI, view, form lead và follow-up |
+| `crm/templates/crm/` | Landing page, CRM, email follow-up và form phản hồi |
 | `crm/static/crm/` | CSS và JavaScript; Django phục vụ trực tiếp |
 | `tailwind/` | Mã nguồn CSS Tailwind và công cụ build giao diện (tùy chọn) |
 | `docs/` | Dàn ý báo cáo và roadmap tính năng |
@@ -223,14 +254,14 @@ Rules chỉ là cơ chế dự phòng minh họa; Gemini có thể trả thêm c
 day6AIERPandCRM/
 ├── config/                       # Settings, URL, ASGI/WSGI
 ├── crm/
-│   ├── models.py                 # Customer, Interaction, LeadRequest, AIAnalysis
-│   ├── forms.py                  # Form yêu cầu tư vấn công khai
-│   ├── views.py                  # Form công khai, thông báo quyền riêng tư, CRM và phân tích
+│   ├── models.py                 # Customer, Interaction, LeadRequest, FollowUp, AIAnalysis
+│   ├── forms.py                  # Form tư vấn, email follow-up và phản hồi
+│   ├── views.py                  # CRM, gửi email và form trả lời bảo mật
 │   ├── migrations/               # Migration database
 │   ├── services/ai_service.py    # Gemini và rules fallback
 │   ├── management/commands/      # Lệnh seed dữ liệu mẫu
 │   ├── test_*.py, tests.py       # Test tự động
-│   ├── templates/crm/            # Landing page, form công khai, Dashboard, hồ sơ
+│   ├── templates/crm/            # Landing page, CRM, email và form follow-up
 │   └── static/crm/               # CSS đã build và JavaScript mobile menu
 ├── tailwind/                     # Nguồn CSS và công cụ build Tailwind
 │   ├── src/input.css             # CSS nguồn: component và utility Tailwind
@@ -289,7 +320,7 @@ Khách gửi form → Customer + LeadRequest + Interaction → Nhân viên duy�
                                       AIAnalysis → Dashboard / hồ sơ khách hàng
 ```
 
-Form tách consent bắt buộc để tiếp nhận/phản hồi khỏi consent AI tùy chọn; lưu riêng thời điểm và phiên bản. Gemini chỉ nhận nội dung nhu cầu và nhóm giải pháp của những lead đã đồng ý, không gửi tên/email/số điện thoại. Form không tự chạy AI, gửi email hay theo dõi hành vi. Google nêu rõ điều khoản dùng dữ liệu khác nhau giữa dịch vụ miễn phí và trả phí; dịch vụ miễn phí có thể dùng nội dung gửi lên để cải thiện dịch vụ và cho người đánh giá xử lý nội dung. Vì vậy không nhập dữ liệu nhạy cảm, cá nhân hoặc bí mật vào prompt miễn phí; xem [điều khoản Gemini API](https://ai.google.dev/gemini-api/terms). Trang `/chinh-sach-du-lieu/` là thông báo mẫu, chưa phải chứng nhận tuân thủ pháp luật.
+Form tách consent tiếp nhận/phản hồi khỏi consent AI tùy chọn; consent cho câu trả lời follow-up được hỏi riêng. Nộp form landing page không tự gửi email follow-up; nhân viên chủ động gửi. Gemini chỉ nhận nội dung đã đồng ý phân tích, không gửi tên/email/số điện thoại hoặc khung giờ liên hệ. Google nêu rõ điều khoản dùng dữ liệu khác nhau giữa dịch vụ miễn phí và trả phí; dịch vụ miễn phí có thể dùng nội dung gửi lên để cải thiện dịch vụ và cho người đánh giá xử lý nội dung. Vì vậy không nhập dữ liệu nhạy cảm, cá nhân hoặc bí mật vào prompt miễn phí; xem [điều khoản Gemini API](https://ai.google.dev/gemini-api/terms). Trang `/chinh-sach-du-lieu/` là thông báo mẫu, chưa phải chứng nhận tuân thủ pháp luật.
 
 ## Git workflow và CI
 
@@ -313,6 +344,7 @@ Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. T
 | Lỗi | Cách xử lý |
 |---|---|
 | `No module named 'wagtail'` | Kích hoạt `.venv`, sau đó chạy `pip install -r requirements.txt` |
+| Pylance gạch đỏ thuộc tính Django như `.objects` | Chọn đúng interpreter `.venv`; cài dependencies bằng `pip install -r requirements.txt`, sau đó chạy **Python: Restart Language Server** trong VS Code |
 | `No module named 'crm'` | Chạy lệnh tại đúng thư mục chứa `manage.py` |
 | `no such table` | Chạy `python manage.py migrate` |
 | Không tìm thấy `seed_crm_data` | Kiểm tra `crm/management/__init__.py` và `crm/management/commands/__init__.py` |
@@ -332,6 +364,9 @@ Có thể chạy các test tự động của form bằng `python manage.py test
 | Tổng quan | Mở `/crm/` | Thấy số liệu chính, yêu cầu gần đây và hồ sơ chờ phân tích; các khu vực có lối đi riêng |
 | Danh bạ khách hàng | Mở `/crm/customers/`, tìm theo tên/email/công ty, lọc phân khúc | Danh sách phân trang; mở từng hồ sơ riêng |
 | Hộp thư yêu cầu | Mở `/crm/yeu-cau/`, tìm/lọc theo trạng thái rồi đổi trạng thái | Yêu cầu được tìm thấy, trạng thái mới được lưu và phản hồi thành công |
+| Email follow-up | Mở lead, chọn **Gửi form hỏi thêm**, gửi bằng console email, mở link ở terminal | Link mở form, khách gửi một phản hồi và CRM hiển thị nội dung; gửi lại lần hai bị chặn |
+| Thu hồi link | Trên trang follow-up, thu hồi một link đang chờ phản hồi | Link bị thu hồi không còn truy cập được |
+| Consent phản hồi AI | Gửi một phản hồi có consent và một phản hồi không consent, sau đó chạy phân tích | Chỉ nội dung đã đồng ý được dùng; thông tin liên hệ và khung giờ không được đưa vào prompt |
 | Phân tích online | Điền `GEMINI_API_KEY`, mở hồ sơ và bấm **Phân tích ngay** | Hiển thị kết quả, nguồn là Gemini nếu API trả về hợp lệ |
 | Phân tích fallback | Bỏ trống API key hoặc dùng key lỗi rồi phân tích | Không crash; kết quả có nguồn phân tích cục bộ |
 | Lưu lịch sử | Phân tích cùng một khách hàng nhiều lần | Mỗi lần tạo một `AIAnalysis`, kết quả mới nhất cập nhật trên hồ sơ |
@@ -355,6 +390,8 @@ Roadmap chi tiết, có phân biệt tính năng hiện có và đề xuất m�
 - [ ] Đăng nhập được Wagtail Admin
 - [ ] Dashboard hiển thị tổng quan và lối tắt đến từng khu vực
 - [ ] Hộp thư yêu cầu tư vấn lọc và cập nhật được trạng thái
+- [ ] Nhân viên gửi email hỏi thêm; link phản hồi dùng một lần, hết hạn và thu hồi được
+- [ ] CRM lưu phản hồi và chỉ phân tích nội dung có consent AI riêng
 - [ ] Danh sách khách hàng tìm kiếm, lọc và phân trang được
 - [ ] Hồ sơ hiển thị lịch sử tương tác
 - [ ] Phân tích AI trả về kết quả bằng Gemini hoặc rules

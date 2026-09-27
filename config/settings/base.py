@@ -103,6 +103,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 WAGTAIL_SITE_NAME = "AI CRM — CRM chuyển đổi số"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 PUBLIC_BRAND_NAME = os.getenv("PUBLIC_BRAND_NAME", "DigiFlow")
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+LEAD_FOLLOW_UP_LINK_TTL_DAYS = int(os.getenv("LEAD_FOLLOW_UP_LINK_TTL_DAYS", "7"))
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").lower() == "true"
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "DigiFlow <no-reply@example.com>")
 PUBLIC_CONTACT_EMAIL = os.getenv("PUBLIC_CONTACT_EMAIL", "")
 PUBLIC_DATA_CONTROLLER_NAME = os.getenv(
     "PUBLIC_DATA_CONTROLLER_NAME",

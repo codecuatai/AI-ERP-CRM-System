@@ -1,0 +1,13 @@
+Xin chào {{ customer_name }},
+
+Cảm ơn bạn đã gửi yêu cầu tư vấn đến {{ brand_name }}.
+
+{{ question_text }}
+
+Bạn có thể bổ sung thông tin tại đường dẫn riêng sau:
+{{ reply_url }}
+
+Đường dẫn hết hạn vào {{ expires_at|date:"d/m/Y H:i" }} và chỉ gửi được một lần. Nếu bạn không yêu cầu trao đổi này, vui lòng bỏ qua email.
+
+Trân trọng,
+{{ brand_name }}

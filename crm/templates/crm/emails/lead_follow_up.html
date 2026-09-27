@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="vi">
+<body style="margin:0;background:#f5f6f8;font-family:Segoe UI,Arial,sans-serif;color:#1e293b">
+  <main style="max-width:600px;margin:32px auto;padding:32px;background:#fff;border:1px solid #e2e8f0;border-radius:16px">
+    <p style="font-size:12px;font-weight:700;letter-spacing:.12em;color:#625bf6">{{ brand_name }}</p>
+    <h1 style="font-size:24px">Xin chào {{ customer_name }}</h1>
+    <p>Cảm ơn bạn đã gửi yêu cầu tư vấn. Để chuẩn bị trao đổi sát hơn với nhu cầu của bạn:</p>
+    <p style="white-space:pre-line">{{ question_text }}</p>
+    <p style="margin:28px 0"><a href="{{ reply_url }}" style="display:inline-block;padding:13px 20px;border-radius:10px;background:#625bf6;color:#fff;text-decoration:none;font-weight:600">Bổ sung thông tin</a></p>
+    <p style="font-size:13px;color:#64748b">Link riêng này hết hạn vào {{ expires_at|date:"d/m/Y H:i" }} và chỉ gửi được một lần. Nếu bạn không yêu cầu trao đổi này, vui lòng bỏ qua email.</p>
+    <p style="font-size:13px;color:#64748b">Trân trọng,<br>{{ brand_name }}</p>
+  </main>
+</body>
+</html>

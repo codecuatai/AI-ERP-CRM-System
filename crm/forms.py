@@ -1,7 +1,7 @@
 from django import forms
 from django.conf import settings
 
-from .models import LeadRequest
+from .models import LeadFollowUpResponse, LeadRequest
 
 
 class PublicLeadRequestForm(forms.Form):
@@ -70,3 +70,61 @@ class PublicLeadRequestForm(forms.Form):
         if value:
             raise forms.ValidationError("Không thể gửi yêu cầu này.")
         return value
+
+
+class LeadFollowUpComposeForm(forms.Form):
+    question_text = forms.CharField(
+        label="Nội dung email",
+        max_length=2000,
+        widget=forms.Textarea(attrs={"rows": 5, "class": "form-input"}),
+        initial=(
+            "Để chuẩn bị tư vấn sát với nhu cầu của anh/chị, vui lòng bổ sung một vài thông tin "
+            "trong biểu mẫu bảo mật bên dưới. Anh/chị chỉ cần chia sẻ những nội dung phù hợp."
+        ),
+    )
+
+
+class LeadFollowUpResponseForm(forms.Form):
+    current_challenge = forms.CharField(
+        label="Khó khăn hoặc quy trình hiện tại",
+        max_length=2000,
+        widget=forms.Textarea(attrs={
+            "rows": 4,
+            "class": "form-input",
+            "placeholder": "Bạn đang gặp khó khăn gì trong công việc hiện tại?",
+        }),
+    )
+    desired_outcome = forms.CharField(
+        label="Bạn mong muốn đạt được kết quả gì?",
+        max_length=2000,
+        required=False,
+        widget=forms.Textarea(attrs={
+            "rows": 3,
+            "class": "form-input",
+            "placeholder": "Không bắt buộc",
+        }),
+    )
+    implementation_timing = forms.ChoiceField(
+        label="Thời điểm dự kiến triển khai",
+        required=False,
+        choices=(("", "Chưa xác định"), *LeadFollowUpResponse.ImplementationTiming.choices),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    preferred_contact_time = forms.CharField(
+        label="Thời gian tiện liên hệ",
+        max_length=120,
+        required=False,
+        widget=forms.TextInput(attrs={
+            "class": "form-input",
+            "placeholder": "Ví dụ: 9:00–11:00 các ngày trong tuần",
+        }),
+    )
+    ai_processing_consent = forms.BooleanField(required=False, label="")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["ai_processing_consent"].label = (
+            "Tôi đồng ý (không bắt buộc) cho phép phân tích AI phần trả lời này để tạo gợi ý nội bộ. "
+            "Nếu dùng Google Gemini, nội dung có thể được gửi tới Google. Không nhập dữ liệu nhạy cảm "
+            "hoặc bí mật kinh doanh."
+        )

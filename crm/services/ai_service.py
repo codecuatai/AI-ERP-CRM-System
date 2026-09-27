@@ -44,14 +44,22 @@ def _request_gemini(prompt):
     return response.text
 
 
-def analyze_customer(customer, permitted_requests=None):
+def analyze_customer(customer, permitted_requests=None, permitted_follow_up_responses=None):
     """Use Gemini when configured; validate its result and fall back to local rules."""
-    if permitted_requests is None and customer.lead_requests.exists():
+    if permitted_requests is None and permitted_follow_up_responses is None and customer.lead_requests.exists():
         raise AIConsentRequired("Public lead requests require explicit AI consent before analysis.")
-    if permitted_requests is not None and not permitted_requests:
-        raise AIConsentRequired("At least one lead request with AI consent is required.")
-    restricted_to_consented_requests = permitted_requests is not None
+    restricted_to_consented_requests = permitted_requests is not None or permitted_follow_up_responses is not None
     if restricted_to_consented_requests:
+        permitted_requests = [
+            request for request in (permitted_requests or []) if request.ai_processing_consent
+        ]
+        permitted_follow_up_responses = [
+            response
+            for response in (permitted_follow_up_responses or [])
+            if response.ai_processing_consent
+        ]
+        if not permitted_requests and not permitted_follow_up_responses:
+            raise AIConsentRequired("At least one item with AI consent is required.")
         interactions = [
             SimpleNamespace(
                 kind="Yêu cầu tư vấn",
@@ -60,6 +68,19 @@ def analyze_customer(customer, permitted_requests=None):
             )
             for request in permitted_requests[:20]
         ]
+        remaining_slots = max(0, 20 - len(interactions))
+        interactions.extend(
+            SimpleNamespace(
+                kind="Phản hồi bổ sung",
+                subject="Thông tin khách hàng bổ sung",
+                content=(
+                    f"Khó khăn hiện tại: {response.current_challenge[:1500]}\n"
+                    f"Kết quả mong muốn: {response.desired_outcome[:1000] or 'Chưa cung cấp'}\n"
+                    f"Thời điểm dự kiến: {response.get_implementation_timing_display() or 'Chưa xác định'}"
+                ),
+            )
+            for response in permitted_follow_up_responses[:remaining_slots]
+        )
     else:
         interactions = list(customer.interactions.all()[:20])
     fallback = _rule_based_analysis(
@@ -92,7 +113,10 @@ Ghi chú: {customer.notes or 'Không có'}
 Lịch sử tương tác:
 {history or 'Chưa có'}"""
     try:
-        data = json.loads(_request_gemini(prompt))
+        response_text = _request_gemini(prompt)
+        if not response_text:
+            raise ValueError("Gemini trả về nội dung trống")
+        data = json.loads(response_text)
         segment = data.get("segment")
         allowed = {choice for choice, _label in Customer.Segment.choices}
         if segment not in allowed:
