@@ -117,7 +117,7 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "DigiFlow <no-reply@example
 PUBLIC_CONTACT_EMAIL = os.getenv("PUBLIC_CONTACT_EMAIL", "")
 PUBLIC_DATA_CONTROLLER_NAME = os.getenv(
     "PUBLIC_DATA_CONTROLLER_NAME",
-    "DigiFlow (tên đơn vị mẫu — cần thay bằng tên đơn vị vận hành thật)",
+    "DigiFlow (đơn vị vận hành bản demo)",
 )
 PUBLIC_PRIVACY_EMAIL = os.getenv("PUBLIC_PRIVACY_EMAIL") or PUBLIC_CONTACT_EMAIL
 PUBLIC_DATA_RETENTION_NOTICE = os.getenv(
