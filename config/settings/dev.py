@@ -20,7 +20,7 @@ LEAD_FOLLOW_UP_LINK_TTL_DAYS = int(os.environ.get("LEAD_FOLLOW_UP_LINK_TTL_DAYS"
 PUBLIC_CONTACT_EMAIL = os.environ.get("PUBLIC_CONTACT_EMAIL", "")
 PUBLIC_DATA_CONTROLLER_NAME = os.environ.get(
     "PUBLIC_DATA_CONTROLLER_NAME",
-    "DigiFlow (tên đơn vị mẫu — cần thay bằng tên đơn vị vận hành thật)",
+    "DigiFlow (đơn vị vận hành bản demo)",
 )
 PUBLIC_PRIVACY_EMAIL = os.environ.get("PUBLIC_PRIVACY_EMAIL") or PUBLIC_CONTACT_EMAIL
 PUBLIC_DATA_RETENTION_NOTICE = os.environ.get(
