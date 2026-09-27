@@ -1,0 +1,7 @@
+{% extends "crm/base.html" %}
+{% block title %}Báo cáo CRM{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">TỔNG HỢP VẬN HÀNH</p><h1>Báo cáo CRM</h1><p class="muted">Số liệu hiện có trong CRM; khách hàng mới tính từ {{ period_start|date:"d/m/Y" }}.</p></div><a class="button-secondary" href="{% url 'crm:export_customers_csv' %}">Xuất khách hàng CSV</a></section>
+<div class="stats-grid"><article class="stat-card"><span>Tổng khách hàng</span><strong>{{ customer_total }}</strong></article><article class="stat-card"><span>Khách mới 30 ngày</span><strong>{{ new_customers }}</strong></article><article class="stat-card"><span>Việc quá hạn</span><strong>{{ overdue_tasks }}</strong></article></div>
+<div class="report-grid"><section class="panel"><h2>Khách hàng theo phân khúc</h2><ul>{% for row in segments %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section><section class="panel"><h2>Yêu cầu tư vấn theo trạng thái</h2><ul>{% for row in lead_statuses %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section><section class="panel"><h2>Việc chăm sóc theo trạng thái</h2><ul>{% for row in task_statuses %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section></div>
+{% endblock %}

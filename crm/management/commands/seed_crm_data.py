@@ -4,7 +4,10 @@
 - Tạo sẵn 2 bản ghi phân tích để minh họa giao diện ngay khi khởi động
 """
 from django.core.management.base import BaseCommand
-from crm.models import Customer, Interaction, AIAnalysis
+from datetime import timedelta
+
+from django.utils import timezone
+from crm.models import CareTask, Customer, Interaction, AIAnalysis
 
 
 class Command(BaseCommand):
@@ -151,9 +154,31 @@ class Command(BaseCommand):
             if s["analysis"] and not cust.ai_analyses.exists():
                 AIAnalysis.objects.create(customer=cust, **s["analysis"])
 
+        task_samples = [
+            ("huong.ttm@saigon-logistics.com", "Gọi trao đổi về demo quản lý kho", "CALL", -2, "HIGH"),
+            ("contact@alpha-tech.vn", "Gửi đề xuất bảo trì máy chủ", "QUOTE", 0, "MEDIUM"),
+            ("cskh@banmecafe.vn", "Hẹn khảo sát nhu cầu POS", "MEETING", 3, "MEDIUM"),
+        ]
+        for email, title, kind, days_from_today, priority in task_samples:
+            customer = Customer.objects.get(email=email)
+            CareTask.objects.get_or_create(
+                customer=customer,
+                title=title,
+                defaults={
+                    "kind": kind,
+                    "due_at": timezone.localdate() + timedelta(days=days_from_today),
+                    "priority": priority,
+                    "status": CareTask.Status.TODO,
+                    "description": "Việc mẫu để minh họa hộp theo dõi chăm sóc khách hàng.",
+                },
+            )
+
         self.stdout.write(self.style.SUCCESS(
             f"Thành công! Đã tạo {count_c} khách hàng mới và {count_i} tương tác."
         ))
         self.stdout.write(self.style.SUCCESS(
             "Có sẵn 4 khách hàng chưa phân tích để bạn trình diễn nút 'Phân tích bằng AI'!"
+        ))
+        self.stdout.write(self.style.SUCCESS(
+            "Đã chuẩn bị việc chăm sóc mẫu gồm việc quá hạn, đến hạn hôm nay và sắp tới."
         ))

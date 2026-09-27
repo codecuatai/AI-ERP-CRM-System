@@ -1,0 +1,12 @@
+{% extends "crm/base.html" %}
+{% block title %}{% if is_edit %}Sửa việc chăm sóc{% else %}Tạo việc chăm sóc{% endif %}{% endblock %}
+{% block content %}
+<nav aria-label="Điều hướng" class="breadcrumb-wrap"><a href="{% url 'crm:care_tasks' %}">Việc chăm sóc</a><span aria-hidden="true">/</span><span>{% if is_edit %}Chỉnh sửa{% else %}Tạo việc mới{% endif %}</span></nav>
+<section class="page-heading"><div><div class="eyebrow">THEO DÕI HÀNH ĐỘNG</div><h1>{% if is_edit %}Cập nhật việc chăm sóc{% else %}Tạo việc chăm sóc{% endif %}</h1><p>{% if customer %}Việc này gắn với {{ customer.full_name }}.{% else %}Chọn khách hàng, người phụ trách và hạn hoàn thành rõ ràng.{% endif %}</p></div><a class="button-secondary" href="{% if customer %}{% url 'crm:customer_detail' customer.pk %}{% else %}{% url 'crm:care_tasks' %}{% endif %}">← Quay lại</a></section>
+<section class="content-card task-form-card"><form method="post" class="task-form">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error-summary">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form %}{% if not field.is_hidden %}<div class="form-field {% if field.name == 'description' %}task-description-field{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% else %}{{ field }}{% endif %}{% endfor %}
+  <p class="page-hint">Người phụ trách mặc định là tài khoản đang đăng nhập. Việc chưa được lưu cho đến khi bạn chọn nút bên dưới.</p>
+  <div class="follow-up-actions"><button class="button-primary" type="submit">{% if is_edit %}Lưu thay đổi{% else %}Tạo việc chăm sóc{% endif %}</button><a class="button-secondary" href="{% if customer %}{% url 'crm:customer_detail' customer.pk %}{% else %}{% url 'crm:care_tasks' %}{% endif %}">Hủy</a></div>
+</form></section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "crm/base.html" %}
+{% block title %}Soạn email · {{ customer.full_name }}{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">HỖ TRỢ CHĂM SÓC</p><h1>Soạn email cho {{ customer.full_name }}</h1><p class="muted">AI chỉ tạo bản nháp. Email không được gửi từ màn hình này.</p></div>
+  <a class="button-secondary" href="{% url 'crm:customer_detail' customer.pk %}">Quay lại hồ sơ</a>
+</section>
+{% if provider %}<p class="notice">Bản nháp tạo bằng {% if provider == "gemini" %}Gemini{% else %}quy tắc cục bộ{% endif %}. Hãy kiểm tra kỹ trước khi sử dụng.</p>{% endif %}
+<form method="post" class="form-card">
+  {% csrf_token %}
+  <div class="form-grid">
+    {% for field in form %}{% if field.name != "draft" %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
+  </div>
+  <button class="button-primary" name="action" value="generate">Tạo bản nháp</button>
+  <div class="form-field draft-field"><label for="{{ form.draft.id_for_label }}">{{ form.draft.label }}</label>{{ form.draft }}{% for error in form.draft.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>
+  <p class="muted">Sau khi tự gửi email bên ngoài, bạn có thể xác nhận bên dưới để lưu nội dung vào lịch sử tương tác.</p>
+  <button class="button-secondary" name="action" value="record_sent">Tôi đã gửi email này — ghi vào lịch sử</button>
+</form>
+{% endblock %}

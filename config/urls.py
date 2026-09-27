@@ -29,8 +29,9 @@ urlpatterns = [
     # Khu vực quản lý khách hàng
     path("crm/", include("crm.urls")),
 
-    # Wagtail Page Tree (luôn để cuối cùng)
+    # Wagtail Page Tree: homepage is routed above for compatibility with the landing form.
     path("pages/", include(wagtail_urls)),
+    path("", include(wagtail_urls)),
 ]
 
 if settings.DEBUG:

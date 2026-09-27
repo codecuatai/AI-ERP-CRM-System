@@ -20,8 +20,8 @@
     <section class="landing-hero">
       <div class="hero-copy">
         <span class="hero-kicker"><span></span> ĐỒNG HÀNH CÙNG DOANH NGHIỆP ĐANG PHÁT TRIỂN</span>
-        <h1>Công nghệ nên giúp công việc <em>trôi chảy hơn.</em></h1>
-        <p class="hero-lead">Kết nối quy trình bán hàng, quản lý vận hành và dữ liệu trên những giải pháp phù hợp với cách doanh nghiệp bạn đang làm việc.</p>
+        <h1>{{ page.hero_title }} <em>{{ page.hero_emphasis }}</em></h1>
+        <p class="hero-lead">{{ page.hero_text }}</p>
         <div class="hero-actions">
           <a class="button-primary hero-primary" href="#lien-he">Bắt đầu cuộc trao đổi <span aria-hidden="true">→</span></a>
           <a class="hero-text-link" href="#giai-phap">Khám phá giải pháp <span aria-hidden="true">↓</span></a>
@@ -48,25 +48,22 @@
 
     <section class="landing-section solutions-section" id="giai-phap">
       <div class="section-heading">
-        <div><span class="section-kicker">GIẢI PHÁP</span><h2>Những mảnh ghép cho<br>một vận hành <em>gọn hơn.</em></h2></div>
-        <p>Không phải doanh nghiệp nào cũng cần cùng một bộ công cụ. Hãy bắt đầu từ điểm nghẽn đang làm đội ngũ mất thời gian nhất.</p>
+        <div><span class="section-kicker">GIẢI PHÁP</span><h2>{{ page.solutions_heading }}</h2></div>
+        <p>{{ page.solutions_intro }}</p>
       </div>
       <div class="solutions-grid">
-        <article class="solution-card solution-purple"><span class="solution-icon">♙</span><span class="solution-number">01 / KHÁCH HÀNG</span><h3>CRM &amp; chăm sóc khách hàng</h3><p>Quản lý đầu mối, lịch sử tư vấn và cơ hội bán hàng trong một hồ sơ dễ theo dõi.</p><a href="#lien-he">Trao đổi về CRM <span>↗</span></a></article>
-        <article class="solution-card solution-green"><span class="solution-icon">▤</span><span class="solution-number">02 / VẬN HÀNH</span><h3>Quản lý kho &amp; bán hàng</h3><p>Kết nối luồng bán hàng với hàng hóa để đội ngũ nắm thông tin nhất quán hơn.</p><a href="#lien-he">Trao đổi về vận hành <span>↗</span></a></article>
-        <article class="solution-card solution-orange"><span class="solution-icon">⌘</span><span class="solution-number">03 / HẠ TẦNG</span><h3>Máy chủ &amp; sao lưu dữ liệu</h3><p>Rà soát nền tảng lưu trữ, sao lưu và hạ tầng phù hợp với nhu cầu doanh nghiệp.</p><a href="#lien-he">Trao đổi về hạ tầng <span>↗</span></a></article>
-        <article class="solution-card solution-blue"><span class="solution-icon">⤳</span><span class="solution-number">04 / TÍCH HỢP</span><h3>Kết nối các hệ thống</h3><p>Giảm nhập liệu lặp lại bằng cách xem xét cách các công cụ hiện tại trao đổi dữ liệu.</p><a href="#lien-he">Trao đổi về tích hợp <span>↗</span></a></article>
+        {% for solution in page.solutions %}
+          <article class="solution-card {% cycle 'solution-purple' 'solution-green' 'solution-orange' 'solution-blue' %}"><span class="solution-icon">{{ solution.value.icon|default:"✳" }}</span><span class="solution-number">{{ solution.value.category }}</span><h3>{{ solution.value.title }}</h3><p>{{ solution.value.description }}</p><a href="#lien-he">{{ solution.value.link_label }} <span>↗</span></a></article>
+        {% empty %}<p>Đang cập nhật danh mục giải pháp.</p>{% endfor %}
       </div>
       <div class="solutions-bottom"><span class="solutions-bottom-mark">✳</span><p>Chưa chắc nên bắt đầu ở đâu? <strong>Hãy kể cho chúng tôi vấn đề bạn đang gặp.</strong></p><a href="#lien-he">Nhận tư vấn ban đầu <span>→</span></a></div>
     </section>
 
     <section class="approach-section" id="cach-lam">
       <div class="approach-inner">
-        <div class="approach-intro"><span class="section-kicker section-kicker-light">CÁCH CHÚNG TÔI LÀM</span><h2>Bắt đầu từ bài toán.<br>Không bắt đầu từ phần mềm.</h2><p>Một giải pháp có ích phải phù hợp với con người và quy trình sử dụng nó.</p><a href="#lien-he" class="approach-link">Kể cho chúng tôi nghe <span>→</span></a></div>
+        <div class="approach-intro"><span class="section-kicker section-kicker-light">CÁCH CHÚNG TÔI LÀM</span><h2>{{ page.approach_heading }}</h2><p>{{ page.approach_intro }}</p><a href="#lien-he" class="approach-link">Kể cho chúng tôi nghe <span>→</span></a></div>
         <div class="approach-steps">
-          <article class="approach-step"><span>01</span><div><h3>Lắng nghe hiện trạng</h3><p>Tìm hiểu cách đội ngũ đang làm việc và điều gì cần được cải thiện trước.</p></div></article>
-          <article class="approach-step"><span>02</span><div><h3>Đề xuất hướng phù hợp</h3><p>Thảo luận lựa chọn, phạm vi và các hệ thống cần phối hợp với nhau.</p></div></article>
-          <article class="approach-step"><span>03</span><div><h3>Triển khai có đồng hành</h3><p>Thống nhất cách đưa giải pháp vào quy trình và hỗ trợ đội ngũ tiếp nhận.</p></div></article>
+          {% for step in page.approach_steps %}<article class="approach-step"><span>0{{ forloop.counter }}</span><div><h3>{{ step.value.title }}</h3><p>{{ step.value.description }}</p></div></article>{% endfor %}
         </div>
       </div>
     </section>
@@ -74,8 +71,8 @@
     <section class="contact-section" id="lien-he">
       <div class="contact-copy">
         <span class="section-kicker">BẮT ĐẦU TỪ MỘT CUỘC TRAO ĐỔI</span>
-        <h2>Chia sẻ điều bạn muốn <em>cải thiện.</em></h2>
-        <p>Chọn nhóm giải pháp và chia sẻ nhu cầu. Đội ngũ sẽ xem xét yêu cầu, sau đó liên hệ để trao đổi bước tiếp theo.</p>
+        <h2>{{ page.contact_heading }}</h2>
+        <p>{{ page.contact_intro }}</p>
         <div class="contact-promise"><span>✓</span><p><strong>Không có quy trình bán hàng tự động.</strong><br>Thông tin được nhân viên xem và phản hồi trực tiếp.</p></div>
         {% if contact_email %}<div class="contact-detail"><span class="contact-detail-icon">✉</span><span><small>EMAIL LIÊN HỆ</small><strong>{{ contact_email }}</strong></span></div>{% endif %}
       </div>

@@ -11,28 +11,21 @@ Theo README và mã nguồn hiện tại, dự án đã có:
 - Ghi lịch sử tương tác: email, điện thoại, gặp mặt hoặc hình thức khác.
 - Nhân viên chủ động gửi email hỏi thêm cho lead; khách trả lời form qua link có hạn dùng, dùng một lần và có thể thu hồi. CRM lưu phản hồi trong hồ sơ và ghi nhận riêng consent AI cho từng phản hồi.
 - Dashboard tổng quan; danh bạ khách hàng tìm kiếm/lọc/phân trang riêng; hộp thư yêu cầu tư vấn tìm kiếm, lọc trạng thái và cập nhật tiến độ riêng.
+- Việc chăm sóc khách hàng: tạo từ hồ sơ/đề xuất AI, người phụ trách, loại việc, hạn, ưu tiên, trạng thái; dashboard chia quá hạn/hôm nay/sắp tới; có danh sách riêng và chỉnh sửa/hoàn tất.
 - Hồ sơ khách hàng với timeline tương tác và lịch sử phân tích.
 - Phân tích từng khách hàng bằng Gemini hoặc rules fallback; lưu phân khúc, điểm, nhận định và đề xuất.
 - Giao diện responsive bằng Django Templates và Tailwind CSS.
+- Landing page là Wagtail `LandingPage`, cho phép biên tập nội dung, danh mục giải pháp và quy trình tư vấn trong Pages.
+- Wagtail Snippets có danh sách cấu hình tìm kiếm/lọc/xem chi tiết; có nhóm quyền CRM Nhân viên và CRM Quản lý.
+- Trợ lý tạo email nháp theo mục tiêu/giọng văn/độ dài; Gemini chỉ dùng dữ liệu khách đã consent; fallback cục bộ; không tự gửi.
+- Hàng đợi ưu tiên có điểm và lý do minh bạch theo phân khúc, điểm AI, việc quá hạn và thời gian từ lần tương tác.
+- Báo cáo tổng hợp CRM và xuất danh sách khách hàng CSV theo bộ lọc.
 
 Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi tiết vẫn được mô tả trong [README](../README.md#tính-năng-chính).
 
-## Nên phát triển trước
+## Các tính năng đã triển khai
 
-### 1. Hộp việc cần chăm sóc — tính năng ưu tiên cao nhất
-
-Cho phép nhân viên biến đề xuất từ AI thành một việc chăm sóc có người phụ trách, hạn hoàn thành và trạng thái.
-
-- Việc cần làm: liên hệ lại, gọi điện, gửi báo giá, hẹn gặp hoặc việc khác.
-- Trường thông tin: khách hàng, nội dung, người phụ trách, ngày đến hạn, mức ưu tiên và trạng thái `Cần làm / Đang làm / Hoàn tất`.
-- Dashboard có khu vực “Hôm nay”, “Quá hạn” và “Sắp tới”.
-- Từ trang khách hàng, tạo việc mới dựa trên gợi ý AI với nội dung được điền sẵn; nhân viên xác nhận trước khi lưu.
-
-**Tiêu chí hoàn thành:** có thể tạo/sửa/hoàn tất việc; việc gắn đúng khách hàng; Dashboard lọc được việc hôm nay và quá hạn; việc hoàn tất vẫn xem lại được.
-
-**Vì sao đáng làm:** khép kín luồng từ AI phân tích đến hành động thực tế — điểm khác biệt rõ nhất khi trình bày đề tài.
-
-### 2. Trợ lý soạn email có người duyệt
+### Đã hoàn thành: Trợ lý soạn email có người duyệt
 
 AI tạo bản nháp email dựa trên hồ sơ, các tương tác gần đây và mục tiêu chăm sóc. Nhân viên có thể sửa, sao chép hoặc bỏ bản nháp.
 
@@ -45,7 +38,7 @@ AI tạo bản nháp email dựa trên hồ sơ, các tương tác gần đây v
 
 **Giới hạn an toàn:** không tự động gửi email/Zalo trong phiên bản đồ án.
 
-### 3. Danh sách khách hàng cần ưu tiên
+### Đã hoàn thành: Danh sách khách hàng cần ưu tiên
 
 Tạo một hàng đợi giúp nhân viên biết nên chăm sóc ai trước thay vì chỉ xem danh sách theo thứ tự tên.
 
@@ -55,23 +48,21 @@ Tạo một hàng đợi giúp nhân viên biết nên chăm sóc ai trước th
 
 **Tiêu chí hoàn thành:** thứ tự ưu tiên có quy tắc minh bạch; người dùng lọc được nhóm; mỗi khách hàng mở được hồ sơ hoặc tạo việc chăm sóc ngay.
 
-## Có thể làm nếu còn thời gian
+## Phần còn thiếu có thể phát triển tiếp
 
-### 4. Nhập và xuất CSV thân thiện với người dùng
+### Đã hoàn thành một phần: Xuất CSV và báo cáo cơ bản
 
-- Tải mẫu CSV có sẵn.
-- Xem trước dữ liệu và báo lỗi theo dòng trước khi nhập.
-- Phát hiện email trùng, trường bắt buộc bị thiếu và dữ liệu không hợp lệ.
-- Xuất danh sách theo bộ lọc hiện tại.
+- Xuất danh sách khách hàng theo bộ lọc hiện tại và xem báo cáo CRM.
+- Chưa có nhập CSV, xem trước hay báo lỗi theo dòng; đây là phần tiếp theo nếu cần nạp dữ liệu hàng loạt.
 
 Đây là tính năng thực tế với nhóm người dùng không chuyên kỹ thuật. Nên bắt đầu bằng CSV, chưa cần hỗ trợ Excel nhiều sheet.
 
-### 5. Báo cáo hiệu quả chăm sóc
+### Đã hoàn thành cơ bản: Báo cáo hiệu quả chăm sóc
 
-- Số khách hàng theo phân khúc và nguồn.
-- Số việc đã hoàn tất, đang mở và quá hạn.
-- Xu hướng khách hàng mới theo tháng.
-- Bộ lọc theo khoảng thời gian; xuất CSV để đưa vào báo cáo.
+- Số khách hàng theo phân khúc và số khách mới trong 30 ngày gần đây.
+- Số yêu cầu tư vấn theo trạng thái.
+- Số việc chăm sóc theo trạng thái và tổng việc quá hạn.
+- Chưa có bộ lọc khoảng thời gian tùy chọn, nhóm theo nguồn, biểu đồ hay xuất báo cáo tổng hợp riêng.
 
 Chỉ nên biểu diễn chỉ số mà dữ liệu hiện có hỗ trợ; chưa nên gọi đây là dự báo doanh thu nếu chưa có dữ liệu đơn hàng đáng tin cậy.
 
@@ -80,16 +71,17 @@ Chỉ nên biểu diễn chỉ số mà dữ liệu hiện có hỗ trợ; chưa
 | Giai đoạn | Nội dung | Kết quả nhìn thấy khi demo |
 |---|---|---|
 | Đã có | Form tiếp nhận, email follow-up do nhân viên gửi và form phản hồi bảo mật | Nhân viên gửi link; khách bổ sung thông tin; CRM lưu phản hồi và consent |
-| 1 | Việc chăm sóc, hạn hoàn thành và trạng thái | Tạo việc từ hồ sơ khách hàng; xem việc hôm nay/quá hạn |
-| 2 | Trợ lý soạn email có người duyệt | AI tạo bản nháp theo ngữ cảnh; nhân viên duyệt trước khi ghi nhận đã gửi |
-| 3 | Hàng đợi khách hàng cần ưu tiên | Dashboard giải thích khách hàng nào cần chăm sóc trước và vì sao |
-| 4 | CSV và báo cáo cơ bản | Nạp dữ liệu nhanh, theo dõi hiệu quả và xuất danh sách |
+| Đã có | Việc chăm sóc, hạn hoàn thành và trạng thái | Tạo việc từ hồ sơ/gợi ý AI; xem việc hôm nay, quá hạn, sắp tới |
+| Đã làm | Wagtail CMS, Snippets và quyền nhóm | Chỉnh sửa trang chủ, tìm/lọc dữ liệu và cấp quyền theo vai trò |
+| Đã làm | Trợ lý soạn email có người duyệt | Tạo bản nháp; nhân viên kiểm tra và tự gửi ngoài hệ thống |
+| Đã làm | Hàng đợi khách hàng cần ưu tiên | Xem khách cần chăm sóc trước cùng lý do |
+| Đã làm một phần | CSV và báo cáo cơ bản | Xuất danh sách, xem số liệu; chưa hỗ trợ nhập CSV |
 
 ## Kịch bản demo “đủ wow”
 
 1. Nhân viên mở một khách hàng đang có nguy cơ rời bỏ.
 2. Xem lịch sử trao đổi và kết quả AI cùng lý do phân khúc.
-3. AI đề xuất liên hệ lại, đồng thời tạo bản nháp email để nhân viên xem và chỉnh sửa.
+3. AI đề xuất liên hệ lại; nhân viên chuyển đề xuất thành việc nháp, kiểm tra và xác nhận.
 4. Nhân viên tạo việc “Gọi lại khách hàng” có hạn hoàn thành vào ngày mai.
 5. Việc đó xuất hiện trên Dashboard trong nhóm “Sắp tới”; sau khi hoàn tất, trạng thái được cập nhật trên hồ sơ.
 

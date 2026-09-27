@@ -19,7 +19,17 @@
   <div class="quick-start-actions">
     <a class="quick-action" href="{% url 'crm:lead_requests' %}"><span class="quick-action-icon">01</span><span><strong>Tiếp nhận khách tiềm năng</strong><small>Xem yêu cầu tư vấn từ website</small></span><span class="quick-arrow">→</span></a>
     <a class="quick-action" href="{% url 'crm:customers' %}"><span class="quick-action-icon">02</span><span><strong>Tìm một khách hàng</strong><small>Tìm hồ sơ, lịch sử trao đổi và phân tích</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="/admin/snippets/crm/customer/"><span class="quick-action-icon">03</span><span><strong>Thêm hoặc sửa dữ liệu</strong><small>Mở Wagtail để quản lý hồ sơ và tương tác</small></span><span class="quick-arrow">↗</span></a>
+    <a class="quick-action" href="{% url 'crm:care_task_create' %}"><span class="quick-action-icon">03</span><span><strong>Tạo việc chăm sóc</strong><small>Giao người phụ trách và đặt hạn xử lý</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="/admin/snippets/crm/customer/"><span class="quick-action-icon">04</span><span><strong>Quản trị dữ liệu</strong><small>Mở Wagtail để quản lý hồ sơ chi tiết</small></span><span class="quick-arrow">↗</span></a>
+  </div>
+</section>
+
+<section class="task-board" aria-labelledby="task-board-title">
+  <div class="task-board-heading"><div><div class="eyebrow">THEO DÕI CÔNG VIỆC</div><h2 id="task-board-title">Việc cần chăm sóc</h2><p>Ưu tiên việc quá hạn trước, sau đó xử lý những việc đến hạn hôm nay.</p></div><a class="button-secondary" href="{% url 'crm:care_tasks' %}">Mở tất cả việc <span aria-hidden="true">→</span></a></div>
+  <div class="task-board-columns">
+    <article class="task-board-card task-board-overdue"><div class="task-board-card-heading"><div><strong>Quá hạn</strong><small>{{ overdue_task_count }} việc cần xử lý</small></div><span>!</span></div><div class="task-board-items">{% for task in overdue_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small></a>{% empty %}<p class="task-board-empty">Không có việc quá hạn. Tốt lắm!</p>{% endfor %}</div></article>
+    <article class="task-board-card task-board-today"><div class="task-board-card-heading"><div><strong>Hôm nay</strong><small>{{ today_task_count }} việc đến hạn</small></div><span>◎</span></div><div class="task-board-items">{% for task in today_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · {{ task.get_priority_display }} ưu tiên</small></a>{% empty %}<p class="task-board-empty">Chưa có việc đến hạn hôm nay.</p>{% endfor %}</div></article>
+    <article class="task-board-card task-board-upcoming"><div class="task-board-card-heading"><div><strong>Sắp tới</strong><small>Việc đang chờ xử lý</small></div><span>→</span></div><div class="task-board-items">{% for task in upcoming_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small></a>{% empty %}<p class="task-board-empty">Chưa có việc sắp tới.</p>{% endfor %}</div></article>
   </div>
 </section>
 

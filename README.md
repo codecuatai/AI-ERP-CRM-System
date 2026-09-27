@@ -8,7 +8,7 @@
 
 Trong bối cảnh này, khách hàng trong database là các doanh nghiệp đang tìm hiểu, mua hoặc sử dụng giải pháp chuyển đổi số. Nhân viên kinh doanh cần theo dõi nhu cầu, lịch sử trao đổi, giá trị đã chi tiêu và dấu hiệu cần chăm sóc tiếp. AI hỗ trợ trả lời câu hỏi: **khách hàng nào cần được ưu tiên và bước chăm sóc tiếp theo nên là gì?**
 
-Khách chủ động gửi nhu cầu qua form công khai; hệ thống lưu yêu cầu và tạo hồ sơ khách hàng nếu email chưa có. Nhân viên làm việc theo các khu vực riêng: **Tổng quan** để xem việc cần chú ý, **Yêu cầu tư vấn** để tiếp nhận và cập nhật trạng thái, **Khách hàng** để tìm hồ sơ và xem lịch sử. Từ một lead, nhân viên có thể chủ động gửi email kèm link bảo mật để khách bổ sung thông tin; phản hồi được lưu vào CRM và chỉ được đưa vào phân tích AI nếu khách đồng ý riêng. Wagtail CMS dùng để quản lý dữ liệu chi tiết. Phần phân tích gọi Google Gemini khi có API key; nếu API không có hoặc gặp lỗi, hệ thống tự chuyển sang quy tắc cục bộ để ứng dụng vẫn hoạt động.
+Khách chủ động gửi nhu cầu qua form công khai; hệ thống lưu yêu cầu và tạo hồ sơ khách hàng nếu email chưa có. Nhân viên làm việc theo các khu vực riêng: **Tổng quan** để xem việc quá hạn/hôm nay/sắp tới, **Yêu cầu tư vấn** để tiếp nhận và cập nhật trạng thái, **Khách hàng** để tìm hồ sơ và xem lịch sử, **Việc chăm sóc** để giao và theo dõi hành động. Từ một lead, nhân viên có thể chủ động gửi email kèm link bảo mật để khách bổ sung thông tin; phản hồi được lưu vào CRM và chỉ được đưa vào phân tích AI nếu khách đồng ý riêng. Đề xuất AI có thể được chuyển thành việc chăm sóc nháp, nhưng chỉ được lưu sau khi nhân viên kiểm tra và xác nhận. Wagtail CMS dùng để quản lý dữ liệu chi tiết. Phần phân tích gọi Google Gemini khi có API key; nếu API không có hoặc gặp lỗi, hệ thống tự chuyển sang quy tắc cục bộ để ứng dụng vẫn hoạt động.
 
 Đây là một đồ án tập trung vào luồng CRM cốt lõi, không phải hệ thống ERP hay hệ thống quản lý toàn bộ quy trình triển khai chuyển đổi số. Phạm vi chính là:
 
@@ -18,6 +18,8 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
                     Khách trả lời link bảo mật → CRM lưu phản hồi
                                       ↓
                        AI phân tích nếu khách đã consent riêng
+                                      ↓
+                   Nhân viên xác nhận → Việc chăm sóc có hạn xử lý
 ```
 
 ### Mục tiêu của dự án
@@ -61,10 +63,17 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - **Lưu phản hồi theo lead:** CRM lưu câu trả lời, trạng thái email và hiển thị phản hồi trên trang yêu cầu/hồ sơ khách hàng.
 - **Consent AI riêng cho phản hồi:** câu trả lời bổ sung chỉ được AI phân tích nếu khách đồng ý ngay trên form đó.
 - **Dashboard:** hiển thị tổng khách hàng đang hoạt động, số khách hàng VIP, số khách hàng chưa phân tích và tổng chi tiêu.
+- **Việc chăm sóc khách hàng:** tạo từ hồ sơ hoặc đề xuất AI; gắn khách hàng, người phụ trách, loại việc, hạn, ưu tiên và trạng thái; có danh sách tìm/lọc riêng.
+- **Theo dõi hạn xử lý:** dashboard chia việc đang mở thành quá hạn, đến hạn hôm nay và sắp tới; việc hoàn tất được loại khỏi các hàng đợi này.
 - **Tìm kiếm và lọc:** tìm theo tên, email, công ty; lọc theo phân khúc AI.
 - **Hồ sơ khách hàng:** xem thông tin liên hệ, tổng chi tiêu, timeline trao đổi, kết quả AI mới nhất và lịch sử các lần phân tích trước.
 - **Phân tích AI:** trả về phân khúc, điểm tiềm năng, nhận định, đề xuất hành động và nguồn phân tích (`gemini` hoặc `rules`).
 - **Quản trị bằng Wagtail:** quản lý dữ liệu tại **Snippets → Khách hàng**, **Yêu cầu tư vấn**, **Lịch sử tương tác** và **Kết quả phân tích AI**.
+- **Wagtail CMS cho landing page:** chỉnh sửa nội dung trang chủ, danh mục giải pháp và quy trình tư vấn trong Pages; các Snippet có tìm kiếm, bộ lọc và trang xem chi tiết.
+- **Hàng đợi ưu tiên:** sắp xếp khách cần chăm sóc theo điểm AI, nguy cơ rời bỏ, việc quá hạn và thời gian chưa tương tác; mỗi thứ tự có lý do giải thích.
+- **Trợ lý soạn email:** tạo bản nháp theo mục tiêu/giọng văn/độ dài bằng Gemini hoặc mẫu cục bộ; không tự gửi. Nhân viên chỉ ghi vào lịch sử sau khi xác nhận đã gửi.
+- **Báo cáo và CSV:** báo cáo phân khúc, lead, việc chăm sóc; xuất danh sách CSV có thể giữ bộ lọc tìm kiếm hiện tại.
+- **Phân quyền CRM:** hai nhóm `CRM - Nhân viên` và `CRM - Quản lý`; lệnh thiết lập cấp quyền frontend, quyền snippet phù hợp và quyền truy cập Wagtail Admin.
 - **Responsive UI:** giao diện Django Templates + Tailwind CSS, có sidebar desktop và menu mobile.
 
 Các phân khúc được hỗ trợ: **Chưa phân loại**, **VIP**, **Tiềm năng**, **Ngủ đông** và **Nguy cơ rời bỏ**.
@@ -74,11 +83,13 @@ Các phân khúc được hỗ trợ: **Chưa phân loại**, **VIP**, **Tiềm 
 | Model | Vai trò | Dữ liệu chính |
 |---|---|---|
 | `Customer` | Hồ sơ khách hàng | Thông tin liên hệ, công ty, nguồn, ghi chú, tổng chi tiêu, trạng thái, phân khúc và điểm AI mới nhất |
+| `LandingPage` | Trang Wagtail CMS | Nội dung landing page, danh mục giải pháp và các bước tư vấn; không thay thế model dữ liệu CRM |
 | `Interaction` | Lịch sử trao đổi | Khách hàng, hình thức, chủ đề, nội dung và thời điểm; quan hệ nhiều-một với `Customer` |
 | `LeadRequest` | Yêu cầu gửi từ form công khai | Nhóm giải pháp, nhu cầu, trạng thái, consent tiếp nhận và consent AI riêng kèm dấu thời gian/phiên bản |
 | `LeadFollowUp` | Email hỏi thêm do nhân viên chủ động gửi | Câu hỏi, nhân viên gửi, hash token, hạn trả lời, trạng thái gửi/phản hồi/thu hồi |
 | `LeadFollowUpResponse` | Câu trả lời từ form follow-up | Khó khăn, kết quả mong muốn, thời điểm triển khai, thời gian liên hệ và consent AI riêng |
 | `AIAnalysis` | Lịch sử phân tích | Khách hàng, phân khúc, điểm, nhận định, đề xuất, nguồn phân tích và thời điểm; lưu lại mỗi lần bấm phân tích |
+| `CareTask` | Việc chăm sóc khách hàng | Khách hàng, nội dung, loại việc, người phụ trách, hạn, ưu tiên, trạng thái và thời điểm hoàn tất |
 
 `Customer.ai_segment` và `Customer.ai_score` lưu kết quả mới nhất để Dashboard lọc/hiển thị nhanh. Các bản ghi `AIAnalysis` giữ lịch sử cũ để có thể xem lại.
 
@@ -110,6 +121,8 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 Copy-Item .env.example .env
 python manage.py migrate
+python manage.py setup_cms_homepage
+python manage.py setup_crm_groups
 python manage.py seed_crm_data
 python manage.py createsuperuser
 python manage.py runserver
@@ -147,11 +160,16 @@ Sau khi chạy `runserver`, mở. Dashboard và hồ sơ yêu cầu đăng nhậ
 |---|---|
 | [CRM Tổng quan](http://127.0.0.1:8000/crm/) | Số liệu chính, yêu cầu gần đây và hồ sơ chờ phân tích |
 | [Danh sách khách hàng](http://127.0.0.1:8000/crm/customers/) | Tìm kiếm, lọc, phân trang và mở hồ sơ khách hàng |
+| [Khách hàng cần ưu tiên](http://127.0.0.1:8000/crm/uu-tien/) | Hàng đợi chăm sóc có giải thích lý do ưu tiên |
 | [Hộp thư yêu cầu tư vấn](http://127.0.0.1:8000/crm/yeu-cau/) | Tìm yêu cầu, lọc trạng thái, cập nhật tiến độ và mở hồ sơ |
+| [Việc chăm sóc](http://127.0.0.1:8000/crm/viec/) | Tạo, tìm, lọc, cập nhật và hoàn tất việc chăm sóc |
+| [Báo cáo CRM](http://127.0.0.1:8000/crm/bao-cao/) | Tổng hợp khách hàng, lead và việc chăm sóc |
 | [Landing page](http://127.0.0.1:8000/) | Giới thiệu giải pháp và form công khai ở cuối trang |
 | [Form yêu cầu tư vấn riêng](http://127.0.0.1:8000/crm/dang-ky-tu-van/) | Form công khai độc lập, dùng chung luồng lưu dữ liệu |
 | [Thông báo quyền riêng tư](http://127.0.0.1:8000/chinh-sach-du-lieu/) | Dữ liệu thu thập, mục đích, AI, lưu trữ và cách liên hệ |
 | [Wagtail Admin](http://127.0.0.1:8000/admin/) | Quản lý khách hàng, yêu cầu tư vấn và tương tác |
+
+Để chỉnh trang chủ, đăng nhập Wagtail Admin → **Pages** → chọn **Trang chủ doanh nghiệp** → Edit. Nếu thêm tài khoản nhân viên, thêm tài khoản vào một trong hai nhóm CRM bằng **Users**. Tài khoản cần `is_staff` để mở Wagtail Admin; lệnh `setup_crm_groups` không tự cấp quyền cho tài khoản cụ thể.
 
 ## Cấu hình Gemini tùy chọn
 
@@ -193,10 +211,13 @@ Thay giá trị mẫu bằng domain HTTPS và thông tin SMTP của đơn vị; 
 2. Đăng nhập bằng tài khoản nhân viên tại khu vực CRM hoặc Wagtail Admin.
 3. Mở [Hộp thư yêu cầu tư vấn](http://127.0.0.1:8000/crm/yeu-cau/) để xem yêu cầu, nhóm giải pháp khách quan tâm và cập nhật trạng thái.
 4. Mở hồ sơ khách hàng từ yêu cầu hoặc tìm trong [Danh sách khách hàng](http://127.0.0.1:8000/crm/customers/); lịch sử trao đổi và phân tích nằm trong hồ sơ riêng.
-5. Nếu khách đã bật đồng ý phân tích AI trên form, chọn **Phân tích ngay**. Nếu không, yêu cầu vẫn được lưu và nhân viên vẫn có thể phản hồi, nhưng phân tích AI sẽ không chạy.
-6. Trên lead, chọn **Gửi form hỏi thêm**, chỉnh nội dung email nếu cần rồi gửi. Khi phát triển local, email được in ở terminal; mở link để thử form phản hồi.
-7. Phản hồi xuất hiện trong lịch sử yêu cầu và timeline khách hàng. Khách có thể chọn consent AI riêng cho câu trả lời follow-up.
-8. Chọn **Phân tích ngay** để xem phân khúc, điểm tiềm năng, nhận định và đề xuất hành động.
+5. Trên lead, chọn **Gửi form hỏi thêm**, chỉnh nội dung email nếu cần rồi gửi. Khi phát triển local, email được in ở terminal; mở link để thử form phản hồi.
+6. Phản hồi xuất hiện trong lịch sử yêu cầu và timeline khách hàng. Khách có thể chọn consent AI riêng cho câu trả lời follow-up.
+7. Nếu khách đã đồng ý phân tích AI, mở hồ sơ và chọn **Phân tích ngay** để xem phân khúc, điểm tiềm năng, nhận định và đề xuất; nếu chưa đồng ý, dữ liệu vẫn được tiếp nhận nhưng không gửi đi phân tích.
+8. Trong hồ sơ khách hàng, tạo việc chăm sóc thủ công hoặc chọn **Tạo việc từ đề xuất này**. Kiểm tra tiêu đề/hạn/ưu tiên rồi mới lưu; việc sẽ xuất hiện ở dashboard theo ngày đến hạn.
+9. Mở **Việc chăm sóc** để tìm, lọc, sửa trạng thái hoặc đánh dấu hoàn tất.
+10. Dùng **Soạn email** ở hồ sơ khách hàng để tạo bản nháp; chỉnh nội dung, tự gửi bên ngoài nếu cần, rồi chỉ xác nhận trong CRM sau khi đã gửi.
+11. Mở **Khách hàng cần ưu tiên** và **Báo cáo** để xem các hàng đợi/chỉ số; danh sách có thể tải xuống dưới dạng CSV.
 
 Để kiểm tra fallback, để trống `GEMINI_API_KEY`, khởi động lại server và phân tích lại.
 
@@ -208,6 +229,7 @@ Lệnh `python manage.py seed_crm_data` tạo dữ liệu phục vụ trình di�
 - 12 lịch sử tương tác gồm email, điện thoại và gặp mặt.
 - 2 bản ghi `AIAnalysis` có sẵn để Dashboard và hồ sơ hiển thị ngay.
 - 4 khách hàng chưa có phân tích để trình diễn nút **Phân tích ngay**.
+- 3 việc chăm sóc mẫu gồm một việc quá hạn, một việc đến hạn hôm nay và một việc sắp tới.
 
 Lệnh seed dùng email và chủ đề tương tác để tránh tạo trùng khi chạy lại. Lệnh này chỉ tạo dữ liệu, không tạo tài khoản đăng nhập.
 
@@ -238,12 +260,14 @@ Rules chỉ là cơ chế dự phòng minh họa; Gemini có thể trả thêm c
 | Thư mục/file | Vai trò |
 |---|---|
 | `config/` | Cấu hình Django/Wagtail và URL |
-| `crm/` | Model, form, view, dịch vụ AI, test và lệnh seed |
-| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `LeadFollowUp`, `LeadFollowUpResponse`, `AIAnalysis` |
-| `crm/forms.py` | Form tư vấn công khai, email follow-up và phản hồi của khách |
+| `crm/` | Model, form, view, dịch vụ AI, test và management commands |
+| `crm/models.py` | Model CRM, `CareTask` và Wagtail `LandingPage` |
+| `crm/forms.py` | Form tư vấn công khai, follow-up, email nháp, consent và việc chăm sóc |
+| `crm/wagtail_hooks.py` | Cấu hình tìm kiếm/lọc/xem chi tiết cho Snippets |
+| `crm/services/email_draft_service.py` | Soạn email nháp có fallback và giới hạn dữ liệu gửi AI |
 | `crm/migrations/` | Migration database của dự án |
 | `crm/test_*.py`, `crm/tests.py` | Test AI, view, form lead và follow-up |
-| `crm/templates/crm/` | Landing page, CRM, email follow-up và form phản hồi |
+| `crm/templates/crm/` | Landing page CMS, CRM, email nháp/follow-up, báo cáo và form phản hồi |
 | `crm/static/crm/` | CSS và JavaScript; Django phục vụ trực tiếp |
 | `tailwind/` | Mã nguồn CSS Tailwind và công cụ build giao diện (tùy chọn) |
 | `docs/` | Dàn ý báo cáo và roadmap tính năng |
@@ -380,7 +404,7 @@ Có thể chạy các test tự động của form bằng `python manage.py test
 - Rules fallback là logic minh họa dựa trên tổng chi tiêu, số tương tác và từ khóa.
 - Chưa có phân quyền nghiệp vụ chi tiết ngoài yêu cầu đăng nhập.
 
-Roadmap chi tiết, có phân biệt tính năng hiện có và đề xuất mới, nằm tại [docs/lo-trinh-tinh-nang.md](docs/lo-trinh-tinh-nang.md). Ưu tiên đề xuất là biến gợi ý AI thành việc chăm sóc có hạn hoàn thành, sau đó thêm soạn email có người duyệt và danh sách khách hàng cần ưu tiên.
+Roadmap chi tiết, có phân biệt tính năng đã triển khai và phần còn thiếu, nằm tại [docs/lo-trinh-tinh-nang.md](docs/lo-trinh-tinh-nang.md). Phần bổ sung thiết thực tiếp theo là nhập CSV có kiểm tra/xem trước và mở rộng báo cáo theo thời gian.
 
 ## Checklist trước khi nộp
 

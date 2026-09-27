@@ -1,7 +1,65 @@
 from django import forms
 from django.conf import settings
 
-from .models import LeadFollowUpResponse, LeadRequest
+from .models import CareTask, LeadFollowUpResponse, LeadRequest
+
+
+class CareTaskForm(forms.ModelForm):
+    class Meta:
+        model = CareTask
+        fields = ("customer", "title", "description", "kind", "due_at", "priority", "status")
+        widgets = {
+            "customer": forms.Select(attrs={"class": "form-input"}),
+            "title": forms.TextInput(attrs={"class": "form-input", "placeholder": "Ví dụ: Gọi trao đổi về demo CRM"}),
+            "description": forms.Textarea(attrs={"class": "form-input", "rows": 4, "placeholder": "Ghi chú hoặc kết quả mong muốn (không bắt buộc)"}),
+            "kind": forms.Select(attrs={"class": "form-input"}),
+            "due_at": forms.DateInput(attrs={"class": "form-input", "type": "date"}, format="%Y-%m-%d"),
+            "priority": forms.Select(attrs={"class": "form-input"}),
+            "status": forms.Select(attrs={"class": "form-input"}),
+        }
+        labels = {
+            "customer": "Khách hàng", "title": "Việc cần làm", "description": "Ghi chú",
+            "kind": "Loại việc", "due_at": "Ngày đến hạn", "priority": "Mức ưu tiên", "status": "Trạng thái",
+        }
+
+    def __init__(self, *args, customer=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.locked_customer = customer
+        if customer is not None:
+            self.fields["customer"].initial = customer
+            self.fields["customer"].widget = forms.HiddenInput()
+            self.fields["customer"].required = False
+
+    def clean_customer(self):
+        if self.locked_customer is not None:
+            return self.locked_customer
+        customer = self.cleaned_data.get("customer")
+        if customer is None and self.instance.pk:
+            return self.instance.customer
+        return customer
+
+
+class EmailDraftForm(forms.Form):
+    GOALS = (
+        ("thanks", "Cảm ơn sau buổi trao đổi"),
+        ("check_in", "Hỏi thăm nhu cầu"),
+        ("meeting", "Đề xuất lịch trao đổi/demo"),
+        ("quote", "Trao đổi báo giá"),
+        ("reconnect", "Kết nối lại khách hàng"),
+    )
+    goal = forms.ChoiceField(label="Mục tiêu email", choices=GOALS, widget=forms.Select(attrs={"class": "form-input"}))
+    tone = forms.ChoiceField(
+        label="Giọng văn", choices=(("formal", "Chuyên nghiệp"), ("friendly", "Thân thiện")),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    length = forms.ChoiceField(
+        label="Độ dài", choices=(("ngắn", "Ngắn"), ("vừa", "Vừa"), ("chi tiết", "Chi tiết")),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    draft = forms.CharField(
+        label="Bản nháp có thể chỉnh sửa", required=False, max_length=5000,
+        widget=forms.Textarea(attrs={"class": "form-input", "rows": 12}),
+    )
 
 
 class PublicLeadRequestForm(forms.Form):

@@ -5,7 +5,7 @@ from datetime import timedelta
 from smtplib import SMTPException
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -28,6 +28,7 @@ class LeadFollowUpFlowTests(TestCase):
             password="test-password-123",
             is_staff=True,
         )
+        self.user.user_permissions.add(*Permission.objects.filter(content_type__app_label="crm"))
         self.customer = Customer.objects.create(
             full_name="Công ty kiểm thử",
             email="follow-up@example.com",

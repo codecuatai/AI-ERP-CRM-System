@@ -28,14 +28,16 @@ Các file quan trọng:
 
 | File/thư mục | Vai trò |
 |---|---|
-| `crm/models.py` | `Customer`, `Interaction`, `LeadRequest`, `LeadFollowUp`, `LeadFollowUpResponse`, `AIAnalysis` |
-| `crm/forms.py` | Form yêu cầu tư vấn, soạn email follow-up, phản hồi và consent |
-| `crm/views.py` | Form công khai/follow-up, gửi email, Dashboard, hồ sơ và endpoint phân tích |
-| `crm/services/ai_service.py` | Gemini và `_rule_based_analysis()` |
-| `crm/templates/crm/` | Form công khai, Dashboard, hồ sơ và layout |
+| `crm/models.py` | Các model CRM và Wagtail `LandingPage` |
+| `crm/forms.py` | Form yêu cầu tư vấn, follow-up, consent, việc chăm sóc và email draft |
+| `crm/views.py` | Frontend CRM, hàng đợi ưu tiên, báo cáo/CSV, phân tích và follow-up |
+| `crm/services/` | Phân tích Gemini/rules và dịch vụ soạn email nháp có consent |
+| `crm/wagtail_hooks.py` | Cấu hình SnippetViewSet tìm kiếm/lọc/xem chi tiết |
+| `crm/templates/crm/` | Các trang CRM, CMS landing page, báo cáo và thao tác email |
 | `crm/migrations/` | Migration database phải được commit |
 | `crm/test_*.py`, `crm/tests.py` | Test AI, view và form lead |
 | `crm/management/commands/seed_crm_data.py` | Dữ liệu demo |
+| `setup_cms_homepage`, `setup_crm_groups` | Khởi tạo trang chủ CMS và nhóm quyền CRM |
 | `config/settings/dev.py` | SQLite, `.env`, Gemini, môi trường local |
 | `PUBLIC_SITE_URL`, `EMAIL_*` | Domain link phản hồi và cấu hình SMTP; local mặc định in email ra terminal |
 | `tailwind/` | Nguồn Tailwind và lệnh build CSS |
@@ -66,6 +68,8 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 python manage.py makemigrations crm
 python manage.py migrate
+python manage.py setup_cms_homepage
+python manage.py setup_crm_groups
 python manage.py seed_crm_data
 python manage.py createsuperuser
 python manage.py runserver
@@ -88,59 +92,13 @@ npm install
 npm run css:build
 ```
 
-## 5. Nhiệm vụ ưu tiên tiếp theo
+## 5. Các tính năng đã có và hướng phát triển
 
-### Xây dựng “Việc cần chăm sóc khách hàng”
-
-Biến đề xuất từ AI thành một việc có thể giao và theo dõi.
-
-#### Phạm vi chức năng
-
-- Tạo việc từ trang hồ sơ khách hàng.
-- Cho phép nhập nội dung việc cần làm.
-- Việc thuộc về đúng một khách hàng.
-- Có loại việc: liên hệ lại, gọi điện, gửi báo giá, hẹn gặp hoặc khác.
-- Có người phụ trách; nếu hệ thống chưa có cơ chế phân công riêng, dùng user đăng nhập hiện tại.
-- Có ngày đến hạn.
-- Có mức ưu tiên: thấp, vừa, cao.
-- Có trạng thái: `Cần làm`, `Đang làm`, `Hoàn tất`.
-- Có thể chỉnh sửa và đánh dấu hoàn tất.
-- Dashboard hiển thị ít nhất: việc hôm nay, việc quá hạn và việc sắp tới.
-- Từ đề xuất AI có thể mở form tạo việc với nội dung gợi ý được điền sẵn; người dùng phải xác nhận trước khi lưu.
-
-#### Gợi ý mô hình dữ liệu
-
-Tạo model mới, ví dụ `CareTask`, gồm tối thiểu:
-
-- `customer`: ForeignKey đến `Customer`.
-- `title` hoặc `content`: nội dung việc.
-- `kind`: loại việc.
-- `assignee`: ForeignKey đến user, cho phép xử lý theo quy tắc của dự án hiện tại.
-- `due_at`: hạn hoàn thành.
-- `priority`: thấp/vừa/cao.
-- `status`: cần làm/đang làm/hoàn tất.
-- `created_at`, `updated_at`, và thời điểm hoàn tất nếu cần.
-
-Model phải được đăng ký trong Wagtail Snippets để có thể quản trị thủ công.
-
-#### Tiêu chí hoàn thành
-
-- Nhân viên tạo được việc từ một khách hàng cụ thể.
-- Việc hiển thị đúng trong hồ sơ khách hàng.
-- Có thể sửa trạng thái và đánh dấu hoàn tất.
-- Dashboard phân biệt đúng việc hôm nay, quá hạn và sắp tới.
-- Không tạo việc nếu người dùng chưa xác nhận form.
-- Migration chạy thành công.
-- Có dữ liệu mẫu để trình diễn ít nhất việc quá hạn và việc sắp tới.
-- Rules fallback vẫn chạy nếu không có `GEMINI_API_KEY`.
-- README mô tả được luồng sử dụng mới.
-
-#### Không làm trong nhiệm vụ này
-
-- Không tự động gửi email, SMS, Zalo hoặc thông báo bên ngoài.
-- Không xây dựng Celery, cron hoặc xử lý nền.
-- Không thêm module kế toán, kho, nhân sự hay thanh toán.
-- Không thay đổi tên model CRM hiện có nếu không cần thiết.
+- `CareTask`, hàng đợi ưu tiên, email draft có người duyệt, CMS landing page, SnippetViewSet, CSV và báo cáo cơ bản đã có.
+- Chạy `setup_crm_groups` sau migrate; chỉ tài khoản được gán nhóm và có quyền mới truy cập màn hình CRM. Follow-up email cần người dùng staff và quyền quản lý lead.
+- AI không tự gửi email/tin nhắn; draft chỉ được lưu thành tương tác khi nhân viên chủ động xác nhận đã gửi bên ngoài.
+- Hướng phát triển kế tiếp được theo dõi trong `docs/lo-trinh-tinh-nang.md`; cập nhật tài liệu đó khi trạng thái roadmap thay đổi.
+- Giữ phạm vi CRM, không thêm kế toán, kho, nhân sự, thanh toán hoặc xử lý nền nếu nhiệm vụ không yêu cầu.
 
 ## 6. Bàn giao kết quả
 

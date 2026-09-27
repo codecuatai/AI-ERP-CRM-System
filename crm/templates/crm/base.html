@@ -19,7 +19,10 @@
       <nav class="flex flex-col gap-1">
         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'crm:dashboard' %}"><span class="nav-symbol">▦</span>Tổng quan</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'customers' or request.resolver_match.url_name == 'customer_detail' %}active{% endif %}" href="{% url 'crm:customers' %}"><span class="nav-symbol">♙</span>Khách hàng</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'priority_customers' %}active{% endif %}" href="{% url 'crm:priority_customers' %}"><span class="nav-symbol">↑</span>Khách cần ưu tiên</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'lead_requests' %}active{% endif %}" href="{% url 'crm:lead_requests' %}"><span class="nav-symbol">✉</span>Yêu cầu tư vấn</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'care_tasks' or request.resolver_match.url_name == 'care_task_create' or request.resolver_match.url_name == 'care_task_edit' or request.resolver_match.url_name == 'customer_care_task_create' %}active{% endif %}" href="{% url 'crm:care_tasks' %}"><span class="nav-symbol">✓</span>Việc chăm sóc</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'report' %}active{% endif %}" href="{% url 'crm:report' %}"><span class="nav-symbol">▤</span>Báo cáo</a>
       </nav>
       <div class="sidebar-bottom mt-auto">
         <div class="help-card"><span class="help-dot"></span><strong>AI hỗ trợ bán hàng</strong><small>Mở hồ sơ khách hàng để phân tích và xem gợi ý chăm sóc.</small></div>
@@ -34,7 +37,10 @@
       <nav class="flex flex-col gap-1">
         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'crm:dashboard' %}"><span class="nav-symbol">▦</span>Tổng quan</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'customers' or request.resolver_match.url_name == 'customer_detail' %}active{% endif %}" href="{% url 'crm:customers' %}"><span class="nav-symbol">♙</span>Khách hàng</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'priority_customers' %}active{% endif %}" href="{% url 'crm:priority_customers' %}"><span class="nav-symbol">↑</span>Khách cần ưu tiên</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'lead_requests' %}active{% endif %}" href="{% url 'crm:lead_requests' %}"><span class="nav-symbol">✉</span>Yêu cầu tư vấn</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'care_tasks' or request.resolver_match.url_name == 'care_task_create' or request.resolver_match.url_name == 'care_task_edit' or request.resolver_match.url_name == 'customer_care_task_create' %}active{% endif %}" href="{% url 'crm:care_tasks' %}"><span class="nav-symbol">✓</span>Việc chăm sóc</a>
+        <a class="nav-link" href="{% url 'crm:report' %}"><span class="nav-symbol">▤</span>Báo cáo</a>
         <a class="nav-link mt-6" href="/admin/"><span class="nav-symbol">⚙</span>Quản trị dữ liệu</a>
       </nav>
     </aside>
@@ -42,7 +48,7 @@
     <div class="main-column">
       <header class="topbar">
         <button class="button-secondary mobile-open lg:hidden" id="openMobileMenu" type="button" aria-controls="mobileMenu" aria-expanded="false" aria-label="Mở menu">☰</button>
-        <div class="topbar-label">CRM <span aria-hidden="true">/</span> {% if request.resolver_match.url_name == 'dashboard' %}Tổng quan{% elif request.resolver_match.url_name == 'lead_requests' %}Yêu cầu tư vấn{% elif request.resolver_match.url_name == 'customer_detail' %}Hồ sơ khách hàng{% else %}Khách hàng{% endif %}</div>
+        <div class="topbar-label">CRM <span aria-hidden="true">/</span> {% if request.resolver_match.url_name == 'dashboard' %}Tổng quan{% elif request.resolver_match.url_name == 'lead_requests' %}Yêu cầu tư vấn{% elif request.resolver_match.url_name == 'care_tasks' %}Việc chăm sóc{% elif request.resolver_match.url_name == 'customer_detail' %}Hồ sơ khách hàng{% elif request.resolver_match.url_name == 'care_task_create' or request.resolver_match.url_name == 'care_task_edit' or request.resolver_match.url_name == 'customer_care_task_create' %}Chi tiết việc chăm sóc{% else %}Khách hàng{% endif %}</div>
         <a class="button-secondary ml-auto hidden sm:inline-flex" href="{% url 'crm:lead_request' %}" target="_blank" rel="noopener">Xem form công khai <span aria-hidden="true">↗</span></a>
       </header>
       <main class="page-content">

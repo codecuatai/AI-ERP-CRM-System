@@ -1,8 +1,11 @@
-from django.contrib.auth.models import User
+from datetime import timedelta
+
+from django.contrib.auth.models import Permission, User
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from crm.models import AIAnalysis, Customer, LeadRequest
+from crm.models import AIAnalysis, CareTask, Customer, LeadRequest
 
 
 class CRMViewTests(TestCase):
@@ -11,6 +14,7 @@ class CRMViewTests(TestCase):
             username="crm-tester",
             password="test-password-123",
         )
+        self.user.user_permissions.add(*Permission.objects.filter(content_type__app_label="crm"))
         self.customer = Customer.objects.create(
             full_name="Công ty kiểm thử",
             email="company@example.com",
@@ -22,6 +26,14 @@ class CRMViewTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn("/admin/login/", response["Location"])
+
+    def test_authenticated_user_without_crm_permission_is_denied(self):
+        unassigned = User.objects.create_user(username="no-crm-role", password="test-password-123")
+        self.client.force_login(unassigned)
+
+        response = self.client.get(reverse("crm:dashboard"))
+
+        self.assertEqual(response.status_code, 403)
 
     def test_authenticated_dashboard_can_search_customer(self):
         self.client.force_login(self.user)
@@ -83,6 +95,188 @@ class CRMViewTests(TestCase):
         self.assertRedirects(response, reverse("crm:lead_requests"))
         lead_request.refresh_from_db()
         self.assertEqual(lead_request.status, LeadRequest.Status.CONTACTED)
+
+    def test_user_can_create_care_task_and_get_assigned_automatically(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("crm:customer_care_task_create", args=[self.customer.pk]), {
+            "title": "Gọi trao đổi về demo",
+            "description": "Thống nhất lịch trình diễn.",
+            "kind": CareTask.Kind.CALL,
+            "due_at": timezone.localdate().isoformat(),
+            "priority": CareTask.Priority.HIGH,
+            "status": CareTask.Status.TODO,
+        })
+
+        task = CareTask.objects.get()
+        self.assertRedirects(response, reverse("crm:customer_detail", args=[self.customer.pk]))
+        self.assertEqual(task.customer, self.customer)
+        self.assertEqual(task.assignee, self.user)
+        self.assertEqual(task.priority, CareTask.Priority.HIGH)
+
+    def test_task_can_be_completed_from_edit_form(self):
+        self.client.force_login(self.user)
+        task = CareTask.objects.create(
+            customer=self.customer,
+            title="Gửi báo giá",
+            due_at=timezone.localdate(),
+            assignee=self.user,
+        )
+
+        response = self.client.post(reverse("crm:care_task_edit", args=[task.pk]), {
+            "customer": self.customer.pk,
+            "title": task.title,
+            "description": "",
+            "kind": CareTask.Kind.QUOTE,
+            "due_at": timezone.localdate().isoformat(),
+            "priority": CareTask.Priority.MEDIUM,
+            "status": CareTask.Status.DONE,
+        })
+
+        self.assertRedirects(response, reverse("crm:care_tasks"))
+        task.refresh_from_db()
+        self.assertEqual(task.status, CareTask.Status.DONE)
+        self.assertIsNotNone(task.completed_at)
+
+    def test_ai_recommendation_prefills_task_but_does_not_save_automatically(self):
+        self.client.force_login(self.user)
+        recommendation = "Gọi lại để hẹn buổi demo giải pháp quản lý kho."
+        AIAnalysis.objects.create(
+            customer=self.customer,
+            segment=Customer.Segment.POTENTIAL,
+            score=75,
+            summary="Nhu cầu phù hợp.",
+            recommendation=recommendation,
+            provider="rules",
+        )
+
+        response = self.client.get(
+            reverse("crm:customer_care_task_create", args=[self.customer.pk]),
+            {"suggestion": "1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["form"]["description"].value(), recommendation)
+        self.assertEqual(CareTask.objects.count(), 0)
+
+    def test_task_list_filters_by_status(self):
+        self.client.force_login(self.user)
+        CareTask.objects.create(customer=self.customer, title="Cần gọi", due_at=timezone.localdate())
+        CareTask.objects.create(
+            customer=self.customer,
+            title="Đã xong",
+            due_at=timezone.localdate(),
+            status=CareTask.Status.DONE,
+        )
+
+        response = self.client.get(reverse("crm:care_tasks"), {"status": CareTask.Status.TODO})
+
+        self.assertContains(response, "Cần gọi")
+        self.assertNotContains(response, "Đã xong")
+
+    def test_priority_queue_explains_why_customer_needs_attention(self):
+        self.client.force_login(self.user)
+        self.customer.ai_segment = Customer.Segment.CHURN_RISK
+        self.customer.ai_score = 88
+        self.customer.save(update_fields=["ai_segment", "ai_score"])
+        CareTask.objects.create(
+            customer=self.customer,
+            title="Việc bị trễ",
+            due_at=timezone.localdate() - timedelta(days=1),
+        )
+
+        response = self.client.get(reverse("crm:priority_customers"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Có nguy cơ rời bỏ")
+        self.assertContains(response, "Có việc chăm sóc quá hạn")
+        self.assertEqual(response.context["queue"][0]["customer"], self.customer)
+
+    def test_priority_queue_quick_filter_shows_only_matching_customers(self):
+        self.client.force_login(self.user)
+        self.customer.ai_segment = Customer.Segment.CHURN_RISK
+        self.customer.save(update_fields=["ai_segment"])
+        ordinary = Customer.objects.create(full_name="Khách thường", email="ordinary@example.com")
+
+        response = self.client.get(reverse("crm:priority_customers"), {"filter": "churn"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([row["customer"] for row in response.context["queue"]], [self.customer])
+        self.assertNotContains(response, ordinary.full_name)
+
+    @override_settings(GEMINI_API_KEY="")
+    def test_email_draft_is_generated_without_sending_or_logging(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("crm:customer_email_draft", args=[self.customer.pk]), {
+            "goal": "check_in", "tone": "formal", "length": "vừa", "action": "generate",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "bản nháp")
+        self.assertContains(response, "Kính gửi")
+        self.assertEqual(self.customer.interactions.count(), 0)
+        self.assertTrue(response.context["form"]["draft"].value())
+
+    def test_email_is_logged_only_after_explicit_user_confirmation(self):
+        self.client.force_login(self.user)
+        draft = "Kính gửi Anh/Chị,\n\nXin cảm ơn anh/chị đã trao đổi.\n\nTrân trọng."
+
+        response = self.client.post(reverse("crm:customer_email_draft", args=[self.customer.pk]), {
+            "goal": "thanks", "tone": "formal", "length": "ngắn", "draft": draft,
+            "action": "record_sent",
+        })
+
+        self.assertRedirects(response, reverse("crm:customer_detail", args=[self.customer.pk]))
+        self.assertEqual(self.customer.interactions.count(), 1)
+        self.assertEqual(self.customer.interactions.get().content, draft)
+
+    def test_customer_export_returns_csv(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("crm:export_customers_csv"), {"q": "Kiểm thử"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response["Content-Type"])
+        self.assertIn(self.customer.email, response.content.decode("utf-8-sig"))
+
+    def test_customer_export_neutralizes_spreadsheet_formulas(self):
+        self.client.force_login(self.user)
+        Customer.objects.create(full_name="=HYPERLINK(\"https://bad.test\")", email="formula@example.com")
+
+        response = self.client.get(reverse("crm:export_customers_csv"))
+
+        self.assertIn("'=HYPERLINK", response.content.decode("utf-8-sig"))
+        self.assertNotIn("\n=HYPERLINK", response.content.decode("utf-8-sig"))
+
+    def test_report_shows_existing_crm_counts(self):
+        self.client.force_login(self.user)
+        CareTask.objects.create(customer=self.customer, title="Gọi khách", due_at=timezone.localdate())
+
+        response = self.client.get(reverse("crm:report"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["customer_total"], 1)
+        self.assertContains(response, "Báo cáo CRM")
+
+    def test_dashboard_groups_overdue_today_and_upcoming_tasks(self):
+        self.client.force_login(self.user)
+        today = timezone.localdate()
+        CareTask.objects.create(customer=self.customer, title="Việc quá hạn", due_at=today - timedelta(days=1))
+        CareTask.objects.create(customer=self.customer, title="Việc hôm nay", due_at=today)
+        CareTask.objects.create(customer=self.customer, title="Việc sắp tới", due_at=today + timedelta(days=1))
+        CareTask.objects.create(
+            customer=self.customer,
+            title="Việc xong không còn mở",
+            due_at=today - timedelta(days=1),
+            status=CareTask.Status.DONE,
+        )
+
+        response = self.client.get(reverse("crm:dashboard"))
+
+        self.assertContains(response, "Việc quá hạn")
+        self.assertContains(response, "Việc hôm nay")
+        self.assertContains(response, "Việc sắp tới")
+        self.assertNotContains(response, "Việc xong không còn mở")
 
     def test_customer_with_public_lead_without_ai_consent_cannot_be_analyzed(self):
         self.client.force_login(self.user)

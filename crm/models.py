@@ -4,13 +4,14 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
-from wagtail.snippets.models import register_snippet
+from wagtail import blocks
+from wagtail.fields import StreamField
+from wagtail.models import Page
 
 if TYPE_CHECKING:
     from django.db.models.fields.related_descriptors import RelatedManager
 
 
-@register_snippet
 class Customer(models.Model):
     if TYPE_CHECKING:
         interactions: RelatedManager["Interaction"]
@@ -52,12 +53,18 @@ class Customer(models.Model):
         ordering = ["full_name"]
         verbose_name = "Khách hàng"
         verbose_name_plural = "Khách hàng"
+        permissions = [
+            ("access_crm", "Can access the CRM workspace"),
+            ("analyze_customer", "Can run customer AI analysis"),
+            ("manage_crm_leads", "Can manage CRM leads and follow-ups"),
+            ("manage_care_tasks", "Can manage customer care tasks"),
+            ("export_crm_data", "Can export CRM data"),
+        ]
 
     def __str__(self):
         return f"{self.full_name} ({self.email})"
 
 
-@register_snippet
 class Interaction(models.Model):
     class Kind(models.TextChoices):
         EMAIL = "EMAIL", "Email"
@@ -82,7 +89,6 @@ class Interaction(models.Model):
         return f"{self.customer.full_name} — {self.subject}"
 
 
-@register_snippet
 class AIAnalysis(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="ai_analyses", verbose_name="Khách hàng")
     segment = models.CharField("Phân khúc", max_length=20, choices=Customer.Segment.choices)
@@ -110,7 +116,6 @@ class AIAnalysis(models.Model):
         return f"{self.customer.full_name} — {self.get_segment_display()} ({self.created_at:%Y-%m-%d})"
 
 
-@register_snippet
 class LeadRequest(models.Model):
     if TYPE_CHECKING:
         follow_ups: RelatedManager["LeadFollowUp"]
@@ -261,3 +266,135 @@ class LeadFollowUpResponse(models.Model):
 
     def __str__(self):
         return f"Phản hồi — {self.follow_up.lead_request.customer.full_name} ({self.submitted_at:%Y-%m-%d})"
+
+
+class CareTask(models.Model):
+    class Kind(models.TextChoices):
+        FOLLOW_UP = "FOLLOW_UP", "Liên hệ lại"
+        CALL = "CALL", "Gọi điện"
+        QUOTE = "QUOTE", "Gửi báo giá"
+        MEETING = "MEETING", "Hẹn gặp"
+        OTHER = "OTHER", "Khác"
+
+    class Priority(models.TextChoices):
+        LOW = "LOW", "Thấp"
+        MEDIUM = "MEDIUM", "Vừa"
+        HIGH = "HIGH", "Cao"
+
+    class Status(models.TextChoices):
+        TODO = "TODO", "Cần làm"
+        IN_PROGRESS = "IN_PROGRESS", "Đang làm"
+        DONE = "DONE", "Hoàn tất"
+
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="care_tasks", verbose_name="Khách hàng"
+    )
+    title = models.CharField("Việc cần làm", max_length=180)
+    description = models.TextField("Ghi chú", blank=True)
+    kind = models.CharField("Loại việc", max_length=12, choices=Kind.choices, default=Kind.FOLLOW_UP)
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="crm_care_tasks", verbose_name="Người phụ trách",
+    )
+    due_at = models.DateField("Ngày đến hạn")
+    priority = models.CharField("Mức ưu tiên", max_length=8, choices=Priority.choices, default=Priority.MEDIUM)
+    status = models.CharField("Trạng thái", max_length=12, choices=Status.choices, default=Status.TODO)
+    completed_at = models.DateTimeField("Thời điểm hoàn tất", null=True, blank=True)
+    created_at = models.DateTimeField("Ngày tạo", auto_now_add=True)
+    updated_at = models.DateTimeField("Cập nhật lần cuối", auto_now=True)
+
+    panels = [
+        FieldPanel("customer"), FieldPanel("title"), FieldPanel("description"),
+        FieldPanel("kind"), FieldPanel("assignee"), FieldPanel("due_at"),
+        FieldPanel("priority"), FieldPanel("status"),
+    ]
+
+    class Meta:
+        ordering = ["status", "due_at", "-priority", "-created_at"]
+        verbose_name = "Việc chăm sóc khách hàng"
+        verbose_name_plural = "Việc chăm sóc khách hàng"
+
+    def __str__(self):
+        return f"{self.title} — {self.customer.full_name}"
+
+
+class LandingPage(Page):
+    """Editable public homepage for the digital-transformation CRM demo."""
+
+    hero_title = models.CharField("Tiêu đề chính", max_length=180, default="Công nghệ nên giúp công việc")
+    hero_emphasis = models.CharField("Cụm từ nhấn mạnh", max_length=100, default="trôi chảy hơn.")
+    hero_text = models.TextField(
+        "Mô tả chính",
+        default="Kết nối quy trình bán hàng, quản lý vận hành và dữ liệu trên những giải pháp phù hợp với cách doanh nghiệp bạn đang làm việc.",
+    )
+    solutions_heading = models.CharField("Tiêu đề khu vực giải pháp", max_length=180, default="Những mảnh ghép cho một vận hành gọn hơn.")
+    solutions_intro = models.TextField(
+        "Giới thiệu giải pháp",
+        default="Không phải doanh nghiệp nào cũng cần cùng một bộ công cụ. Hãy bắt đầu từ điểm nghẽn đang làm đội ngũ mất thời gian nhất.",
+    )
+    solutions = StreamField(
+        [
+            ("solution", blocks.StructBlock([
+                ("icon", blocks.CharBlock(max_length=8, required=False)),
+                ("category", blocks.CharBlock(max_length=60)),
+                ("title", blocks.CharBlock(max_length=100)),
+                ("description", blocks.TextBlock()),
+                ("link_label", blocks.CharBlock(max_length=60, default="Trao đổi về giải pháp")),
+            ], icon="list-ul")),
+        ], blank=True, use_json_field=True, verbose_name="Các giải pháp",
+    )
+    approach_heading = models.CharField("Tiêu đề cách làm", max_length=180, default="Bắt đầu từ bài toán. Không bắt đầu từ phần mềm.")
+    approach_intro = models.TextField(
+        "Giới thiệu cách làm",
+        default="Một giải pháp có ích phải phù hợp với con người và quy trình sử dụng nó.",
+    )
+    approach_steps = StreamField(
+        [
+            ("step", blocks.StructBlock([
+                ("title", blocks.CharBlock(max_length=100)),
+                ("description", blocks.TextBlock()),
+            ], icon="list-ol")),
+        ], blank=True, use_json_field=True, verbose_name="Các bước triển khai",
+    )
+    contact_heading = models.CharField("Tiêu đề liên hệ", max_length=160, default="Chia sẻ điều bạn muốn cải thiện.")
+    contact_intro = models.TextField(
+        "Giới thiệu liên hệ",
+        default="Chọn nhóm giải pháp và chia sẻ nhu cầu. Đội ngũ sẽ xem xét yêu cầu, sau đó liên hệ để trao đổi bước tiếp theo.",
+    )
+
+    content_panels = Page.content_panels + [
+        MultiFieldPanel([FieldPanel("hero_title"), FieldPanel("hero_emphasis"), FieldPanel("hero_text")], heading="Hero"),
+        MultiFieldPanel([FieldPanel("solutions_heading"), FieldPanel("solutions_intro"), FieldPanel("solutions")], heading="Giải pháp"),
+        MultiFieldPanel([FieldPanel("approach_heading"), FieldPanel("approach_intro"), FieldPanel("approach_steps")], heading="Cách làm"),
+        MultiFieldPanel([FieldPanel("contact_heading"), FieldPanel("contact_intro")], heading="Liên hệ"),
+    ]
+
+    parent_page_types = ["wagtailcore.Page"]
+    subpage_types = []
+
+    class Meta:
+        verbose_name = "Trang chủ doanh nghiệp"
+
+    def get_context(self, request, *args, **kwargs):
+        from django.conf import settings as django_settings
+        from .forms import PublicLeadRequestForm
+
+        context = super().get_context(request, *args, **kwargs)
+        context.update({
+            "form": PublicLeadRequestForm(request.POST or None),
+            "brand_name": django_settings.PUBLIC_BRAND_NAME,
+            "contact_email": django_settings.PUBLIC_CONTACT_EMAIL,
+        })
+        return context
+
+    def serve(self, request, *args, **kwargs):
+        if request.method == "POST":
+            from django.shortcuts import redirect
+            from .forms import PublicLeadRequestForm
+            from .views import save_public_lead_request
+
+            form = PublicLeadRequestForm(request.POST)
+            if form.is_valid():
+                save_public_lead_request(form.cleaned_data)
+                return redirect("crm:lead_request_success")
+        return super().serve(request, *args, **kwargs)
