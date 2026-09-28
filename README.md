@@ -244,15 +244,15 @@ Profile production từ chối secret yếu/thiếu, wildcard host, URL public k
 
 ## Dữ liệu mẫu
 
-Lệnh `python manage.py seed_crm_data` tạo dữ liệu phục vụ trình diễn:
+Lệnh `python manage.py seed_crm_data` tạo dữ liệu phục vụ trình diễn. Ngoài 6 hồ sơ mẫu ban đầu, lệnh bổ sung 24 doanh nghiệp giả lập với email thuộc miền `.test`:
 
-- 6 khách hàng mẫu thuộc nhiều bối cảnh khác nhau.
-- 10 lịch sử tương tác gồm email, điện thoại và gặp mặt.
-- 2 bản ghi `AIAnalysis` có sẵn để Dashboard và hồ sơ hiển thị ngay.
-- 4 khách hàng chưa có phân tích để trình diễn nút **Phân tích ngay**.
-- 3 việc chăm sóc mẫu gồm một việc quá hạn, một việc đến hạn hôm nay và một việc sắp tới.
+- Tổng 30 hồ sơ trong database mới; 24 hồ sơ thêm có tên/công ty và ghi chú ghi rõ là dữ liệu giả lập.
+- 58 lịch sử tương tác trong database mới, xen kẽ email, điện thoại và gặp mặt.
+- 24 yêu cầu tư vấn mẫu với trạng thái mới/đã liên hệ/đã xử lý và có/không đồng ý AI để minh họa quyền riêng tư.
+- Kết quả phân tích mẫu cho hồ sơ được giả lập đã đồng ý AI; không gọi Gemini khi seed.
+- 19 việc chăm sóc với trạng thái hoàn tất/đang làm/cần làm, hạn quá khứ/hôm nay/tương lai.
 
-Lệnh seed dùng email và chủ đề tương tác để tránh tạo trùng khi chạy lại. Lệnh này chỉ tạo dữ liệu, không tạo tài khoản đăng nhập.
+Lệnh seed dùng email, nội dung yêu cầu, chủ đề tương tác và tiêu đề việc để tránh tạo trùng khi chạy lại; không ghi đè hồ sơ đã tồn tại. Các thông tin liên hệ mới đều là dữ liệu demo, không dùng dữ liệu khách thật. Lệnh này chỉ tạo dữ liệu, không tạo tài khoản đăng nhập. Chạy lại lệnh an toàn nếu muốn bổ sung các bản ghi demo còn thiếu.
 
 ## Cách phân tích AI hoạt động
 

@@ -2,74 +2,303 @@
 {% load humanize %}
 {% block title %}Tổng quan{% endblock %}
 {% block content %}
+
+<!-- HERO BANNER -->
 <section class="dashboard-hero" aria-labelledby="dashboard-title">
-  <div class="dashboard-hero-copy"><span class="dashboard-hero-kicker"><span aria-hidden="true">✦</span> KHÔNG GIAN LÀM VIỆC CRM</span><h1 id="dashboard-title">Chào {{ request.user.get_username }}<span>.</span></h1><p>Mọi khách hàng và việc cần chăm sóc, gói gọn trong một nơi.</p>
-    <div class="dashboard-hero-actions"><a class="dashboard-hero-primary" href="{% url 'crm:priority_customers' %}">Xem ai cần chăm sóc trước <span aria-hidden="true">→</span></a><a class="dashboard-hero-secondary" href="{% url 'crm:customers' %}">Mở danh sách khách</a></div>
+  <div class="dashboard-hero-grid">
+    <div class="dashboard-hero-copy">
+      <span class="dashboard-hero-kicker">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Không gian làm việc CRM
+      </span>
+      <h1 id="dashboard-title">Chào {{ request.user.get_username }}<span class="text-blue-400">.</span></h1>
+      <p>Mọi khách hàng và việc cần chăm sóc — tập trung trong một nơi duy nhất.</p>
+      <div class="dashboard-hero-actions">
+        <a class="dashboard-hero-primary" href="{% url 'crm:priority_customers' %}">
+          Xem ai cần chăm sóc trước
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a class="dashboard-hero-secondary" href="{% url 'crm:customers' %}">Mở danh sách khách</a>
+      </div>
+    </div>
+    <div class="dashboard-hero-glance" aria-label="Tóm tắt công việc">
+      <div class="hero-glance-item">
+        <span>Việc đang mở</span>
+        <strong>{{ open_task_count }}</strong>
+      </div>
+      <div class="hero-glance-divider"></div>
+      <div class="hero-glance-item hero-glance-alert">
+        <span>Quá hạn</span>
+        <strong>{{ overdue_task_count }}</strong>
+      </div>
+      <p class="hero-glance-note">Ưu tiên xử lý việc quá hạn trước.</p>
+    </div>
   </div>
-  <div class="dashboard-hero-glance" aria-label="Tóm tắt công việc"><div class="hero-glance-item"><span>Việc đang mở</span><strong>{{ open_task_count }}</strong></div><div class="hero-glance-divider"></div><div class="hero-glance-item hero-glance-alert"><span>Quá hạn</span><strong>{{ overdue_task_count }}</strong></div><p>Ưu tiên xử lý việc quá hạn trước.</p></div>
 </section>
 
-<section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Chỉ số CRM">
-  <a class="stat-card stat-link" href="{% url 'crm:customers' %}"><div class="stat-top"><span class="stat-icon icon-blue">♙</span><span class="stat-caption">KHÁCH HÀNG ĐANG HOẠT ĐỘNG</span></div><div class="stat-value">{{ customer_count|intcomma }}</div><div class="stat-note">Mở danh sách khách hàng <span aria-hidden="true">→</span></div></a>
-  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=VIP"><div class="stat-top"><span class="stat-icon icon-violet">★</span><span class="stat-caption">KHÁCH HÀNG VIP</span></div><div class="stat-value">{{ vip_count|intcomma }}</div><div class="stat-note">Xem nhóm khách hàng VIP <span aria-hidden="true">→</span></div></a>
-  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED"><div class="stat-top"><span class="stat-icon icon-amber">◷</span><span class="stat-caption">CHƯA ĐƯỢC PHÂN TÍCH</span></div><div class="stat-value">{{ unclassified_count|intcomma }}</div><div class="stat-note">Mở hồ sơ để chạy phân tích AI <span aria-hidden="true">→</span></div></a>
-  <a class="stat-card stat-link" href="{% url 'crm:lead_requests' %}?status=NEW"><div class="stat-top"><span class="stat-icon icon-green">✉</span><span class="stat-caption">YÊU CẦU MỚI</span></div><div class="stat-value">{{ new_lead_count|intcomma }}</div><div class="stat-note">Cần được nhân viên phản hồi <span aria-hidden="true">→</span></div></a>
+<!-- STAT CARDS -->
+<section class="stats-grid" aria-label="Chỉ số CRM">
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}">
+    <div class="stat-top">
+      <span class="stat-icon icon-blue" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Khách hàng đang hoạt động</div>
+    <div class="stat-value">{{ customer_count|intcomma }}</div>
+    <div class="stat-note">Mở danh sách khách hàng →</div>
+  </a>
+
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=VIP">
+    <div class="stat-top">
+      <span class="stat-icon icon-amber" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Khách hàng VIP</div>
+    <div class="stat-value">{{ vip_count|intcomma }}</div>
+    <div class="stat-note">Xem nhóm VIP →</div>
+  </a>
+
+  <a class="stat-card stat-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED">
+    <div class="stat-top">
+      <span class="stat-icon icon-violet" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Chưa được phân tích AI</div>
+    <div class="stat-value">{{ unclassified_count|intcomma }}</div>
+    <div class="stat-note">Mở hồ sơ để chạy phân tích →</div>
+  </a>
+
+  <a class="stat-card stat-link" href="{% url 'crm:lead_requests' %}?status=NEW">
+    <div class="stat-top">
+      <span class="stat-icon icon-green" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Yêu cầu mới chưa xử lý</div>
+    <div class="stat-value">{{ new_lead_count|intcomma }}</div>
+    <div class="stat-note">Cần nhân viên phản hồi →</div>
+  </a>
 </section>
 
 {% if show_first_run_guide %}
+<!-- FIRST RUN GUIDE -->
 <section class="first-run-guide" aria-labelledby="first-run-title">
-  <div class="first-run-heading">
-    <span class="eyebrow">HƯỚNG DẪN LẦN ĐẦU</span>
+  <div>
+    <span class="eyebrow">Hướng dẫn lần đầu</span>
     <h2 id="first-run-title">Bắt đầu với một khách hàng mẫu</h2>
     <p>Đi theo luồng này để hiểu cách CRM biến yêu cầu tư vấn thành một việc chăm sóc có thể theo dõi.</p>
   </div>
   <ol class="first-run-steps">
-    <li><span class="first-run-number">01</span><div><strong>Gửi yêu cầu tư vấn thử</strong><p>Mở form như một khách hàng. Dùng email và thông tin giả lập, không nhập dữ liệu thật khi đang demo.</p><a href="{% url 'crm:lead_request' %}" target="_blank" rel="noopener">Mở form công khai <span aria-hidden="true">↗</span></a></div></li>
-    <li><span class="first-run-number">02</span><div><strong>Tiếp nhận yêu cầu</strong><p>Yêu cầu sẽ xuất hiện trong hộp thư CRM; mở hồ sơ để xem nhu cầu và cập nhật trạng thái.</p><a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu <span aria-hidden="true">→</span></a></div></li>
-    <li><span class="first-run-number">03</span><div><strong>Đọc gợi ý AI</strong><p>Chỉ phân tích nội dung khách đã đồng ý. Kết quả là gợi ý tham khảo; nhân viên vẫn quyết định bước tiếp theo.</p><a href="{% url 'crm:customers' %}">Mở danh sách khách hàng <span aria-hidden="true">→</span></a></div></li>
-    <li><span class="first-run-number">04</span><div><strong>Lên lịch chăm sóc</strong><p>Tạo việc có người phụ trách và hạn xử lý để không bỏ quên khách hàng.</p><a href="{% url 'crm:care_tasks' %}">Xem việc chăm sóc <span aria-hidden="true">→</span></a></div></li>
+    <li>
+      <span class="first-run-number" aria-label="Bước 1">01</span>
+      <div>
+        <strong>Gửi yêu cầu tư vấn thử</strong>
+        <p>Mở form như một khách hàng. Dùng email và thông tin giả lập, không nhập dữ liệu thật khi đang demo.</p>
+        <a href="{% url 'crm:lead_request' %}" target="_blank" rel="noopener">Mở form công khai ↗</a>
+      </div>
+    </li>
+    <li>
+      <span class="first-run-number" aria-label="Bước 2">02</span>
+      <div>
+        <strong>Tiếp nhận yêu cầu</strong>
+        <p>Yêu cầu xuất hiện trong hộp thư CRM; mở hồ sơ để xem nhu cầu và cập nhật trạng thái.</p>
+        <a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu →</a>
+      </div>
+    </li>
+    <li>
+      <span class="first-run-number" aria-label="Bước 3">03</span>
+      <div>
+        <strong>Đọc gợi ý AI</strong>
+        <p>Chỉ phân tích nội dung khách đã đồng ý. Kết quả là gợi ý tham khảo; nhân viên quyết định bước tiếp theo.</p>
+        <a href="{% url 'crm:customers' %}">Mở danh sách khách hàng →</a>
+      </div>
+    </li>
+    <li>
+      <span class="first-run-number" aria-label="Bước 4">04</span>
+      <div>
+        <strong>Lên lịch chăm sóc</strong>
+        <p>Tạo việc có người phụ trách và hạn xử lý để không bỏ quên khách hàng.</p>
+        <a href="{% url 'crm:care_tasks' %}">Xem việc chăm sóc →</a>
+      </div>
+    </li>
   </ol>
   <p class="first-run-note">Muốn xem dữ liệu mẫu có sẵn? Chạy <code>python manage.py seed_crm_data</code> trong terminal.</p>
 </section>
+
 {% else %}
+<!-- QUICK START SHORTCUTS -->
 <section class="quick-start-card" aria-labelledby="quick-start-title">
-  <div><span class="eyebrow">BẮT ĐẦU NHANH</span><h2 id="quick-start-title">Bạn muốn làm gì?</h2><p>Chọn đúng khu vực để không phải tìm mọi thứ trong cùng một màn hình.</p></div>
+  <div>
+    <span class="eyebrow">Bắt đầu nhanh</span>
+    <h2 id="quick-start-title">Bạn muốn làm gì?</h2>
+    <p>Chọn đúng khu vực để không phải tìm mọi thứ trong cùng một màn hình.</p>
+  </div>
   <div class="quick-start-actions">
-    <a class="quick-action" href="{% url 'crm:lead_requests' %}"><span class="quick-action-icon">01</span><span><strong>Xử lý yêu cầu mới{% if new_lead_count %} ({{ new_lead_count }}){% endif %}</strong><small>Xem nhu cầu khách gửi từ website</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="{% url 'crm:customers' %}"><span class="quick-action-icon">02</span><span><strong>Tìm khách hàng</strong><small>Mở hồ sơ, lịch sử trao đổi và gợi ý AI</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="{% url 'crm:care_tasks' %}"><span class="quick-action-icon">03</span><span><strong>Theo dõi việc chăm sóc</strong><small>Xem việc đến hạn, quá hạn và người phụ trách</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="{% url 'crm:lead_requests' %}">
+      <span class="quick-action-icon" aria-hidden="true">01</span>
+      <span>
+        <strong>Xử lý yêu cầu mới{% if new_lead_count %} ({{ new_lead_count }}){% endif %}</strong>
+        <small>Xem nhu cầu khách gửi từ website</small>
+      </span>
+      <span class="quick-arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="quick-action" href="{% url 'crm:customers' %}">
+      <span class="quick-action-icon" aria-hidden="true">02</span>
+      <span>
+        <strong>Tìm khách hàng</strong>
+        <small>Mở hồ sơ, lịch sử trao đổi và gợi ý AI</small>
+      </span>
+      <span class="quick-arrow" aria-hidden="true">→</span>
+    </a>
+    <a class="quick-action" href="{% url 'crm:care_tasks' %}">
+      <span class="quick-action-icon" aria-hidden="true">03</span>
+      <span>
+        <strong>Theo dõi việc chăm sóc</strong>
+        <small>Xem việc đến hạn, quá hạn và người phụ trách</small>
+      </span>
+      <span class="quick-arrow" aria-hidden="true">→</span>
+    </a>
   </div>
 </section>
 {% endif %}
 
+<!-- TASK BOARD -->
 <section class="task-board" aria-labelledby="task-board-title">
-  <div class="task-board-heading"><div><div class="eyebrow">THEO DÕI CÔNG VIỆC</div><h2 id="task-board-title">Việc cần chăm sóc</h2><p>Ưu tiên việc quá hạn trước, sau đó xử lý những việc đến hạn hôm nay.</p></div><a class="button-secondary" href="{% url 'crm:care_tasks' %}">Mở tất cả việc <span aria-hidden="true">→</span></a></div>
+  <div class="task-board-heading">
+    <div>
+      <span class="eyebrow">Theo dõi công việc</span>
+      <h2 id="task-board-title">Việc cần chăm sóc</h2>
+      <p>Ưu tiên việc quá hạn trước, sau đó xử lý những việc đến hạn hôm nay.</p>
+    </div>
+    <a class="button-secondary" href="{% url 'crm:care_tasks' %}">Mở tất cả việc →</a>
+  </div>
+
   <div class="task-board-columns">
-    <article class="task-board-card task-board-overdue"><div class="task-board-card-heading"><div><strong>Quá hạn</strong><small>{{ overdue_task_count }} việc cần xử lý</small></div><span>!</span></div><div class="task-board-items">{% for task in overdue_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small></a>{% empty %}<p class="task-board-empty">Không có việc quá hạn. Tốt lắm!</p>{% endfor %}</div></article>
-    <article class="task-board-card task-board-today"><div class="task-board-card-heading"><div><strong>Hôm nay</strong><small>{{ today_task_count }} việc đến hạn</small></div><span>◎</span></div><div class="task-board-items">{% for task in today_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · {{ task.get_priority_display }} ưu tiên</small></a>{% empty %}<p class="task-board-empty">Chưa có việc đến hạn hôm nay.</p>{% endfor %}</div></article>
-    <article class="task-board-card task-board-upcoming"><div class="task-board-card-heading"><div><strong>Sắp tới</strong><small>Việc đang chờ xử lý</small></div><span>→</span></div><div class="task-board-items">{% for task in upcoming_tasks %}<a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}"><strong>{{ task.title }}</strong><small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small></a>{% empty %}<p class="task-board-empty">Chưa có việc sắp tới.</p>{% endfor %}</div></article>
+    <article class="task-board-card task-board-overdue">
+      <div class="task-board-card-heading">
+        <div>
+          <strong>Quá hạn</strong>
+          <small>{{ overdue_task_count }} việc cần xử lý ngay</small>
+        </div>
+        <span aria-label="{{ overdue_task_count }} việc quá hạn">!</span>
+      </div>
+      <div class="task-board-items">
+        {% for task in overdue_tasks %}
+          <a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}">
+            <strong>{{ task.title }}</strong>
+            <small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small>
+          </a>
+        {% empty %}
+          <p class="task-board-empty">Không có việc quá hạn. Tốt lắm!</p>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="task-board-card task-board-today">
+      <div class="task-board-card-heading">
+        <div>
+          <strong>Hôm nay</strong>
+          <small>{{ today_task_count }} việc đến hạn</small>
+        </div>
+        <span aria-label="{{ today_task_count }} việc hôm nay">◎</span>
+      </div>
+      <div class="task-board-items">
+        {% for task in today_tasks %}
+          <a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}">
+            <strong>{{ task.title }}</strong>
+            <small>{{ task.customer.full_name }} · {{ task.get_priority_display }} ưu tiên</small>
+          </a>
+        {% empty %}
+          <p class="task-board-empty">Chưa có việc đến hạn hôm nay.</p>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="task-board-card task-board-upcoming">
+      <div class="task-board-card-heading">
+        <div>
+          <strong>Sắp tới</strong>
+          <small>Việc đang chờ xử lý</small>
+        </div>
+        <span aria-label="Việc sắp tới">→</span>
+      </div>
+      <div class="task-board-items">
+        {% for task in upcoming_tasks %}
+          <a class="task-board-item" href="{% url 'crm:care_task_edit' task.pk %}">
+            <strong>{{ task.title }}</strong>
+            <small>{{ task.customer.full_name }} · Hạn {{ task.due_at|date:"d/m/Y" }}</small>
+          </a>
+        {% empty %}
+          <p class="task-board-empty">Chưa có việc sắp tới.</p>
+        {% endfor %}
+      </div>
+    </article>
   </div>
 </section>
 
-<section class="dashboard-panels">
+<!-- DASHBOARD PANELS -->
+<div class="dashboard-panels">
   <article class="content-card">
-    <div class="content-card-heading"><div><h2>Yêu cầu tư vấn gần đây</h2><p>Tiếp nhận và cập nhật trạng thái xử lý.</p></div><a class="text-link" href="{% url 'crm:lead_requests' %}">Xem tất cả <span aria-hidden="true">→</span></a></div>
+    <div class="content-card-heading">
+      <div>
+        <h2>Yêu cầu tư vấn gần đây</h2>
+        <p>Tiếp nhận và cập nhật trạng thái xử lý.</p>
+      </div>
+      <a class="text-link" href="{% url 'crm:lead_requests' %}">Xem tất cả →</a>
+    </div>
     <div class="dashboard-list">
       {% for lead in recent_lead_requests %}
-        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' lead.customer_id %}"><span class="list-avatar">{{ lead.customer.full_name|slice:":1"|upper }}</span><span class="list-main"><strong>{{ lead.customer.full_name }}</strong><small>{{ lead.customer.company|default:lead.customer.email }} · {{ lead.created_at|date:"d/m/Y" }}</small></span><span class="request-status status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span><span class="quick-arrow">→</span></a>
-      {% empty %}<div class="dashboard-empty"><strong>Chưa có yêu cầu tư vấn</strong><p>Các yêu cầu khách gửi từ website sẽ xuất hiện tại đây.</p><a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu →</a></div>{% endfor %}
+        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' lead.customer_id %}">
+          <span class="list-avatar" aria-hidden="true">{{ lead.customer.full_name|slice:":1"|upper }}</span>
+          <span class="list-main">
+            <strong>{{ lead.customer.full_name }}</strong>
+            <small>{{ lead.customer.company|default:lead.customer.email }} · {{ lead.created_at|date:"d/m/Y" }}</small>
+          </span>
+          <span class="request-status status-{{ lead.status|lower }}">{{ lead.get_status_display }}</span>
+          <span class="quick-arrow" aria-hidden="true">→</span>
+        </a>
+      {% empty %}
+        <div class="dashboard-empty">
+          <strong>Chưa có yêu cầu tư vấn</strong>
+          <p>Các yêu cầu khách gửi từ website sẽ xuất hiện tại đây.</p>
+          <a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu →</a>
+        </div>
+      {% endfor %}
     </div>
   </article>
 
   <article class="content-card">
-    <div class="content-card-heading"><div><h2>Chờ phân tích AI</h2><p>Hồ sơ chưa có phân khúc và điểm tiềm năng.</p></div><a class="text-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED">Xem tất cả <span aria-hidden="true">→</span></a></div>
+    <div class="content-card-heading">
+      <div>
+        <h2>Chờ phân tích AI</h2>
+        <p>Hồ sơ chưa có phân khúc và điểm tiềm năng.</p>
+      </div>
+      <a class="text-link" href="{% url 'crm:customers' %}?segment=UNCLASSIFIED">Xem tất cả →</a>
+    </div>
     <div class="dashboard-list">
       {% for customer in unclassified_customers %}
-        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' customer.pk %}"><span class="list-avatar">{{ customer.full_name|slice:":1"|upper }}</span><span class="list-main"><strong>{{ customer.full_name }}</strong><small>{{ customer.company|default:customer.email }}</small></span><span class="list-action">Phân tích <span aria-hidden="true">→</span></span></a>
-      {% empty %}<div class="dashboard-empty"><strong>Mọi hồ sơ đã có kết quả</strong><p>Không còn khách hàng nào đang chờ phân tích.</p><a href="{% url 'crm:customers' %}">Duyệt danh sách khách hàng →</a></div>{% endfor %}
+        <a class="dashboard-list-row" href="{% url 'crm:customer_detail' customer.pk %}">
+          <span class="list-avatar" aria-hidden="true">{{ customer.full_name|slice:":1"|upper }}</span>
+          <span class="list-main">
+            <strong>{{ customer.full_name }}</strong>
+            <small>{{ customer.company|default:customer.email }}</small>
+          </span>
+          <span class="list-action">Phân tích <span aria-hidden="true">→</span></span>
+        </a>
+      {% empty %}
+        <div class="dashboard-empty">
+          <strong>Mọi hồ sơ đã có kết quả</strong>
+          <p>Không còn khách hàng nào đang chờ phân tích.</p>
+          <a href="{% url 'crm:customers' %}">Duyệt danh sách khách hàng →</a>
+        </div>
+      {% endfor %}
     </div>
   </article>
-</section>
+</div>
 
-<p class="page-hint">Tổng chi tiêu được ghi nhận trong hồ sơ hiện tại: <strong>{{ total_spent|intcomma }} ₫</strong>. Đây không phải báo cáo doanh thu.</p>
+<p class="page-hint">Tổng chi tiêu ghi nhận trong hồ sơ hiện tại: <strong>{{ total_spent|intcomma }} ₫</strong>. Đây không phải báo cáo doanh thu.</p>
+
 {% endblock %}

@@ -5,8 +5,8 @@ const closeButton = document.getElementById("closeMobileMenu");
 
 function setMenuOpen(isOpen) {
   if (!menu || !overlay || !openButton) return;
-  menu.classList.toggle("hidden", !isOpen);
-  overlay.classList.toggle("hidden", !isOpen);
+  menu.classList.toggle("is-open", isOpen);
+  overlay.classList.toggle("is-open", isOpen);
   menu.setAttribute("aria-hidden", String(!isOpen));
   openButton.setAttribute("aria-expanded", String(isOpen));
 }

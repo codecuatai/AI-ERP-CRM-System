@@ -1,7 +1,110 @@
 {% extends "crm/base.html" %}
+{% load humanize %}
 {% block title %}Báo cáo CRM{% endblock %}
 {% block content %}
-<section class="page-heading"><div><p class="eyebrow">TỔNG HỢP VẬN HÀNH</p><h1>Báo cáo CRM</h1><p class="muted">Số liệu hiện có trong CRM; khách hàng mới tính từ {{ period_start|date:"d/m/Y" }}.</p></div><a class="button-secondary" href="{% url 'crm:export_customers_csv' %}">Xuất khách hàng CSV</a></section>
-<div class="stats-grid"><article class="stat-card"><span>Tổng khách hàng</span><strong>{{ customer_total }}</strong></article><article class="stat-card"><span>Khách mới 30 ngày</span><strong>{{ new_customers }}</strong></article><article class="stat-card"><span>Việc quá hạn</span><strong>{{ overdue_tasks }}</strong></article></div>
-<div class="report-grid"><section class="panel"><h2>Khách hàng theo phân khúc</h2><ul>{% for row in segments %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section><section class="panel"><h2>Yêu cầu tư vấn theo trạng thái</h2><ul>{% for row in lead_statuses %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section><section class="panel"><h2>Việc chăm sóc theo trạng thái</h2><ul>{% for row in task_statuses %}<li>{{ row.label }} <strong>{{ row.count }}</strong></li>{% endfor %}</ul></section></div>
+
+<section class="page-heading" aria-labelledby="report-title">
+  <div>
+    <span class="eyebrow">Tổng hợp vận hành</span>
+    <h1 id="report-title">Báo cáo CRM</h1>
+    <p>Số liệu tổng hợp hiện có trong hệ thống CRM; khách hàng mới được tính từ {{ period_start|date:"d/m/Y" }}.</p>
+  </div>
+  <a class="button-secondary" href="{% url 'crm:export_customers_csv' %}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Xuất danh sách CSV
+  </a>
+</section>
+
+<!-- KPI STATS -->
+<section class="stats-grid" aria-label="Chỉ số tổng hợp">
+  <article class="stat-card">
+    <div class="stat-top">
+      <span class="stat-icon icon-blue" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Tổng số khách hàng</div>
+    <div class="stat-value">{{ customer_total|intcomma }}</div>
+    <div class="stat-note">Hồ sơ trong cơ sở dữ liệu</div>
+  </article>
+
+  <article class="stat-card">
+    <div class="stat-top">
+      <span class="stat-icon icon-green" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Khách mới (30 ngày)</div>
+    <div class="stat-value">{{ new_customers|intcomma }}</div>
+    <div class="stat-note">Ghi nhận từ {{ period_start|date:"d/m" }}</div>
+  </article>
+
+  <article class="stat-card">
+    <div class="stat-top">
+      <span class="stat-icon icon-red" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
+    </div>
+    <div class="stat-label">Việc chăm sóc quá hạn</div>
+    <div class="stat-value text-red-600">{{ overdue_tasks|intcomma }}</div>
+    <div class="stat-note">Cần nhân viên xử lý gấp</div>
+  </article>
+</section>
+
+<!-- REPORT BREAKDOWN PANELS -->
+<div class="report-grid">
+  <section class="panel">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true"></span>
+      <h2>Khách hàng theo phân khúc</h2>
+    </div>
+    <ul>
+      {% for row in segments %}
+        <li>
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count|intcomma }}</strong>
+        </li>
+      {% empty %}
+        <li class="text-slate-400">Chưa có dữ liệu phân khúc.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+      <h2>Yêu cầu tư vấn theo trạng thái</h2>
+    </div>
+    <ul>
+      {% for row in lead_statuses %}
+        <li>
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count|intcomma }}</strong>
+        </li>
+      {% empty %}
+        <li class="text-slate-400">Chưa có yêu cầu tư vấn.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+      <h2>Việc chăm sóc theo trạng thái</h2>
+    </div>
+    <ul>
+      {% for row in task_statuses %}
+        <li>
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count|intcomma }}</strong>
+        </li>
+      {% empty %}
+        <li class="text-slate-400">Chưa có việc chăm sóc.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<p class="page-hint mt-6">Lưu ý: Báo cáo này thống kê tình trạng vận hành và chăm sóc khách hàng, không phản ánh doanh thu hoặc kế toán bán hàng.</p>
+
 {% endblock %}
