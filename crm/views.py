@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 def dashboard(request):
     active_customers = Customer.objects.filter(is_active=True)
     today = timezone.localdate()
+    lead_total_count = LeadRequest.objects.count()
+    customer_count = active_customers.count()
     open_tasks = CareTask.objects.exclude(status=CareTask.Status.DONE).select_related(
         "customer", "assignee"
     ).annotate(priority_order=Case(
@@ -44,7 +46,8 @@ def dashboard(request):
         output_field=IntegerField(),
     ))
     context = {
-        "customer_count": active_customers.count(),
+        "customer_count": customer_count,
+        "show_first_run_guide": customer_count == 0 and lead_total_count == 0,
         "unclassified_count": active_customers.filter(ai_segment=Customer.Segment.UNCLASSIFIED).count(),
         "vip_count": active_customers.filter(ai_segment=Customer.Segment.VIP).count(),
         "total_spent": active_customers.aggregate(total=Sum("total_spent"))["total"] or 0,
@@ -430,6 +433,7 @@ def public_lead_request(request):
         "form": form,
         "brand_name": settings.PUBLIC_BRAND_NAME,
         "contact_email": settings.PUBLIC_CONTACT_EMAIL,
+        "contact_email_is_demo": _is_demo_email(settings.PUBLIC_CONTACT_EMAIL),
     })
 
 
@@ -438,6 +442,7 @@ def public_lead_request_success(request):
     return render(request, "crm/lead_request_success.html", {
         "brand_name": settings.PUBLIC_BRAND_NAME,
         "contact_email": settings.PUBLIC_CONTACT_EMAIL,
+        "contact_email_is_demo": _is_demo_email(settings.PUBLIC_CONTACT_EMAIL),
     })
 
 
@@ -460,6 +465,7 @@ def landing_page(request):
         "form": form,
         "brand_name": settings.PUBLIC_BRAND_NAME,
         "contact_email": settings.PUBLIC_CONTACT_EMAIL,
+        "contact_email_is_demo": _is_demo_email(settings.PUBLIC_CONTACT_EMAIL),
     })
 
 
@@ -696,9 +702,17 @@ def lead_follow_up_reply(request, token):
 
 @require_http_methods(["GET"])
 def privacy_notice(request):
+    privacy_email = settings.PUBLIC_PRIVACY_EMAIL
     return render(request, "crm/privacy_notice.html", {
         "brand_name": settings.PUBLIC_BRAND_NAME,
         "data_controller_name": settings.PUBLIC_DATA_CONTROLLER_NAME,
-        "privacy_email": settings.PUBLIC_PRIVACY_EMAIL,
+        "privacy_email": privacy_email,
+        "privacy_email_is_demo": _is_demo_email(privacy_email),
         "data_retention_notice": settings.PUBLIC_DATA_RETENTION_NOTICE,
     })
+
+
+def _is_demo_email(email):
+    """Identify reserved example domains so they are never presented as real contacts."""
+    domain = email.rpartition("@")[2].lower().rstrip(".")
+    return domain == "test" or domain.endswith((".test", ".example", ".invalid"))

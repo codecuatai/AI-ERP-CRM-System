@@ -37,6 +37,17 @@
     <article class="ai-card">
       <div class="ai-card-top"><span class="ai-spark">✦</span><div><div class="eyebrow">TRỢ LÝ AI</div><h2>Phân tích khách hàng</h2></div></div>
       <p class="ai-intro">{% if has_public_requests %}AI chỉ phân tích nhu cầu đã được khách đồng ý; tên, email và số điện thoại không gửi đến Gemini.{% else %}AI phân tích hồ sơ nội bộ để đề xuất cách chăm sóc phù hợp.{% endif %}</p>
+      <details class="ai-help">
+        <summary>AI dùng dữ liệu nào? Điểm số có nghĩa gì?</summary>
+        <div>
+          {% if has_public_requests %}
+            <p>Chỉ nội dung yêu cầu hoặc phản hồi mà khách đã đồng ý phân tích mới được dùng. Tên, email và số điện thoại không được đưa vào yêu cầu gửi Gemini.</p>
+          {% else %}
+            <p>Với hồ sơ do nhân viên tạo, Gemini có thể nhận tên, công ty, tổng chi tiêu, ghi chú và tối đa 20 tương tác gần đây. Không đưa bí mật kinh doanh hoặc dữ liệu nhạy cảm vào ghi chú.</p>
+          {% endif %}
+          <ul><li>Điểm 0–100 là chỉ báo tham khảo, không phải xác suất mua hàng.</li><li>AI không tự sửa hồ sơ, gửi email hay quyết định thay nhân viên.</li><li>Nếu Gemini không khả dụng, hệ thống dùng quy tắc cục bộ.</li></ul>
+        </div>
+      </details>
       {% if can_run_ai_analysis %}
         <form method="post" action="{% url 'crm:analyze_customer' customer.pk %}">{% csrf_token %}<button class="button-primary w-full" type="submit">✦ &nbsp; Phân tích ngay</button></form>
       {% else %}

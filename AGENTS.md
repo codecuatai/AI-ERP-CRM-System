@@ -36,6 +36,8 @@ Các file quan trọng:
 | `crm/templates/crm/` | Các trang CRM, CMS landing page, báo cáo và thao tác email |
 | `crm/migrations/` | Migration database phải được commit |
 | `crm/test_*.py`, `crm/tests.py` | Test AI, view và form lead |
+| `crm/test_browser_e2e.py` | E2E trình duyệt Chromium trên test database cô lập |
+| `requirements-e2e.txt` | Phụ thuộc tùy chọn để chạy browser E2E |
 | `crm/management/commands/seed_crm_data.py` | Dữ liệu demo |
 | `setup_cms_homepage`, `setup_crm_groups` | Khởi tạo trang chủ CMS và nhóm quyền CRM |
 | `config/settings/dev.py` | SQLite, `.env`, Gemini, môi trường local; tự sinh secret nếu thiếu |
@@ -92,6 +94,18 @@ cd tailwind
 npm install
 npm run css:build
 ```
+
+Kiểm thử E2E trình duyệt dùng Chromium và database test cô lập:
+
+```powershell
+python -m pip install -r requirements-e2e.txt
+playwright install chromium
+$env:RUN_BROWSER_E2E = "1"
+python manage.py test crm.test_browser_e2e --verbosity=2
+Remove-Item Env:RUN_BROWSER_E2E
+```
+
+Không chạy test browser có ghi dữ liệu lên database development; class `StaticLiveServerTestCase` tự tạo/xóa test database. CI chạy browser E2E riêng trên Python 3.12.
 
 ## 5. Các tính năng đã có và hướng phát triển
 

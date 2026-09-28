@@ -27,6 +27,15 @@ class CRMViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("/admin/login/", response["Location"])
 
+    def test_wagtail_login_page_uses_vietnamese_labels(self):
+        response = self.client.get("/admin/login/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Đăng nhập DigiFlow CRM")
+        self.assertContains(response, "Tên đăng nhập")
+        self.assertContains(response, "Mật khẩu")
+        self.assertContains(response, "Quên mật khẩu?")
+
     def test_authenticated_user_without_crm_permission_is_denied(self):
         unassigned = User.objects.create_user(username="no-crm-role", password="test-password-123")
         self.client.force_login(unassigned)
@@ -55,12 +64,36 @@ class CRMViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "KHÔNG GIAN LÀM VIỆC CRM")
-        self.assertContains(response, "Xem khách cần ưu tiên")
+        self.assertContains(response, "Xem ai cần chăm sóc trước")
         self.assertContains(response, "Việc đang mở")
         self.assertContains(response, "Bạn muốn làm gì?")
         self.assertContains(response, "Yêu cầu tư vấn gần đây")
         self.assertContains(response, reverse("crm:customers"))
         self.assertContains(response, reverse("crm:lead_requests"))
+
+    def test_empty_dashboard_guides_first_time_users_through_the_crm_flow(self):
+        self.customer.delete()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("crm:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_first_run_guide"])
+        self.assertContains(response, "HƯỚNG DẪN LẦN ĐẦU")
+        self.assertContains(response, "Gửi yêu cầu tư vấn thử")
+        self.assertContains(response, "Đọc gợi ý AI")
+        self.assertContains(response, "python manage.py seed_crm_data")
+        self.assertNotContains(response, "Bạn muốn làm gì?")
+
+    def test_customer_detail_explains_ai_data_and_score(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("crm:customer_detail", args=[self.customer.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "AI dùng dữ liệu nào? Điểm số có nghĩa gì?")
+        self.assertContains(response, "không phải xác suất mua hàng")
+        self.assertContains(response, "Gemini có thể nhận tên, công ty")
 
     def test_lead_request_list_filters_by_status(self):
         self.client.force_login(self.user)

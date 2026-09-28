@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Customer, Interaction, LeadRequest
@@ -36,6 +36,7 @@ class PublicLeadRequestTests(TestCase):
         self.assertContains(response, "id_ai_processing_consent")
         self.assertContains(response, reverse("privacy_notice"))
 
+    @override_settings(PUBLIC_PRIVACY_EMAIL="")
     def test_privacy_notice_discloses_demo_placeholders(self):
         response = self.client.get(reverse("privacy_notice"))
 
@@ -43,6 +44,39 @@ class PublicLeadRequestTests(TestCase):
         self.assertContains(response, "Thông báo quyền riêng tư")
         self.assertContains(response, "PUBLIC_PRIVACY_EMAIL")
         self.assertContains(response, "rút lại đồng ý")
+
+    @override_settings(
+        PUBLIC_CONTACT_EMAIL="demo-contact@digiflow.test",
+        PUBLIC_PRIVACY_EMAIL="privacy@digiflow.test",
+    )
+    def test_demo_email_addresses_are_never_presented_as_live_contact_channels(self):
+        landing = self.client.get(reverse("landing_page"))
+        privacy = self.client.get(reverse("privacy_notice"))
+
+        self.assertContains(landing, "Email minh họa — không nhận thư")
+        self.assertNotContains(landing, "demo-contact@digiflow.test")
+        self.assertContains(privacy, "không nhận thư")
+        self.assertNotContains(privacy, "mailto:privacy@digiflow.test")
+
+    @override_settings(
+        PUBLIC_CONTACT_EMAIL="hello@digiflow.example.org",
+        PUBLIC_PRIVACY_EMAIL="privacy@digiflow.example.org",
+    )
+    def test_real_contact_addresses_are_clickable(self):
+        landing = self.client.get(reverse("landing_page"))
+        privacy = self.client.get(reverse("privacy_notice"))
+
+        self.assertContains(landing, 'href="mailto:hello@digiflow.example.org"')
+        self.assertContains(privacy, 'href="mailto:privacy@digiflow.example.org"')
+
+    def test_privacy_notice_has_a_scannable_summary_and_section_links(self):
+        response = self.client.get(reverse("privacy_notice"))
+
+        self.assertContains(response, 'aria-label="Mục lục thông báo quyền riêng tư"')
+        self.assertContains(response, 'href="#du-lieu"')
+        self.assertContains(response, 'href="#ai"')
+        self.assertContains(response, 'href="#luu-tru"')
+        self.assertContains(response, 'href="#quyen"')
 
     def test_landing_page_form_uses_the_same_lead_capture_flow(self):
         response = self.client.post(reverse("landing_page"), self.payload)

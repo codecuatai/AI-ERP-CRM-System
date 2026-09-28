@@ -287,7 +287,7 @@ Rules chỉ là cơ chế dự phòng minh họa; Gemini có thể trả thêm c
 | `crm/wagtail_hooks.py` | Cấu hình tìm kiếm/lọc/xem chi tiết cho Snippets |
 | `crm/services/email_draft_service.py` | Soạn email nháp có fallback và giới hạn dữ liệu gửi AI |
 | `crm/migrations/` | Migration database của dự án |
-| `crm/test_*.py`, `crm/tests.py` | Test AI, view, form lead và follow-up |
+| `crm/test_*.py`, `crm/tests.py` | Test AI, view, form lead/follow-up và browser E2E (`test_browser_e2e.py`) |
 | `crm/templates/crm/` | Landing page CMS, CRM, email nháp/follow-up, báo cáo và form phản hồi |
 | `crm/static/crm/` | CSS và JavaScript; Django phục vụ trực tiếp |
 | `tailwind/` | Mã nguồn CSS Tailwind và công cụ build giao diện (tùy chọn) |
@@ -317,6 +317,7 @@ day6AIERPandCRM/
 ├── .github/                      # GitHub Actions và mẫu Pull Request
 ├── manage.py                     # Điểm vào của Django
 ├── requirements.txt              # Thư viện Python
+├── requirements-e2e.txt          # Playwright cho browser E2E tùy chọn
 ├── .env.example                  # Mẫu biến môi trường
 └── README.md                     # Tài liệu dự án
 ```
@@ -402,11 +403,25 @@ Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. T
 
 Có thể chạy các test tự động của form bằng `python manage.py test crm`; ngoài ra kiểm tra luồng thủ công theo các kịch bản sau:
 
+Chạy E2E qua trình duyệt Chromium trên database test cô lập:
+
+```powershell
+python -m pip install -r requirements-e2e.txt
+playwright install chromium
+$env:RUN_BROWSER_E2E = "1"
+python manage.py test crm.test_browser_e2e --verbosity=2
+Remove-Item Env:RUN_BROWSER_E2E
+```
+
+Test trình duyệt gửi form lead công khai, đăng nhập Wagtail bằng tài khoản chỉ tồn tại trong test database, chạy phân tích rules fallback rồi tạo việc chăm sóc. Không cần Gemini API key, không gửi email thật và không ghi dữ liệu vào database local. CI cài Chromium và chạy test này tự động trên Python 3.12.
+
 | Kịch bản | Thao tác | Kết quả mong đợi |
 |---|---|---|
 | Quản trị dữ liệu | Vào Admin, tạo khách hàng và hai tương tác | Dữ liệu xuất hiện trong các Snippets tương ứng |
 | Form công khai | Gửi form không đăng nhập; thử bỏ consent bắt buộc, bật/tắt consent AI, gửi email trùng và điền trường ẩn | Form ghi nhóm giải pháp; AI opt-in được lưu riêng, không đồng ý vẫn gửi được; lead không đồng ý không thể phân tích; email trùng dùng lại hồ sơ; bot trap bị từ chối |
 | Landing page | Mở `/`, bấm điều hướng dịch vụ/liên hệ rồi gửi form | Trang công khai hiện đầy đủ nội dung, form hoạt động và gửi đến luồng lead hiện có |
+| Email demo | Mở trang chủ và thông báo quyền riêng tư với email `.test` | Email được đánh dấu là minh họa, không có liên kết mailto giả |
+| Đăng nhập | Mở `/admin/login/` | Nhãn, tiêu đề và thao tác đăng nhập hiển thị bằng tiếng Việt |
 | Tổng quan | Mở `/crm/` | Thấy số liệu chính, yêu cầu gần đây và hồ sơ chờ phân tích; các khu vực có lối đi riêng |
 | Danh bạ khách hàng | Mở `/crm/customers/`, tìm theo tên/email/công ty, lọc phân khúc | Danh sách phân trang; mở từng hồ sơ riêng |
 | Hộp thư yêu cầu | Mở `/crm/yeu-cau/`, tìm/lọc theo trạng thái rồi đổi trạng thái | Yêu cầu được tìm thấy, trạng thái mới được lưu và phản hồi thành công |

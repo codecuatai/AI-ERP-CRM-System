@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Browser-level end-to-end tests (install Chromium with `playwright install chromium`).
+playwright>=1.50,<2.0

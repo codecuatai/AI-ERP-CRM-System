@@ -1,7 +1,19 @@
 from django import forms
 from django.conf import settings
+from wagtail.admin.forms.auth import LoginForm
 
 from .models import CareTask, LeadFollowUpResponse, LeadRequest
+
+
+class VietnameseWagtailLoginForm(LoginForm):
+    """Use consistent Vietnamese labels on the Wagtail sign-in screen."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].label = "Tên đăng nhập"
+        self.fields["username"].widget.attrs["placeholder"] = "Nhập tên đăng nhập"
+        self.fields["password"].label = "Mật khẩu"
+        self.fields["password"].widget.attrs["placeholder"] = "Nhập mật khẩu"
 
 
 class CareTaskForm(forms.ModelForm):

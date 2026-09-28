@@ -74,7 +74,7 @@
         <h2>{{ page.contact_heading }}</h2>
         <p>{{ page.contact_intro }}</p>
         <div class="contact-promise"><span>✓</span><p><strong>Không có quy trình bán hàng tự động.</strong><br>Thông tin được nhân viên xem và phản hồi trực tiếp.</p></div>
-        {% if contact_email %}<div class="contact-detail"><span class="contact-detail-icon">✉</span><span><small>EMAIL LIÊN HỆ</small><strong>{{ contact_email }}</strong></span></div>{% endif %}
+        {% if contact_email %}<div class="contact-detail"><span class="contact-detail-icon" aria-hidden="true">✉</span><span><small>EMAIL LIÊN HỆ</small><strong>{% if contact_email_is_demo %}Email minh họa — không nhận thư{% else %}<a href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% endif %}</strong></span></div>{% endif %}
       </div>
       <div class="contact-form-card">
         <div class="contact-form-heading"><span class="form-step">01 <i></i> 02</span><h3>Gửi yêu cầu tư vấn</h3><p>Các trường có dấu * là bắt buộc.</p></div>

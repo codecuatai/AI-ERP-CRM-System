@@ -4,7 +4,7 @@
 {% block content %}
 <section class="dashboard-hero" aria-labelledby="dashboard-title">
   <div class="dashboard-hero-copy"><span class="dashboard-hero-kicker"><span aria-hidden="true">✦</span> KHÔNG GIAN LÀM VIỆC CRM</span><h1 id="dashboard-title">Chào {{ request.user.get_username }}<span>.</span></h1><p>Mọi khách hàng và việc cần chăm sóc, gói gọn trong một nơi.</p>
-    <div class="dashboard-hero-actions"><a class="dashboard-hero-primary" href="{% url 'crm:priority_customers' %}">Xem khách cần ưu tiên <span aria-hidden="true">→</span></a><a class="dashboard-hero-secondary" href="{% url 'crm:customers' %}">Mở danh bạ</a></div>
+    <div class="dashboard-hero-actions"><a class="dashboard-hero-primary" href="{% url 'crm:priority_customers' %}">Xem ai cần chăm sóc trước <span aria-hidden="true">→</span></a><a class="dashboard-hero-secondary" href="{% url 'crm:customers' %}">Mở danh sách khách</a></div>
   </div>
   <div class="dashboard-hero-glance" aria-label="Tóm tắt công việc"><div class="hero-glance-item"><span>Việc đang mở</span><strong>{{ open_task_count }}</strong></div><div class="hero-glance-divider"></div><div class="hero-glance-item hero-glance-alert"><span>Quá hạn</span><strong>{{ overdue_task_count }}</strong></div><p>Ưu tiên xử lý việc quá hạn trước.</p></div>
 </section>
@@ -16,15 +16,31 @@
   <a class="stat-card stat-link" href="{% url 'crm:lead_requests' %}?status=NEW"><div class="stat-top"><span class="stat-icon icon-green">✉</span><span class="stat-caption">YÊU CẦU MỚI</span></div><div class="stat-value">{{ new_lead_count|intcomma }}</div><div class="stat-note">Cần được nhân viên phản hồi <span aria-hidden="true">→</span></div></a>
 </section>
 
+{% if show_first_run_guide %}
+<section class="first-run-guide" aria-labelledby="first-run-title">
+  <div class="first-run-heading">
+    <span class="eyebrow">HƯỚNG DẪN LẦN ĐẦU</span>
+    <h2 id="first-run-title">Bắt đầu với một khách hàng mẫu</h2>
+    <p>Đi theo luồng này để hiểu cách CRM biến yêu cầu tư vấn thành một việc chăm sóc có thể theo dõi.</p>
+  </div>
+  <ol class="first-run-steps">
+    <li><span class="first-run-number">01</span><div><strong>Gửi yêu cầu tư vấn thử</strong><p>Mở form như một khách hàng. Dùng email và thông tin giả lập, không nhập dữ liệu thật khi đang demo.</p><a href="{% url 'crm:lead_request' %}" target="_blank" rel="noopener">Mở form công khai <span aria-hidden="true">↗</span></a></div></li>
+    <li><span class="first-run-number">02</span><div><strong>Tiếp nhận yêu cầu</strong><p>Yêu cầu sẽ xuất hiện trong hộp thư CRM; mở hồ sơ để xem nhu cầu và cập nhật trạng thái.</p><a href="{% url 'crm:lead_requests' %}">Mở hộp thư yêu cầu <span aria-hidden="true">→</span></a></div></li>
+    <li><span class="first-run-number">03</span><div><strong>Đọc gợi ý AI</strong><p>Chỉ phân tích nội dung khách đã đồng ý. Kết quả là gợi ý tham khảo; nhân viên vẫn quyết định bước tiếp theo.</p><a href="{% url 'crm:customers' %}">Mở danh sách khách hàng <span aria-hidden="true">→</span></a></div></li>
+    <li><span class="first-run-number">04</span><div><strong>Lên lịch chăm sóc</strong><p>Tạo việc có người phụ trách và hạn xử lý để không bỏ quên khách hàng.</p><a href="{% url 'crm:care_tasks' %}">Xem việc chăm sóc <span aria-hidden="true">→</span></a></div></li>
+  </ol>
+  <p class="first-run-note">Muốn xem dữ liệu mẫu có sẵn? Chạy <code>python manage.py seed_crm_data</code> trong terminal.</p>
+</section>
+{% else %}
 <section class="quick-start-card" aria-labelledby="quick-start-title">
   <div><span class="eyebrow">BẮT ĐẦU NHANH</span><h2 id="quick-start-title">Bạn muốn làm gì?</h2><p>Chọn đúng khu vực để không phải tìm mọi thứ trong cùng một màn hình.</p></div>
   <div class="quick-start-actions">
-    <a class="quick-action" href="{% url 'crm:lead_requests' %}"><span class="quick-action-icon">01</span><span><strong>Tiếp nhận khách tiềm năng</strong><small>Xem yêu cầu tư vấn từ website</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="{% url 'crm:customers' %}"><span class="quick-action-icon">02</span><span><strong>Tìm một khách hàng</strong><small>Tìm hồ sơ, lịch sử trao đổi và phân tích</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="{% url 'crm:care_task_create' %}"><span class="quick-action-icon">03</span><span><strong>Tạo việc chăm sóc</strong><small>Giao người phụ trách và đặt hạn xử lý</small></span><span class="quick-arrow">→</span></a>
-    <a class="quick-action" href="/admin/snippets/crm/customer/"><span class="quick-action-icon">04</span><span><strong>Quản trị dữ liệu</strong><small>Mở Wagtail để quản lý hồ sơ chi tiết</small></span><span class="quick-arrow">↗</span></a>
+    <a class="quick-action" href="{% url 'crm:lead_requests' %}"><span class="quick-action-icon">01</span><span><strong>Xử lý yêu cầu mới{% if new_lead_count %} ({{ new_lead_count }}){% endif %}</strong><small>Xem nhu cầu khách gửi từ website</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="{% url 'crm:customers' %}"><span class="quick-action-icon">02</span><span><strong>Tìm khách hàng</strong><small>Mở hồ sơ, lịch sử trao đổi và gợi ý AI</small></span><span class="quick-arrow">→</span></a>
+    <a class="quick-action" href="{% url 'crm:care_tasks' %}"><span class="quick-action-icon">03</span><span><strong>Theo dõi việc chăm sóc</strong><small>Xem việc đến hạn, quá hạn và người phụ trách</small></span><span class="quick-arrow">→</span></a>
   </div>
 </section>
+{% endif %}
 
 <section class="task-board" aria-labelledby="task-board-title">
   <div class="task-board-heading"><div><div class="eyebrow">THEO DÕI CÔNG VIỆC</div><h2 id="task-board-title">Việc cần chăm sóc</h2><p>Ưu tiên việc quá hạn trước, sau đó xử lý những việc đến hạn hôm nay.</p></div><a class="button-secondary" href="{% url 'crm:care_tasks' %}">Mở tất cả việc <span aria-hidden="true">→</span></a></div>

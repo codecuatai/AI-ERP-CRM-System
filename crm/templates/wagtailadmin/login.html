@@ -1,0 +1,33 @@
+{% extends "wagtailadmin/admin_base.html" %}
+{% load wagtailadmin_tags %}
+{% block titletag %}Đăng nhập{% endblock %}
+{% block bodyclass %}login{% endblock %}
+{% block furniture %}
+<main class="content-wrapper" id="main">
+  <h1>Đăng nhập DigiFlow CRM</h1>
+  <div class="messages" role="status">
+    {% if messages or form.errors %}
+      <ul>
+        {% if form.errors %}{% for error in form.non_field_errors %}<li class="error">{{ error }}</li>{% endfor %}{% endif %}
+        {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  <form class="login-form" action="{% url 'wagtailadmin_login' %}" method="post" autocomplete="off" novalidate>
+    {% csrf_token %}
+    {% url 'wagtailadmin_home' as home_url %}
+    <input type="hidden" name="next" value="{{ next|default:home_url }}" />
+    {% formattedfield form.username %}
+    {% formattedfield form.password %}
+    {% if show_password_reset %}<a class="reset-password" href="{% url 'wagtailadmin_password_reset' %}">Quên mật khẩu?</a>{% endif %}
+    {% for field_name, field in form.extra_fields %}{% formattedfield field %}{% endfor %}
+    {% include "wagtailadmin/shared/forms/single_checkbox.html" with label_classname="remember-me" name="remember" text="Ghi nhớ đăng nhập" %}
+    <footer class="form-actions">
+      <button type="submit" class="button button-longrunning" data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Đang đăng nhập…">
+        {% icon name="spinner" %}<em data-w-progress-target="label">Đăng nhập</em>
+      </button>
+    </footer>
+  </form>
+  <div class="login-logo">{% include "wagtailadmin/logo.html" with wordmark="True" %}</div>
+</main>
+{% endblock %}
