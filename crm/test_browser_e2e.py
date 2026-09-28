@@ -64,6 +64,9 @@ class CRMBrowserEndToEndTests(StaticLiveServerTestCase):
                 page.get_by_label("Mật khẩu").fill("browser-e2e-password-only")
                 page.get_by_role("button", name="Đăng nhập").click()
                 page.get_by_role("heading", name="Chào browser-e2e-staff.").wait_for()
+                # The dashboard heading can appear before the stylesheet finishes loading
+                # on slower CI runners; wait before asserting computed layout styles.
+                page.wait_for_load_state("networkidle")
                 page.set_viewport_size({"width": 1920, "height": 937})
                 self.assertIn("v=20260928", page.locator("link[rel='stylesheet']").get_attribute("href"))
                 self.assertEqual(
