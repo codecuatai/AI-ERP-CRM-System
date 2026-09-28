@@ -139,6 +139,11 @@
   .timeline-content p { @apply mb-0 mt-2 text-[11px] leading-relaxed text-slate-500; }
   .empty-state.compact { @apply py-7; }
   .ai-card { @apply rounded-xl border border-violet-100 bg-white p-5 shadow-card; }
+  .ai-help { @apply mb-4 mt-3 rounded-lg border border-slate-200 bg-slate-50/70; }
+  .ai-help summary { @apply cursor-pointer px-3 py-3 text-xs font-semibold text-slate-700; }
+  .ai-help > div { @apply border-t border-slate-200 px-3 py-3 text-xs leading-relaxed text-slate-600; }
+  .ai-help p { @apply mb-2; }
+  .ai-help ul { @apply mb-0 list-disc space-y-1 pl-4; }
   .ai-card-top { @apply flex items-center gap-2.5; }
   .ai-spark { @apply grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-lg text-brand; }
   .ai-card h2 { @apply mt-1; }
@@ -190,6 +195,25 @@
   .quick-action strong { @apply text-[11px] font-semibold text-slate-800; }
   .quick-action small { @apply mt-1 text-[9px] leading-relaxed text-slate-500; }
   .quick-arrow { @apply ml-auto shrink-0 text-sm text-violet-600; }
+  .first-run-guide { @apply mt-5 rounded-2xl border border-violet-100 bg-white p-5 shadow-card md:p-6; }
+  .first-run-heading { @apply max-w-3xl; }
+  .first-run-heading h2 { @apply mb-2 mt-2 text-xl font-semibold tracking-tight text-slate-900; }
+  .first-run-heading p { @apply mb-0 text-sm leading-relaxed text-slate-600; }
+  .first-run-steps { @apply mt-5 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-4; }
+  .first-run-steps li { @apply flex min-w-0 gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4; }
+  .first-run-number { @apply grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-100 text-xs font-bold text-violet-800; }
+  .first-run-steps strong { @apply block text-sm font-semibold text-slate-800; }
+  .first-run-steps p { @apply mb-2 mt-1 text-xs leading-relaxed text-slate-600; }
+  .first-run-steps a { @apply text-xs font-semibold text-violet-700 hover:text-violet-900; }
+  .first-run-note { @apply mb-0 mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500; }
+  .first-run-note code { @apply rounded bg-slate-100 px-1.5 py-1 font-mono text-[11px] text-slate-700; }
+  .admin-tools { @apply my-2 rounded-lg border border-slate-200 px-3 py-2; }
+  .admin-tools summary { @apply flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-800; }
+  .admin-tools summary::-webkit-details-marker { display:none; }
+  .admin-tools summary::after { content:"+"; @apply ml-auto text-sm text-slate-400; }
+  .admin-tools[open] summary::after { content:"−"; }
+  .admin-tools > a { @apply ml-7 mt-2 flex items-center gap-1 text-xs font-semibold text-violet-700 hover:text-violet-900; }
+  .admin-tools > small { @apply ml-7 mt-1 block text-[11px] leading-relaxed text-slate-500; }
   .dashboard-panels { @apply mt-5 grid grid-cols-1 items-start gap-4 2xl:grid-cols-2; }
   .text-link { @apply whitespace-nowrap text-[11px] font-semibold text-violet-700 hover:text-violet-900; }
   .text-link span { @apply ml-1; }
@@ -364,6 +388,12 @@
   .privacy-warning, .privacy-demo-note { @apply rounded-lg border border-amber-100 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-800; }
   .privacy-demo-note { @apply mt-5 mb-0; }
   .privacy-section code { @apply rounded bg-slate-100 px-1 py-0.5; }
+  .privacy-contents { @apply my-6 rounded-xl border border-brand/15 bg-brand/[.04] p-4; }
+  .privacy-contents > strong { @apply text-sm font-semibold text-ink; }
+  .privacy-contents > p { @apply mb-3 mt-1 text-xs leading-relaxed text-slate-600; }
+  .privacy-contents > div { @apply flex flex-wrap gap-2; }
+  .privacy-contents a { @apply rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-brand shadow-sm hover:bg-brand hover:text-white; }
+  .privacy-section[id] { scroll-margin-top: 1.5rem; }
   .ai-consent-required { @apply mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800; }
   .landing-main { @apply w-full; }
   .landing-header { @apply sticky top-0 z-20 mx-auto flex max-w-[1320px] items-center justify-between border-b border-slate-200/70 bg-[#f8f9fc]/90 px-5 py-4 backdrop-blur-xl md:px-10; }
@@ -463,6 +493,7 @@
   .contact-detail small, .contact-detail strong { @apply block; }
   .contact-detail small { @apply text-[8px] font-bold tracking-[.1em] text-slate-400; }
   .contact-detail strong { @apply mt-1 text-[11px] text-slate-700; }
+  .contact-detail strong a { @apply text-brand underline underline-offset-2; }
   .contact-form-card { @apply rounded-2xl border border-white bg-white p-5 shadow-card sm:p-7; }
   .contact-form-heading { @apply mb-5; }
   .contact-form-heading h3 { @apply mb-1 mt-3 text-lg font-semibold text-slate-900; }

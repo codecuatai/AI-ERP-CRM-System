@@ -384,6 +384,9 @@ class LandingPage(Page):
             "form": PublicLeadRequestForm(request.POST or None),
             "brand_name": django_settings.PUBLIC_BRAND_NAME,
             "contact_email": django_settings.PUBLIC_CONTACT_EMAIL,
+            "contact_email_is_demo": django_settings.PUBLIC_CONTACT_EMAIL.lower().endswith(
+                (".test", ".example", ".invalid")
+            ),
         })
         return context
 

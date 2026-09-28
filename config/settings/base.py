@@ -57,7 +57,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "crm" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -102,6 +102,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ── Wagtail Settings ────────────────────────────────────────
 WAGTAIL_SITE_NAME = "AI CRM — CRM chuyển đổi số"
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
+WAGTAILADMIN_USER_LOGIN_FORM = "crm.forms.VietnameseWagtailLoginForm"
 PUBLIC_BRAND_NAME = os.getenv("PUBLIC_BRAND_NAME", "DigiFlow")
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "http://127.0.0.1:8000").rstrip("/")
 LEAD_FOLLOW_UP_LINK_TTL_DAYS = int(os.getenv("LEAD_FOLLOW_UP_LINK_TTL_DAYS", "7"))
