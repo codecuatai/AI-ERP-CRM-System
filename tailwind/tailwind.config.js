@@ -4,18 +4,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        canvas: "#f5f6f8",
-        ink: "#20252d",
-        muted: "#858d99",
-        brand: "#625bf6",
-        line: "#e9ebef",
+        canvas: "#f8fafc",
+        ink: "#0f172a",
+        muted: "#64748b",
+        brand: "#2563eb",
+        line: "#e2e8f0",
       },
       boxShadow: {
-        card: "0 2px 10px rgba(25, 34, 48, .035)",
-        float: "0 12px 32px rgba(25, 34, 48, .12)",
+        card: "0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08)",
+        float: "0 10px 30px -5px rgba(15, 23, 42, 0.12), 0 4px 6px -4px rgba(15, 23, 42, 0.06)",
       },
       fontFamily: {
-        sans: ["Inter", "Segoe UI", "Arial", "sans-serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
     },
   },

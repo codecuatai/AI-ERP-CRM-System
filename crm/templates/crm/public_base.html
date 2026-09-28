@@ -4,20 +4,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f6f8">
+  <meta name="theme-color" content="#0f172a">
   <title>{% block title %}Liên hệ{% endblock %} · {{ brand_name|default:"DigiFlow" }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link href="{% static 'crm/css/app.css' %}" rel="stylesheet">
 </head>
 <body class="public-shell">
-  {% block public_header %}<header class="public-topbar">
+  {% block public_header %}
+  <header class="public-topbar">
     <a class="brand mb-0" href="{% url 'landing_page' %}" aria-label="{{ brand_name|default:'DigiFlow' }} — trang chủ">
-      <span class="brand-mark">D</span><span><strong>{{ brand_name|default:"DigiFlow" }}</strong><small>Giải pháp số doanh nghiệp</small></span>
+      <span class="brand-mark">D</span>
+      <span><strong>{{ brand_name|default:"DigiFlow" }}</strong><small>Giải pháp số doanh nghiệp</small></span>
     </a>
-    <span class="public-secure-label"><span aria-hidden="true">●</span> Kênh tiếp nhận yêu cầu</span>
-  </header>{% endblock %}
+    <span class="public-secure-label">
+      <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-1.5" aria-hidden="true"></span>
+      Kênh tiếp nhận bảo mật
+    </span>
+  </header>
+  {% endblock %}
+
   <main class="{% block main_class %}public-main{% endblock %}">
     {% block content %}{% endblock %}
   </main>
-  {% block public_footer %}<footer class="public-footer">Chỉ cung cấp thông tin cần thiết để chúng tôi phản hồi yêu cầu của bạn.</footer>{% endblock %}
+
+  {% block public_footer %}
+  <footer class="public-footer">
+    Chỉ cung cấp thông tin cần thiết để chúng tôi phản hồi yêu cầu của bạn · Bảo mật theo chuẩn B2B
+  </footer>
+  {% endblock %}
 </body>
 </html>

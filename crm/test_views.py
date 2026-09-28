@@ -63,7 +63,7 @@ class CRMViewTests(TestCase):
         response = self.client.get(reverse("crm:dashboard"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "KHÔNG GIAN LÀM VIỆC CRM")
+        self.assertContains(response, "Không gian làm việc CRM")
         self.assertContains(response, "Xem ai cần chăm sóc trước")
         self.assertContains(response, "Việc đang mở")
         self.assertContains(response, "Bạn muốn làm gì?")
@@ -79,7 +79,7 @@ class CRMViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["show_first_run_guide"])
-        self.assertContains(response, "HƯỚNG DẪN LẦN ĐẦU")
+        self.assertContains(response, "Hướng dẫn lần đầu")
         self.assertContains(response, "Gửi yêu cầu tư vấn thử")
         self.assertContains(response, "Đọc gợi ý AI")
         self.assertContains(response, "python manage.py seed_crm_data")

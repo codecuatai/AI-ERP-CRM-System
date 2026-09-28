@@ -1,19 +1,88 @@
 {% extends "crm/base.html" %}
 {% block title %}Soạn email · {{ customer.full_name }}{% endblock %}
 {% block content %}
-<section class="page-heading">
-  <div><p class="eyebrow">HỖ TRỢ CHĂM SÓC</p><h1>Soạn email cho {{ customer.full_name }}</h1><p class="muted">AI chỉ tạo bản nháp. Email không được gửi từ màn hình này.</p></div>
-  <a class="button-secondary" href="{% url 'crm:customer_detail' customer.pk %}">Quay lại hồ sơ</a>
-</section>
-{% if provider %}<p class="notice">Bản nháp tạo bằng {% if provider == "gemini" %}Gemini{% else %}quy tắc cục bộ{% endif %}. Hãy kiểm tra kỹ trước khi sử dụng.</p>{% endif %}
-<form method="post" class="form-card">
-  {% csrf_token %}
-  <div class="form-grid">
-    {% for field in form %}{% if field.name != "draft" %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
+
+<nav aria-label="Điều hướng" class="breadcrumb-wrap">
+  <a href="{% url 'crm:customers' %}">Khách hàng</a>
+  <span aria-hidden="true">/</span>
+  <a href="{% url 'crm:customer_detail' customer.pk %}">{{ customer.full_name }}</a>
+  <span aria-hidden="true">/</span>
+  <span>Soạn email</span>
+</nav>
+
+<section class="page-heading" aria-labelledby="draft-title">
+  <div>
+    <span class="eyebrow">Hỗ trợ chăm sóc</span>
+    <h1 id="draft-title">Soạn email cho {{ customer.full_name }}</h1>
+    <p>AI hỗ trợ viết nháp theo ngữ cảnh hồ sơ. Email không tự động gửi từ hệ thống này — bạn chủ động gửi qua ứng dụng thư của mình.</p>
   </div>
-  <button class="button-primary" name="action" value="generate">Tạo bản nháp</button>
-  <div class="form-field draft-field"><label for="{{ form.draft.id_for_label }}">{{ form.draft.label }}</label>{{ form.draft }}{% for error in form.draft.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>
-  <p class="muted">Sau khi tự gửi email bên ngoài, bạn có thể xác nhận bên dưới để lưu nội dung vào lịch sử tương tác.</p>
-  <button class="button-secondary" name="action" value="record_sent">Tôi đã gửi email này — ghi vào lịch sử</button>
-</form>
+  <a class="button-secondary" href="{% url 'crm:customer_detail' customer.pk %}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Quay lại hồ sơ
+  </a>
+</section>
+
+{% if provider %}
+<div class="message mb-6" role="status">
+  <div class="flex items-center gap-2">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>Bản nháp được tạo bằng <strong>{% if provider == "gemini" %}Google Gemini{% else %}quy tắc cục bộ{% endif %}</strong>. Vui lòng rà soát lại thông tin trước khi gửi thực tế.</span>
+  </div>
+</div>
+{% endif %}
+
+<section class="content-card max-w-4xl">
+  <div class="content-card-heading">
+    <div>
+      <h2>Thiết lập nội dung nháp</h2>
+      <p>Chọn mục tiêu, văn phong và nhấn tạo bản nháp.</p>
+    </div>
+  </div>
+
+  <form method="post" class="p-6 md:p-8 space-y-6">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="form-error-summary">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+      {% for field in form %}
+        {% if field.name != "draft" %}
+          <div class="form-field">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div>
+      <button class="button-primary" name="action" value="generate" type="submit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Tạo bản nháp
+      </button>
+    </div>
+
+    <div class="draft-field">
+      <label class="form-label" for="{{ form.draft.id_for_label }}">{{ form.draft.label }}</label>
+      {{ form.draft }}
+      {% for error in form.draft.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      <p class="field-help mt-2">Nội dung trên có thể chỉnh sửa tự do trước khi bạn sao chép gửi ra ngoài.</p>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+      <h3 class="text-sm font-bold text-slate-800">Xác nhận gửi ra ngoài</h3>
+      <p class="mt-1 text-sm text-slate-500 leading-relaxed">Sau khi tự gửi email qua phần mềm gửi thư riêng, bạn có thể lưu bản nháp này thành một tương tác trong lịch sử chăm sóc.</p>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button class="button-secondary" name="action" value="record_sent" type="submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          Tôi đã gửi email này — ghi vào lịch sử
+        </button>
+        <a class="button-secondary" href="{% url 'crm:customer_detail' customer.pk %}">Hủy</a>
+      </div>
+    </div>
+  </form>
+</section>
+
 {% endblock %}
