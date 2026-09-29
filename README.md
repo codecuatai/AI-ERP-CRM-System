@@ -123,7 +123,8 @@ Copy-Item .env.example .env
 python manage.py migrate
 python manage.py setup_cms_homepage
 python manage.py setup_crm_groups
-python manage.py seed_crm_data
+# Chỉ chạy lệnh này nếu muốn có dữ liệu giả lập để demo:
+# python manage.py seed_crm_data
 python manage.py createsuperuser
 python manage.py runserver
 ```
@@ -139,7 +140,8 @@ cp .env.example .env
 python manage.py migrate
 python manage.py setup_cms_homepage
 python manage.py setup_crm_groups
-python manage.py seed_crm_data
+# Chỉ chạy lệnh này nếu muốn có dữ liệu giả lập để demo:
+# python manage.py seed_crm_data
 python manage.py createsuperuser
 python manage.py runserver
 ```
@@ -153,6 +155,31 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 Hoặc bỏ qua bước kích hoạt và dùng `.venv\Scripts\python.exe` thay cho `python`.
 
 Migration ban đầu đã được lưu trong dự án nên cài mới chỉ cần chạy `migrate`. Chỉ chạy `makemigrations` khi thay đổi model. Lệnh `seed_crm_data` tạo dữ liệu mẫu nhưng không tạo tài khoản đăng nhập; tài khoản đó được tạo ở bước `createsuperuser`.
+
+### Nạp dữ liệu khách hàng thật
+
+Ứng dụng không thể tự tạo dữ liệu khách hàng thật nếu chưa có nguồn dữ liệu. Để bắt đầu với hồ sơ thật, có thể tiếp nhận yêu cầu từ form công khai hoặc nhập CSV do doanh nghiệp xuất từ nguồn đang sử dụng. Không chạy `seed_crm_data` trong database muốn dùng dữ liệu thật; lệnh đó chỉ tạo hồ sơ giả lập để demo.
+
+CSV cần có cột `full_name,email`; các cột còn lại là tùy chọn: `phone,company,source,notes,total_spent,is_active`. Ví dụ:
+
+```csv
+full_name,email,phone,company,source,notes,total_spent,is_active
+Nguyễn Văn A,contact@congty.vn,0900000000,Công ty ABC,Giới thiệu,Quan tâm phần mềm CRM,0,true
+```
+
+Kiểm tra file trước khi nhập, không thay đổi database:
+
+```powershell
+python manage.py import_crm_customers .\khach-hang.csv --dry-run
+```
+
+Nhập hồ sơ mới; email đã có trong database mặc định được bỏ qua để bảo vệ dữ liệu đang lưu:
+
+```powershell
+python manage.py import_crm_customers .\khach-hang.csv
+```
+
+Chỉ thêm `--update` khi muốn cập nhật hồ sơ trùng email theo các cột trong file. Bản ghi trong CSV phải dùng UTF-8; email được chuẩn hóa chữ thường. Lệnh này chỉ nhập hồ sơ khách hàng, chưa nhập lịch sử tương tác/đơn hàng từ hệ thống khác.
 
 ## Truy cập ứng dụng
 
@@ -184,7 +211,7 @@ GEMINI_MODEL=gemini-3.5-flash-lite
 
 Có thể lấy API key tại [Google AI Studio](https://aistudio.google.com/). Sau khi sửa `.env`, khởi động lại server. Không commit `.env` hoặc dữ liệu khách hàng thật lên Git.
 
-Không có `GEMINI_API_KEY` cũng không sao: phân tích vẫn chạy bằng rules fallback và kết quả vẫn được lưu.
+Không có `GEMINI_API_KEY` cũng không sao: phân tích vẫn chạy bằng rules fallback và kết quả vẫn được lưu, nhưng đây là phân tích quy tắc cục bộ chứ không phải Gemini. Trên hồ sơ khách hàng, nút **Phân tích ngay** gửi thông tin CRM hiện có đến Gemini khi key hợp lệ; nếu phân tích bằng fallback, giao diện sẽ ghi rõ nguồn. Chỉ nhập dữ liệu khách hàng khi doanh nghiệp có quyền sử dụng và đã thông báo/thu consent phù hợp. Với lead gửi form công khai, nội dung chỉ được gửi phân tích nếu khách đã đồng ý AI riêng.
 
 ## Gửi email hỏi thêm thông tin
 
