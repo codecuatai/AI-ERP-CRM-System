@@ -400,6 +400,8 @@ Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. T
 
 ## Kiểm thử thủ công
 
+**Bộ bàn giao Thành viên 1 (QA):** xem [hướng dẫn QA](docs/qa/README.md), [Bug Tracker](docs/qa/bug-tracker.md), [checklist và kết quả](docs/qa/checklist.md) và [báo cáo ngày 29/09/2026](docs/qa/bao-cao-2026-09-29.md). Bộ test thường chạy bằng `python manage.py test`; các lỗi đang mở có bộ tái hiện riêng `python manage.py test crm.qa_known_bugs --verbosity=2` (hiện thất bại, cần chạy lại khi Thành viên 2 sửa). Test thường đạt không đồng nghĩa các lỗi mở đã được đóng.
+
 Có thể chạy các test tự động của form bằng `python manage.py test crm`; ngoài ra kiểm tra luồng thủ công theo các kịch bản sau:
 
 | Kịch bản | Thao tác | Kết quả mong đợi |

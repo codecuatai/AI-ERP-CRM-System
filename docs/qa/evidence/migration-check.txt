@@ -1,0 +1,4 @@
+COMMAND: python manage.py makemigrations --check --dry-run
+EXIT CODE: 0
+
+No changes detected
