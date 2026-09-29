@@ -40,6 +40,7 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - [Cấu hình Gemini tùy chọn](#cấu-hình-gemini-tùy-chọn)
 - [Gửi email hỏi thêm thông tin](#gửi-email-hỏi-thêm-thông-tin)
 - [Demo trong 5 phút](#demo-trong-5-phút)
+- [Kịch bản video demo chi tiết](docs/kich-ban-demo.md)
 - [Dữ liệu mẫu](#dữ-liệu-mẫu)
 - [Cách phân tích AI hoạt động](#cách-phân-tích-ai-hoạt-động)
 - [Cấu trúc chính](#cấu-trúc-chính)
@@ -470,6 +471,18 @@ Test trình duyệt gửi form lead công khai, đăng nhập Wagtail bằng tà
 - Form công khai chưa có rate limit/WAF tích hợp; trước khi mở internet nhận dữ liệu thật cần bật giới hạn request tại reverse proxy/CDN/WAF.
 
 Roadmap chi tiết, có phân biệt tính năng đã triển khai và phần còn thiếu, nằm tại [docs/lo-trinh-tinh-nang.md](docs/lo-trinh-tinh-nang.md). Phần bổ sung thiết thực tiếp theo là nhập CSV có kiểm tra/xem trước và mở rộng báo cáo theo thời gian.
+
+## Đối chiếu checklist đồ án
+
+| Yêu cầu | Trạng thái | Bằng chứng trong dự án / cách trình bày khi demo |
+|---|---|---|
+| 1. Cài đặt Python và khởi tạo Wagtail | Hoàn thành | `requirements.txt` khai báo Wagtail và các thư viện; `config/settings/` cấu hình dự án; phần [Bắt đầu nhanh](#bắt-đầu-nhanh) hướng dẫn tạo môi trường, migrate và chạy ứng dụng. |
+| 2. Model tùy chỉnh quản lý dữ liệu | Hoàn thành | `crm/models.py` có `Customer`, `LeadRequest`, `Interaction`, `AIAnalysis`, `CareTask` và `LandingPage`; `crm/wagtail_hooks.py` đưa các model CRM vào Snippets để quản trị trong Wagtail. |
+| 3. Tích hợp AI | Hoàn thành | `crm/services/ai_service.py` gọi Google Gemini khi có `GEMINI_API_KEY`, kiểm tra kết quả và dùng rules fallback khi thiếu key hoặc API lỗi. Có thể demo fallback không cần API key; demo Gemini trực tiếp cần cấu hình key riêng trong `.env`. |
+| 4. Giao diện cho người dùng tương tác với AI | Hoàn thành | `crm/views.py` và `crm/templates/crm/` cung cấp hồ sơ khách hàng, thao tác phân tích, hàng đợi ưu tiên và tạo việc chăm sóc từ đề xuất. Luồng mẫu có trong `crm/test_e2e_flow.py`. |
+| 5. Kiểm thử luồng và tài liệu triển khai | Hoàn thành | `README.md` có cài đặt, cấu hình, seed dữ liệu, chạy ứng dụng và kịch bản kiểm tra; `crm/test_e2e_flow.py` kiểm tra luồng form công khai → phân tích AI fallback → tạo việc chăm sóc. Chạy `python manage.py test` để kiểm tra toàn bộ test Django. |
+
+Phạm vi sản phẩm là **CRM cơ bản tích hợp Wagtail và AI**, đúng nhánh CRM của đề bài; dự án không tuyên bố là ERP đầy đủ. Khi quay demo, dùng dữ liệu giả từ `python manage.py seed_crm_data`; không đưa API key hoặc dữ liệu khách thật lên màn hình.
 
 ## Checklist trước khi nộp
 
