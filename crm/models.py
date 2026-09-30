@@ -318,6 +318,39 @@ class CareTask(models.Model):
         return f"{self.title} — {self.customer.full_name}"
 
 
+class SalesRecord(models.Model):
+    """A minimal closed-sale record for CRM revenue reporting, not accounting."""
+
+    class Status(models.TextChoices):
+        WON = "WON", "Đã chốt"
+        VOID = "VOID", "Đã hủy"
+
+    reference = models.CharField("Mã giao dịch", max_length=40, unique=True)
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.PROTECT,
+        related_name="sales_records",
+        verbose_name="Khách hàng",
+    )
+    amount = models.DecimalField("Giá trị giao dịch (VNĐ)", max_digits=14, decimal_places=0)
+    closed_at = models.DateField("Ngày chốt")
+    status = models.CharField("Trạng thái", max_length=8, choices=Status.choices, default=Status.WON)
+    created_at = models.DateTimeField("Ngày tạo bản ghi", auto_now_add=True)
+
+    panels = [
+        FieldPanel("reference"), FieldPanel("customer"), FieldPanel("amount"),
+        FieldPanel("closed_at"), FieldPanel("status"),
+    ]
+
+    class Meta:
+        ordering = ["-closed_at", "reference"]
+        verbose_name = "Giao dịch doanh thu"
+        verbose_name_plural = "Giao dịch doanh thu"
+
+    def __str__(self):
+        return f"{self.reference} — {self.amount:,.0f} VNĐ"
+
+
 class LandingPage(Page):
     """Editable public homepage for the digital-transformation CRM demo."""
 

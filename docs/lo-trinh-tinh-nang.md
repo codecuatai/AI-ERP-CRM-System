@@ -25,6 +25,16 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 ## Các tính năng đã triển khai
 
+### Đã hoàn thành phần tích hợp dữ liệu: Apache Superset
+
+- Django có thể dùng PostgreSQL tùy chọn, SQLite vẫn là mặc định local.
+- Superset chạy riêng bằng Docker Compose, dùng database metadata riêng và tài khoản CRM chỉ đọc.
+- Lệnh `setup_superset_analytics` tạo schema view chỉ chứa chỉ số cần thiết, không lộ thông tin liên hệ/nội dung tương tác.
+- Seed thêm giao dịch doanh thu giả lập để demo biểu đồ theo thời gian; đây không phải nghiệp vụ kế toán hoặc dữ liệu doanh thu thật.
+- README hướng dẫn khởi động database, kết nối SQLAlchemy URI, chọn dataset, tạo chart/dashboard và đối chiếu kết quả.
+
+**Bước demo trong Superset:** thêm kết nối theo URI, đăng ký bốn dataset analytics, rồi tạo/publish chart và dashboard theo hướng dẫn README. Dữ liệu giao dịch là giả lập, không phải doanh thu thật.
+
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 
 AI tạo bản nháp email theo mục tiêu chăm sóc và dữ liệu được phép dùng trong luồng hiện tại; nhân viên có thể sửa, sao chép hoặc bỏ bản nháp. Không nên mô tả rằng tính năng luôn sử dụng lịch sử tương tác gần đây: email draft giới hạn ngữ cảnh theo service và consent.

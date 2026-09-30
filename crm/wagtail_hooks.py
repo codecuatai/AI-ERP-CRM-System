@@ -1,7 +1,7 @@
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
-from .models import AIAnalysis, CareTask, Customer, Interaction, LeadRequest
+from .models import AIAnalysis, CareTask, Customer, Interaction, LeadRequest, SalesRecord
 
 
 @register_snippet
@@ -51,4 +51,14 @@ class AIAnalysisViewSet(SnippetViewSet):
     list_display = ["customer", "segment", "score", "provider", "created_at"]
     list_filter = ["segment", "provider", "created_at"]
     search_fields = ["customer__full_name", "summary", "recommendation"]
+    inspect_view_enabled = True
+
+
+@register_snippet
+class SalesRecordViewSet(SnippetViewSet):
+    model = SalesRecord
+    icon = "doc-full"
+    list_display = ["reference", "customer", "amount", "closed_at", "status"]
+    list_filter = ["status", "closed_at"]
+    search_fields = ["reference", "customer__full_name", "customer__company"]
     inspect_view_enabled = True

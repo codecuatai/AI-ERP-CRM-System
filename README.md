@@ -65,6 +65,7 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - **Consent AI riêng cho phản hồi:** câu trả lời bổ sung chỉ được AI phân tích nếu khách đồng ý ngay trên form đó.
 - **Dashboard:** hiển thị tổng khách hàng đang hoạt động, số khách hàng VIP, số khách hàng chưa phân tích và tổng chi tiêu.
 - **Việc chăm sóc khách hàng:** tạo từ hồ sơ hoặc đề xuất AI; gắn khách hàng, người phụ trách, loại việc, hạn, ưu tiên và trạng thái; có danh sách tìm/lọc riêng.
+- **Giao dịch doanh thu tối giản:** ghi nhận giao dịch đã chốt/hủy gắn với khách hàng để demo báo cáo theo tháng; không thay thế nghiệp vụ kế toán hay quản lý đơn hàng đầy đủ.
 - **Theo dõi hạn xử lý:** dashboard chia việc đang mở thành quá hạn, đến hạn hôm nay và sắp tới; việc hoàn tất được loại khỏi các hàng đợi này.
 - **Tìm kiếm và lọc:** tìm theo tên, email, công ty; lọc theo phân khúc AI.
 - **Hồ sơ khách hàng:** xem thông tin liên hệ, tổng chi tiêu, timeline trao đổi, kết quả AI mới nhất và lịch sử các lần phân tích trước.
@@ -91,6 +92,7 @@ Các phân khúc được hỗ trợ: **Chưa phân loại**, **VIP**, **Tiềm 
 | `LeadFollowUpResponse` | Câu trả lời từ form follow-up | Khó khăn, kết quả mong muốn, thời điểm triển khai, thời gian liên hệ và consent AI riêng |
 | `AIAnalysis` | Lịch sử phân tích | Khách hàng, phân khúc, điểm, nhận định, đề xuất, nguồn phân tích và thời điểm; lưu lại mỗi lần bấm phân tích |
 | `CareTask` | Việc chăm sóc khách hàng | Khách hàng, nội dung, loại việc, người phụ trách, hạn, ưu tiên, trạng thái và thời điểm hoàn tất |
+| `SalesRecord` | Giao dịch doanh thu tối giản | Mã giao dịch demo, khách hàng, giá trị, ngày chốt và trạng thái đã chốt/đã hủy; không phải phân hệ kế toán |
 
 `Customer.ai_segment` và `Customer.ai_score` lưu kết quả mới nhất để Dashboard lọc/hiển thị nhanh. Các bản ghi `AIAnalysis` giữ lịch sử cũ để có thể xem lại.
 
@@ -109,6 +111,7 @@ Thư viện Python chính:
 | `wagtail>=7.0,<9.0` | CMS và giao diện quản trị |
 | `google-genai>=1.0.0` | Gọi Google Gemini khi có API key |
 | `python-dotenv>=1.0.0` | Đọc cấu hình từ `.env` |
+| `requirements-postgres.txt` | Driver PostgreSQL tùy chọn cho demo Superset |
 | SQLite | Cơ sở dữ liệu mặc định, không cần cài thêm |
 
 Mở Terminal/PowerShell tại thư mục chứa `manage.py` rồi chạy các lệnh sau.
@@ -252,7 +255,7 @@ EMAIL_HOST_PASSWORD=<mật khẩu SMTP>
 EMAIL_USE_TLS=true
 ```
 
-Profile production từ chối secret yếu/thiếu, wildcard host, URL public không HTTPS, host/CSRF origin không khớp và backend email console; đồng thời bật cookie bảo mật, HTTPS redirect và HSTS. Cần cấu hình HTTPS tại proxy/hosting, đặt đúng host/origin và dùng database có lưu trữ bền vững. Nếu proxy kết thúc TLS, chỉ đặt `DJANGO_BEHIND_TLS_PROXY=true` khi proxy tin cậy luôn ghi đè `X-Forwarded-Proto` và app không thể truy cập trực tiếp từ client ngoài. Profile hiện vẫn dùng SQLite như bản demo; chỉ triển khai với volume bền vững và tải nhỏ. Với môi trường production nhiều người dùng, hãy cấu hình PostgreSQL riêng và backup database/media trước khi nhận dữ liệu thật. Không dùng file `.env` trong repo để chứa secret production.
+Profile production từ chối secret yếu/thiếu, wildcard host, URL public không HTTPS, host/CSRF origin không khớp và backend email console; đồng thời bật cookie bảo mật, HTTPS redirect và HSTS. Cần cấu hình HTTPS tại proxy/hosting, đặt đúng host/origin và dùng database có lưu trữ bền vững. Nếu proxy kết thúc TLS, chỉ đặt `DJANGO_BEHIND_TLS_PROXY=true` khi proxy tin cậy luôn ghi đè `X-Forwarded-Proto` và app không thể truy cập trực tiếp từ client ngoài. Profile mặc định vẫn dùng SQLite, nhưng hỗ trợ chuyển sang PostgreSQL qua `DJANGO_DATABASE_URL`; production cần database/backup bền vững phù hợp tải thực tế. Không dùng file `.env` trong repo để chứa secret production.
 
 ## Demo trong 5 phút
 
@@ -281,6 +284,61 @@ Lệnh `python manage.py seed_crm_data` tạo dữ liệu phục vụ trình di�
 - 19 việc chăm sóc với trạng thái hoàn tất/đang làm/cần làm, hạn quá khứ/hôm nay/tương lai.
 
 Lệnh seed dùng email, nội dung yêu cầu, chủ đề tương tác và tiêu đề việc để tránh tạo trùng khi chạy lại; không ghi đè hồ sơ đã tồn tại. Các thông tin liên hệ mới đều là dữ liệu demo, không dùng dữ liệu khách thật. Lệnh này chỉ tạo dữ liệu, không tạo tài khoản đăng nhập. Chạy lại lệnh an toàn nếu muốn bổ sung các bản ghi demo còn thiếu.
+
+Lệnh seed cũng tạo 12 giao dịch doanh thu giả lập theo các tháng gần nhất, dùng mã `DEMO-REV-*`; một giao dịch đã hủy để minh họa lọc trạng thái. Đây là dữ liệu demo, không phải doanh thu thật.
+
+## Kết nối Apache Superset
+
+Superset chạy riêng trong Docker Compose, đọc PostgreSQL qua tài khoản `superset_ro`. Cấu hình này dành cho demo local với dữ liệu giả lập; không mở cổng dashboard/database ra mạng công khai và không dùng database thật trong lần chạy seed.
+
+### Khởi chạy trên Windows
+
+Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies của dự án.
+
+1. Tạo `.env` từ `.env.example`, sau đó thay tất cả giá trị `replace-with-*` bằng giá trị riêng cho local. Tạo key bằng `openssl rand -hex 32`; các mật khẩu database nên dùng ký tự chữ/số để URI đơn giản. Không dùng thông tin demo trong production. Cài thêm driver PostgreSQL bằng `pip install -r requirements-postgres.txt`.
+2. Cấu hình Django dùng PostgreSQL trong `.env`:
+
+   ```dotenv
+   DJANGO_DATABASE_URL=postgresql://crm_app:YOUR_CRM_PASSWORD@127.0.0.1:5433/crm
+   ```
+
+   Đặt `CRM_DB_NAME=crm`, `CRM_DB_USER=crm_app` và `CRM_DB_PASSWORD=YOUR_CRM_PASSWORD` tương ứng. Đặt thêm mật khẩu riêng `CRM_DB_ADMIN_PASSWORD` cho tài khoản khởi tạo PostgreSQL; Django không dùng tài khoản admin này. Nếu cổng `5433` hoặc `8088` đang dùng, đổi `CRM_DB_HOST_PORT` hoặc `SUPERSET_HOST_PORT` và cập nhật URL tương ứng.
+
+3. Khởi động PostgreSQL CRM và Superset:
+
+   ```powershell
+   docker compose --env-file .env -f docker-compose.superset.yml up -d crm-db superset-meta-db superset-init superset
+   ```
+
+4. Trong môi trường Python đã cài dependencies, chạy migration, dữ liệu mẫu và tạo view analytics:
+
+   ```powershell
+   python manage.py migrate
+   python manage.py seed_crm_data
+   python manage.py setup_superset_analytics
+   python manage.py runserver
+   ```
+
+   Django trên máy host kết nối PostgreSQL ở `127.0.0.1:5433`; Superset trong Docker kết nối database bằng hostname `crm-db`.
+
+5. Mở [Superset](http://127.0.0.1:8088), đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` trong `.env`. Thêm database ở **Settings → Data → Database Connections → + Database**, dùng URI:
+
+   ```text
+   postgresql://superset_ro:<SUPERSET_READONLY_PASSWORD>@crm-db:5432/crm
+   ```
+
+   Chọn **Test Connection**. Đăng ký dataset trong schema `analytics`: `customer_monthly`, `lead_pipeline`, `care_task_summary`, `revenue_transactions`.
+
+6. Tạo chart bằng Explore, sau đó ghép thành dashboard CRM:
+
+   - Khách hàng theo tháng/phân khúc: dataset `customer_monthly`, metric `SUM(customer_count)`.
+   - Lead theo tháng/trạng thái/giải pháp: dataset `lead_pipeline`, metric `SUM(lead_count)`.
+   - Việc chăm sóc/quá hạn: dataset `care_task_summary`, metric `SUM(task_count)` hoặc `SUM(overdue_count)`.
+   - Doanh thu đã chốt theo tháng: dataset `revenue_transactions`, temporal column `closed_at`, metric `SUM(won_revenue)`; giao dịch `VOID` có doanh thu bằng 0.
+
+Các view trong schema `analytics` chỉ chứa chỉ số cần thiết, không có tên, email, số điện thoại, ghi chú hay nội dung tương tác. Superset metadata nằm trong PostgreSQL volume riêng. Lệnh `setup_superset_analytics` chỉ hỗ trợ PostgreSQL và cấp quyền đọc schema view cho role `superset_ro`.
+
+Để dừng dịch vụ, chạy `docker compose --env-file .env -f docker-compose.superset.yml down`. Lệnh `down -v` xóa cả database demo và dashboard Superset; chỉ dùng nếu muốn xóa các volume này.
 
 ## Cách phân tích AI hoạt động
 
