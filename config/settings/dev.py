@@ -4,6 +4,7 @@ Settings cho môi trường phát triển.
 """
 import os
 from pathlib import Path
+from urllib.parse import urlsplit, unquote
 from django.core.management.utils import get_random_secret_key
 from .base import *  # noqa: F403, F401
 
@@ -36,13 +37,32 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
-# ── Database: SQLite (không cần cài thêm gì) ─────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("DJANGO_DATABASE_PATH", BASE_DIR / "db.sqlite3"),  # noqa: F405
+# ── Database: SQLite mặc định, PostgreSQL tùy chọn qua .env ──
+database_url = os.environ.get("DJANGO_DATABASE_URL", "").strip()
+if database_url:
+    parsed_database_url = urlsplit(database_url)
+    if parsed_database_url.scheme not in {"postgres", "postgresql"}:
+        raise ValueError("DJANGO_DATABASE_URL must use the postgres:// or postgresql:// scheme.")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": unquote(parsed_database_url.path.lstrip("/")),
+            "USER": unquote(parsed_database_url.username or ""),
+            "PASSWORD": unquote(parsed_database_url.password or ""),
+            "HOST": parsed_database_url.hostname or "localhost",
+            "PORT": parsed_database_url.port or 5432,
+            "OPTIONS": {"sslmode": "require"} if parsed_database_url.query == "sslmode=require" else {},
+        }
     }
-}
+    if "django.contrib.postgres" not in INSTALLED_APPS:
+        INSTALLED_APPS.append("django.contrib.postgres")
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.environ.get("DJANGO_DATABASE_PATH", BASE_DIR / "db.sqlite3"),  # noqa: F405
+        }
+    }
 
 # ── AI API Keys (đọc từ .env) ────────────────────────────────
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")

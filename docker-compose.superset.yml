@@ -1,0 +1,97 @@
+services:
+  crm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${CRM_DB_NAME:?Set CRM_DB_NAME in .env}
+      POSTGRES_USER: crm_admin
+      POSTGRES_PASSWORD: ${CRM_DB_ADMIN_PASSWORD:?Set CRM_DB_ADMIN_PASSWORD in .env}
+      CRM_DB_USER: ${CRM_DB_USER:-crm_app}
+      CRM_DB_PASSWORD: ${CRM_DB_PASSWORD:?Set CRM_DB_PASSWORD in .env}
+      SUPERSET_READONLY_PASSWORD: ${SUPERSET_READONLY_PASSWORD:?Set SUPERSET_READONLY_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${CRM_DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - crm-db-data:/var/lib/postgresql/data
+      - ./superset/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  superset-meta-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: superset_meta
+      POSTGRES_USER: superset_meta
+      POSTGRES_PASSWORD: ${SUPERSET_META_PASSWORD:?Set SUPERSET_META_PASSWORD in .env}
+    volumes:
+      - superset-meta-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  superset-init:
+    image: crm-superset:6.0.0
+    build:
+      context: ./superset
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:?Set SUPERSET_SECRET_KEY in .env}
+      SUPERSET_META_PASSWORD: ${SUPERSET_META_PASSWORD}
+      SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:?Set SUPERSET_ADMIN_PASSWORD in .env}
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+    depends_on:
+      superset-meta-db:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        superset db upgrade &&
+        if ! superset fab list-users | grep -F -- "$${SUPERSET_ADMIN_USERNAME}"; then
+        superset fab create-admin --username "$${SUPERSET_ADMIN_USERNAME}"
+        --firstname Demo --lastname Admin --email admin@digiflow.test
+        --password "$${SUPERSET_ADMIN_PASSWORD}"; fi &&
+        superset init
+    restart: "no"
+
+  superset:
+    image: crm-superset:6.0.0
+    build:
+      context: ./superset
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:?Set SUPERSET_SECRET_KEY in .env}
+      SUPERSET_META_PASSWORD: ${SUPERSET_META_PASSWORD}
+    ports:
+      - "127.0.0.1:${SUPERSET_HOST_PORT:-8088}:8088"
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+      - superset-home:/app/superset_home
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+      crm-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  crm-db-data:
+  superset-meta-data:
+  superset-home:

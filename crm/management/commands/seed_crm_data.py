@@ -4,11 +4,11 @@ Creates sample customers, leads with varied AI consent, interactions, analysis
 results, and care tasks. All added contact email addresses use the reserved
 ``.test`` domain and rerunning the command is idempotent.
 """
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from crm.models import AIAnalysis, CareTask, Customer, Interaction, LeadRequest
+from crm.models import AIAnalysis, CareTask, Customer, Interaction, LeadRequest, SalesRecord
 
 
 class Command(BaseCommand):
@@ -207,6 +207,7 @@ class Command(BaseCommand):
         count_l = 0
         count_a = 0
         count_t = 0
+        count_sales = 0
         for s in samples:
             cust, created = Customer.objects.get_or_create(
                 email=s["email"],
@@ -295,8 +296,34 @@ class Command(BaseCommand):
             )
             count_t += int(task_created)
 
+        # 12 fictional monthly transactions make revenue charts useful without
+        # turning the CRM demo into an order, inventory, or accounting system.
+        demo_customer_emails = [
+            "contact@alpha-tech.vn",
+            "huong.ttm@saigon-logistics.com",
+            "cskh@banmecafe.vn",
+            "demo.customer01@digiflow.test",
+            "demo.customer06@digiflow.test",
+            "demo.customer11@digiflow.test",
+        ]
+        today = timezone.localdate()
+        for index in range(12):
+            month_index = today.year * 12 + today.month - 1 - index
+            year, zero_based_month = divmod(month_index, 12)
+            customer = Customer.objects.get(email=demo_customer_emails[index % len(demo_customer_emails)])
+            _, sale_created = SalesRecord.objects.get_or_create(
+                reference=f"DEMO-REV-{index + 1:02d}",
+                defaults={
+                    "customer": customer,
+                    "amount": 8_000_000 + (index % 5) * 3_500_000,
+                    "closed_at": date(year, zero_based_month + 1, 15),
+                    "status": SalesRecord.Status.VOID if index == 7 else SalesRecord.Status.WON,
+                },
+            )
+            count_sales += int(sale_created)
+
         self.stdout.write(self.style.SUCCESS(
             f"Created {count_c} customers, {count_l} leads, {count_i} interactions, "
-            f"{count_a} analyses and {count_t} care tasks."
+            f"{count_a} analyses, {count_t} care tasks and {count_sales} sales records."
         ))
         self.stdout.write(self.style.SUCCESS("All added contacts and company details are fictional demo records."))
