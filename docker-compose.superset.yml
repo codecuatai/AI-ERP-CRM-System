@@ -91,6 +91,23 @@ services:
       retries: 10
     restart: unless-stopped
 
+  superset-bootstrap:
+    image: crm-superset:6.0.0
+    environment:
+      SUPERSET_URL: http://superset:8088
+      SUPERSET_CRM_HOST: crm-db
+      CRM_DB_NAME: ${CRM_DB_NAME:?Set CRM_DB_NAME in .env}
+      SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:?Set SUPERSET_ADMIN_PASSWORD in .env}
+      SUPERSET_READONLY_PASSWORD: ${SUPERSET_READONLY_PASSWORD:?Set SUPERSET_READONLY_PASSWORD in .env}
+    volumes:
+      - ./superset/bootstrap_superset.py:/app/bootstrap_superset.py:ro
+    depends_on:
+      superset:
+        condition: service_healthy
+    command: ["python", "/app/bootstrap_superset.py"]
+    restart: "no"
+
 volumes:
   crm-db-data:
   superset-meta-data:

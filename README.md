@@ -321,20 +321,43 @@ Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies c
 
    Django trên máy host kết nối PostgreSQL ở `127.0.0.1:5433`; Superset trong Docker kết nối database bằng hostname `crm-db`.
 
-5. Mở [Superset](http://127.0.0.1:8088), đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` trong `.env`. Thêm database ở **Settings → Data → Database Connections → + Database**, dùng URI:
+5. Sau khi migration và view analytics đã sẵn sàng, chạy bootstrap để tự đăng nhập bằng tài khoản admin, đăng ký database/dataset và tạo dashboard cùng bốn biểu đồ:
+
+   ```powershell
+   docker compose --env-file .env -f docker-compose.superset.yml run --rm superset-bootstrap
+   ```
+
+   Nếu cần chạy lại sau khi chỉnh dữ liệu hoặc xóa metadata, chạy lại lệnh trên hoặc chạy từ PowerShell:
+
+   ```powershell
+   $env:SUPERSET_URL = "http://127.0.0.1:8088"
+   python superset/bootstrap_superset.py
+   ```
+
+   Mở [Superset](http://127.0.0.1:8088), đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` trong `.env`. Kết nối được tạo tự động với URI:
 
    ```text
    postgresql://superset_ro:<SUPERSET_READONLY_PASSWORD>@crm-db:5432/crm
    ```
 
-   Chọn **Test Connection**. Đăng ký dataset trong schema `analytics`: `customer_monthly`, `lead_pipeline`, `care_task_summary`, `revenue_transactions`.
+   Kết nối này dùng tài khoản chỉ đọc; bốn dataset trong schema `analytics` được bootstrap tự động.
 
-6. Tạo chart bằng Explore, sau đó ghép thành dashboard CRM:
+6. Dashboard đã tạo có slug `crm-analytics-dashboard` và bốn biểu đồ:
 
    - Khách hàng theo tháng/phân khúc: dataset `customer_monthly`, metric `SUM(customer_count)`.
    - Lead theo tháng/trạng thái/giải pháp: dataset `lead_pipeline`, metric `SUM(lead_count)`.
    - Việc chăm sóc/quá hạn: dataset `care_task_summary`, metric `SUM(task_count)` hoặc `SUM(overdue_count)`.
    - Doanh thu đã chốt theo tháng: dataset `revenue_transactions`, temporal column `closed_at`, metric `SUM(won_revenue)`; giao dịch `VOID` có doanh thu bằng 0.
+
+   Có thể mở trực tiếp [dashboard CRM](http://127.0.0.1:8088/superset/dashboard/crm-analytics-dashboard/) sau khi đăng nhập. Nếu muốn chỉnh màu, bộ lọc hoặc bố cục, dùng **Edit dashboard** trong Superset; chạy lại bootstrap sẽ cập nhật lại bốn biểu đồ và bố cục chuẩn.
+
+7. Đối chiếu dữ liệu hiển thị trước khi demo/nộp bài. Lệnh này so sánh tổng khách hàng, lead, việc chăm sóc và doanh thu WON giữa bảng CRM và bốn view analytics:
+
+   ```powershell
+   python manage.py verify_superset_analytics
+   ```
+
+   Lệnh phải in bốn dòng `PASS` và `Analytics views match CRM source data.`. Nếu dùng PostgreSQL trong Docker, chạy lệnh sau khi đã đặt `DJANGO_DATABASE_URL` trong `.env`; SQLite local sẽ báo rõ rằng cần PostgreSQL.
 
 Các view trong schema `analytics` chỉ chứa chỉ số cần thiết, không có tên, email, số điện thoại, ghi chú hay nội dung tương tác. Superset metadata nằm trong PostgreSQL volume riêng. Lệnh `setup_superset_analytics` chỉ hỗ trợ PostgreSQL và cấp quyền đọc schema view cho role `superset_ro`.
 

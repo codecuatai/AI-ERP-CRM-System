@@ -31,9 +31,10 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 - Superset chạy riêng bằng Docker Compose, dùng database metadata riêng và tài khoản CRM chỉ đọc.
 - Lệnh `setup_superset_analytics` tạo schema view chỉ chứa chỉ số cần thiết, không lộ thông tin liên hệ/nội dung tương tác.
 - Seed thêm giao dịch doanh thu giả lập để demo biểu đồ theo thời gian; đây không phải nghiệp vụ kế toán hoặc dữ liệu doanh thu thật.
-- README hướng dẫn khởi động database, kết nối SQLAlchemy URI, chọn dataset, tạo chart/dashboard và đối chiếu kết quả.
+- Docker Compose có service `superset-bootstrap` dùng REST API để tự đăng ký SQLAlchemy URI, bốn dataset, bốn chart và dashboard đã publish; có thể chạy lại bằng `python superset/bootstrap_superset.py`.
+- Lệnh `verify_superset_analytics` đối chiếu tổng khách hàng, lead, việc chăm sóc và doanh thu WON giữa bảng CRM và view analytics trước khi demo.
 
-**Bước demo trong Superset:** thêm kết nối theo URI, đăng ký bốn dataset analytics, rồi tạo/publish chart và dashboard theo hướng dẫn README. Dữ liệu giao dịch là giả lập, không phải doanh thu thật.
+**Bước demo trong Superset:** khởi động stack với `superset-bootstrap`, mở dashboard `crm-analytics-dashboard`, rồi chạy lệnh đối chiếu để xác nhận số liệu. Có thể chỉnh chart/dashboard trong UI; bootstrap sẽ khôi phục cấu hình chuẩn khi cần. Dữ liệu giao dịch là giả lập, không phải doanh thu thật.
 
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 

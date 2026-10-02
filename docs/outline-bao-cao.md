@@ -89,7 +89,7 @@ Ghi lại kết quả thực tế: ngày chạy, phiên bản Python, lệnh, s�
 ## 6. Kết luận và hướng phát triển
 
 - Đánh giá luồng CRM từ tiếp nhận nhu cầu đến phân tích, người duyệt và việc theo dõi.
-- Nêu rõ giới hạn: SQLite cho demo; fallback là heuristics minh họa; chưa có tác vụ nền, nhập CSV hoặc triển khai PostgreSQL cấu hình sẵn.
+- Nêu rõ giới hạn: SQLite vẫn là mặc định local; fallback là heuristics minh họa; chưa có tác vụ nền hoặc nhập CSV. Luồng PostgreSQL/Superset đã có cấu hình Docker riêng cho demo analytics.
 - Hướng phát triển: nhập CSV có preview/validation, lọc báo cáo theo thời gian, PostgreSQL và backup/monitoring trước khi triển khai thực tế.
 
 ## Phụ lục
