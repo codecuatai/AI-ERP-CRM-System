@@ -83,7 +83,7 @@
   </div>
 
   <!-- Thanh bộ lọc 1-chạm (Quick Filter Pills) -->
-  <div class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3 mb-4">
+  <div class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 px-6 pt-3 pb-3">
     <a href="{% url 'crm:lead_requests' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if not selected_status %}bg-blue-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
       <span>Tất cả</span>
@@ -122,26 +122,29 @@
     {% endif %}
   </form>
 
-  <!-- Danh sách Lead Cards -->
+  <!-- Danh sách Lead Cards: Phân tách rõ ràng với màu nền xen kẽ (Zebra: Lẻ xanh nhạt, Chẵn trắng) -->
   <div class="lead-queue">
     {% for lead in lead_requests %}
-      <article class="lead-card border-slate-200 hover:border-blue-300 transition-all">
-        <!-- Phần đầu thẻ: Khách hàng + Thời gian -->
+      <article class="lead-card {% if forloop.counter|divisibleby:2 %}lead-card-white{% else %}lead-card-blue{% endif %}">
+        <!-- Phần đầu thẻ: Thứ tự + Khách hàng + Thời gian -->
         <div class="lead-card-top">
           <div class="lead-person">
+            <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-bold font-mono {% if forloop.counter|divisibleby:2 %}bg-slate-100 text-slate-600{% else %}bg-blue-100 text-blue-700{% endif %}">
+              #{{ forloop.counter }}
+            </span>
             <span class="list-avatar">{{ lead.customer.full_name|slice:":1"|upper }}</span>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
-                <a class="customer-name font-bold text-slate-900 hover:text-blue-600" href="{% url 'crm:customer_detail' lead.customer_id %}">
+                <a class="customer-name font-bold text-slate-900 hover:text-blue-600 text-base" href="{% url 'crm:customer_detail' lead.customer_id %}">
                   {{ lead.customer.full_name }}
                 </a>
-                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                <span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/60">
                   {{ lead.customer.company|default:"Chưa có tên công ty" }}
                 </span>
               </div>
               <div class="mt-1 flex items-center gap-3 text-xs text-slate-500 flex-wrap">
                 {% if lead.customer.phone %}
-                  <a href="tel:{{ lead.customer.phone }}" class="inline-flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  <a href="tel:{{ lead.customer.phone }}" class="inline-flex items-center gap-1 font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                     <span aria-hidden="true">📞</span> {{ lead.customer.phone }}
                   </a>
                 {% endif %}
@@ -154,7 +157,7 @@
           <time class="text-xs text-slate-400 shrink-0 font-medium">{{ lead.created_at|date:"d/m/Y · H:i" }}</time>
         </div>
 
-        <!-- Phần thân thẻ: Thẻ giải pháp + Trích dẫn nội dung -->
+        <!-- Phần thân thẻ: Thẻ giải pháp + Trích dẫn nội dung yêu cầu -->
         <div class="lead-card-body">
           <div class="lead-tags">
             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
@@ -164,63 +167,72 @@
               {% if lead.ai_processing_consent %}✓ Khách đồng ý phân tích AI{% else %}⚠ Chưa đồng ý phân tích AI{% endif %}
             </span>
           </div>
-          <div class="rounded-lg bg-slate-50 p-3 border border-slate-100 text-sm text-slate-700 leading-relaxed">
-            <span class="font-semibold text-slate-900 block text-xs mb-1 uppercase tracking-wider text-slate-500">Nội dung yêu cầu từ khách hàng:</span>
-            {{ lead.request_text|linebreaksbr }}
+          <div class="lead-quote-box">
+            <div class="flex items-center gap-1.5 font-bold text-xs mb-1.5 uppercase tracking-wider text-slate-500">
+              <span aria-hidden="true">💬</span>
+              <span>Nội dung yêu cầu từ khách hàng:</span>
+            </div>
+            <div class="text-sm font-normal text-slate-800 leading-relaxed">
+              {{ lead.request_text|linebreaksbr }}
+            </div>
           </div>
         </div>
 
         <!-- Phần chân thẻ: Trạng thái + Thao tác nhanh -->
-        <div class="lead-card-bottom flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-          <div class="flex items-center gap-2 flex-wrap">
-            {{ lead.get_status_display|lead_status_badge }}
-            {% for follow_up in lead.follow_ups.all %}
-              {% if forloop.first %}
-                <span class="consent-indicator {% if follow_up.status == 'ANSWERED' %}consent-granted{% else %}consent-not-granted{% endif %}">
-                  Follow-up: {{ follow_up.get_status_display }}
-                </span>
-                {% if follow_up.status == "ANSWERED" %}
-                  <span class="consent-indicator consent-granted font-medium">✓ Đã nhận câu trả lời</span>
+        <div class="lead-card-bottom lead-card-divider">
+          <!-- Hàng 1: Trạng thái & Các nút hành động chính -->
+          <div class="w-full flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              {{ lead.get_status_display|lead_status_badge }}
+              {% for follow_up in lead.follow_ups.all %}
+                {% if forloop.first %}
+                  <span class="consent-indicator {% if follow_up.status == 'ANSWERED' %}consent-granted{% else %}consent-not-granted{% endif %}">
+                    Follow-up: {{ follow_up.get_status_display }}
+                  </span>
+                  {% if follow_up.status == "ANSWERED" %}
+                    <span class="consent-indicator consent-granted font-medium">✓ Đã nhận câu trả lời</span>
+                  {% endif %}
                 {% endif %}
+              {% endfor %}
+            </div>
+
+            <!-- Các nút hành động trực quan -->
+            <div class="flex items-center gap-2 flex-wrap ml-auto">
+              {% if lead.customer.phone %}
+                <a class="button-secondary text-xs py-1.5 px-3 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" href="tel:{{ lead.customer.phone }}">
+                  📞 Gọi ngay
+                </a>
               {% endif %}
-            {% endfor %}
-          </div>
-
-          <!-- Các nút hành động trực quan -->
-          <div class="flex items-center gap-2 flex-wrap ml-auto">
-            {% if lead.customer.phone %}
-              <a class="button-secondary text-xs py-1.5 px-3 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" href="tel:{{ lead.customer.phone }}">
-                📞 Gọi ngay
+              <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:customer_email_draft' lead.customer_id %}">
+                ✉️ Soạn mail AI
               </a>
-            {% endif %}
-            <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:customer_email_draft' lead.customer_id %}">
-              ✉️ Soạn mail AI
-            </a>
-            <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:lead_follow_up' lead.pk %}">
-              {% if lead.follow_ups.all %}📋 Lịch sử hỏi đáp{% else %}📋 Gửi form hỏi thêm{% endif %}
-            </a>
-            <a class="button-primary text-xs py-1.5 px-3" href="{% url 'crm:customer_detail' lead.customer_id %}">
-              Hồ sơ <span aria-hidden="true">→</span>
-            </a>
+              <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:lead_follow_up' lead.pk %}">
+                {% if lead.follow_ups.all %}📋 Lịch sử hỏi đáp{% else %}📋 Gửi form hỏi thêm{% endif %}
+              </a>
+              <a class="button-primary text-xs py-1.5 px-3" href="{% url 'crm:customer_detail' lead.customer_id %}">
+                Hồ sơ <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </div>
 
-          <!-- Form cập nhật trạng thái nhanh -->
-          <div class="w-full pt-2 flex items-center justify-end">
-            <form class="lead-status-form flex items-center gap-2" method="post" action="{% url 'crm:update_lead_request_status' lead.pk %}">
+          <!-- Hàng 2: Form cập nhật trạng thái nhanh gọn gàng -->
+          <div class="w-full pt-2.5 border-t border-dashed border-slate-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="text-slate-400 font-mono">Mã yêu cầu: #{{ lead.pk }}</span>
+            <form class="lead-status-form ml-auto" method="post" action="{% url 'crm:update_lead_request_status' lead.pk %}">
               {% csrf_token %}
-              <label class="text-xs text-slate-500 font-medium" for="status-{{ lead.pk }}">Đổi trạng thái:</label>
-              <select id="status-{{ lead.pk }}" class="status-select text-xs py-1 px-2 border-slate-300 rounded" name="status">
+              <label class="text-xs text-slate-500 font-medium" for="status-{{ lead.pk }}">Cập nhật nhanh:</label>
+              <select id="status-{{ lead.pk }}" class="status-select" name="status">
                 {% for value,label in status_choices %}
                   <option value="{{ value }}" {% if lead.status == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
               </select>
-              <button class="button-secondary text-xs py-1 px-2.5" type="submit">Lưu</button>
+              <button class="button-secondary text-xs py-1 px-3 font-semibold" type="submit">Lưu</button>
             </form>
           </div>
         </div>
       </article>
     {% empty %}
-      <div class="empty-state">
+      <div class="empty-state bg-white rounded-xl border border-dashed border-slate-200 p-8 text-center my-2">
         <span class="empty-icon">✉</span>
         <strong>Không có yêu cầu tư vấn nào phù hợp</strong>
         <p>Khi khách gửi form yêu cầu tư vấn trên website, thông tin sẽ tự động hiển thị tại đây.</p>
