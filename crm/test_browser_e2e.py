@@ -47,6 +47,7 @@ class CRMBrowserEndToEndTests(StaticLiveServerTestCase):
                 self.assertTrue(page.url.endswith("#ai"))
 
                 page.goto(f"{self.live_server_url}/")
+                page.locator(".btn-open-lead-modal").first.click()
                 page.locator("#id_full_name").fill("Nguyễn Minh Anh E2E")
                 page.locator("#id_email").fill("minhanh-browser-e2e@example.test")
                 page.locator("#id_company").fill("Doanh nghiệp E2E")

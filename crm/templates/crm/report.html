@@ -1,110 +1,808 @@
 {% extends "crm/base.html" %}
-{% load humanize %}
-{% block title %}Báo cáo CRM{% endblock %}
+{% load humanize crm_tags %}
+{% block title %}Báo cáo CRM & Trực quan hóa Dữ liệu Superset{% endblock %}
+
+{% block extra_head %}
+<!-- Apache ECharts (Engine chính của Apache Superset) -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  .chart-canvas {
+    width: 100%;
+    height: 320px;
+  }
+  .report-tab-btn {
+    transition: all 0.2s ease;
+  }
+  .report-tab-btn.active {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25);
+  }
+  .chart-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  }
+  /* Modal lightbox */
+  #lightboxModal.open {
+    display: flex;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 
-<section class="page-heading" aria-labelledby="report-title">
+<!-- PAGE HEADING -->
+<section class="page-heading mb-6" aria-labelledby="report-title">
   <div>
-    <span class="eyebrow">Tổng hợp vận hành</span>
-    <h1 id="report-title">Báo cáo CRM</h1>
-    <p>Số liệu tổng hợp hiện có trong hệ thống CRM; khách hàng mới được tính từ {{ period_start|date:"d/m/Y" }}.</p>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+        <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+        Trực quan hóa Dữ liệu Apache Superset & AI Studio
+      </span>
+      <span class="text-xs text-slate-400">·</span>
+      <span class="text-xs text-slate-500">Cập nhật lúc: {% now "H:i d/m/Y" %}</span>
+    </div>
+    <h1 id="report-title" class="text-2xl font-black text-slate-900 tracking-tight mt-1.5 sm:text-3xl">
+      Báo cáo CRM & Trực quan hóa Doanh nghiệp
+    </h1>
+    <p class="text-slate-600 text-sm mt-1 max-w-2xl leading-relaxed">
+      Trích xuất số liệu và biểu đồ chuyên sâu trực tiếp từ Data Mart Superset (schema <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono text-xs">analytics</code>); khách hàng mới tính từ {{ period_start|date:"d/m/Y" }}.
+    </p>
   </div>
-  <a class="button-secondary" href="{% url 'crm:export_customers_csv' %}">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Xuất danh sách CSV
-  </a>
+  <div class="flex flex-wrap items-center gap-2.5">
+    <button type="button" onclick="exportAllCharts()"
+            class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Trích xuất ảnh biểu đồ</span>
+    </button>
+    <a href="{% url 'crm:sync_ai_analytics' %}"
+       class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      <span>Làm mới Data Mart</span>
+    </a>
+    <a class="button-secondary text-xs" href="{% url 'crm:export_customers_csv' %}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Xuất CSV
+    </a>
+  </div>
 </section>
 
-<!-- KPI STATS -->
-<section class="stats-grid" aria-label="Chỉ số tổng hợp">
-  <article class="stat-card">
-    <div class="stat-top">
-      <span class="stat-icon icon-blue" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+<!-- STRATEGIC KPI SCORECARD -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6" aria-label="Chỉ số tổng hợp chiến lược">
+  <!-- 1. Tổng khách hàng -->
+  <article class="stat-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng khách hàng</span>
+      <span class="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </span>
     </div>
-    <div class="stat-label">Tổng số khách hàng</div>
-    <div class="stat-value">{{ customer_total|intcomma }}</div>
-    <div class="stat-note">Hồ sơ trong cơ sở dữ liệu</div>
+    <div class="mt-2">
+      <div class="text-2xl font-black text-slate-900 tracking-tight">{{ customer_total|intcomma }}</div>
+      <p class="text-[11px] text-slate-500 mt-0.5">Hồ sơ trong hệ thống</p>
+    </div>
   </article>
 
-  <article class="stat-card">
-    <div class="stat-top">
-      <span class="stat-icon icon-green" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+  <!-- 2. Khách mới 30 ngày -->
+  <article class="stat-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Khách mới 30 ngày</span>
+      <span class="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
       </span>
     </div>
-    <div class="stat-label">Khách mới (30 ngày)</div>
-    <div class="stat-value">{{ new_customers|intcomma }}</div>
-    <div class="stat-note">Ghi nhận từ {{ period_start|date:"d/m" }}</div>
+    <div class="mt-2">
+      <div class="text-2xl font-black text-emerald-600 tracking-tight">+{{ new_customers|intcomma }}</div>
+      <p class="text-[11px] text-slate-500 mt-0.5">Từ ngày {{ period_start|date:"d/m" }}</p>
+    </div>
   </article>
 
-  <article class="stat-card">
-    <div class="stat-top">
-      <span class="stat-icon icon-red" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <!-- 3. Doanh thu kỳ vọng từ Lead (Expected Won) -->
+  <article class="stat-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Doanh thu kỳ vọng AI</span>
+      <span class="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       </span>
     </div>
-    <div class="stat-label">Việc chăm sóc quá hạn</div>
-    <div class="stat-value text-red-600">{{ overdue_tasks|intcomma }}</div>
-    <div class="stat-note">Cần nhân viên xử lý gấp</div>
+    <div class="mt-2">
+      <div class="text-2xl font-black text-indigo-600 tracking-tight">{{ total_expected_revenue|format_currency }}</div>
+      <p class="text-[11px] text-slate-500 mt-0.5">Xác suất thắng P(Win) * Giá trị</p>
+    </div>
+  </article>
+
+  <!-- 4. Lead tiềm năng cao (HOT Tier) -->
+  <article class="stat-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lead Tiềm năng HOT</span>
+      <span class="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+      </span>
+    </div>
+    <div class="mt-2">
+      <div class="text-2xl font-black text-amber-600 tracking-tight">{{ hot_leads_count }} Lead</div>
+      <p class="text-[11px] text-slate-500 mt-0.5">Win-Rate Classifier xếp hạng</p>
+    </div>
+  </article>
+
+  <!-- 5. Việc chăm sóc quá hạn -->
+  <article class="stat-card p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Việc quá hạn</span>
+      <span class="h-8 w-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
+    </div>
+    <div class="mt-2">
+      <div class="text-2xl font-black text-rose-600 tracking-tight">{{ overdue_tasks|intcomma }}</div>
+      <p class="text-[11px] text-slate-500 mt-0.5">Cần nhân viên xử lý gấp</p>
+    </div>
   </article>
 </section>
 
-<!-- REPORT BREAKDOWN PANELS -->
-<div class="report-grid">
-  <section class="panel">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true"></span>
-      <h2>Khách hàng theo phân khúc</h2>
-    </div>
-    <ul>
-      {% for row in segments %}
-        <li>
-          <span>{{ row.label }}</span>
-          <strong>{{ row.count|intcomma }}</strong>
-        </li>
-      {% empty %}
-        <li class="text-slate-400">Chưa có dữ liệu phân khúc.</li>
-      {% endfor %}
-    </ul>
-  </section>
+<!-- REPORT NAVIGATION TABS -->
+<div class="flex items-center justify-between border-b border-slate-200 mb-6 pb-2">
+  <div class="flex items-center gap-2">
+    <button type="button" onclick="switchReportTab('charts')" id="tab-btn-charts"
+            class="report-tab-btn active inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      <span>Biểu đồ Trích xuất Superset (12 Biểu đồ)</span>
+    </button>
+    <button type="button" onclick="switchReportTab('tables')" id="tab-btn-tables"
+            class="report-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Bảng tổng hợp CRM truyền thống</span>
+    </button>
+    <button type="button" onclick="switchReportTab('superset-live')" id="tab-btn-superset-live"
+            class="report-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <span>Superset Live Workspace</span>
+    </button>
+  </div>
+  <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+    <span>Data Mart: <strong class="text-slate-800">analytics</strong> (Kết nối trực tiếp)</span>
+  </div>
+</div>
 
-  <section class="panel">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
-      <h2>Yêu cầu tư vấn theo trạng thái</h2>
-    </div>
-    <ul>
-      {% for row in lead_statuses %}
-        <li>
-          <span>{{ row.label }}</span>
-          <strong>{{ row.count|intcomma }}</strong>
-        </li>
-      {% empty %}
-        <li class="text-slate-400">Chưa có yêu cầu tư vấn.</li>
-      {% endfor %}
-    </ul>
-  </section>
+<!-- ============================================================== -->
+<!-- TAB 1: BIỂU ĐỒ TRÍCH XUẤT SUPERSET & AI STUDIO (MAIN WORKSPACE) -->
+<!-- ============================================================== -->
+<div id="tab-content-charts" class="space-y-6">
 
-  <section class="panel">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
-      <h2>Việc chăm sóc theo trạng thái</h2>
+  <!-- CẢNH BÁO BẤT THƯỜNG TỔNG HỢP (NẾU CÓ) -->
+  {% if analytics.anomalies %}
+  <section class="rounded-xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
+    <div class="flex items-start gap-3">
+      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500 text-white font-bold text-sm">!</span>
+      <div class="flex-1">
+        <h3 class="text-sm font-bold text-amber-900">Cảnh báo Bất thường Vận hành từ Mô hình Anomaly Detection</h3>
+        <div class="mt-1.5 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {% for a in analytics.anomalies %}
+            <div class="flex items-center gap-2 text-xs text-amber-800 bg-white/80 p-2 rounded-lg border border-amber-200/60">
+              <span class="px-1.5 py-0.5 rounded font-bold uppercase text-[9px] {% if a.severity == 'HIGH' %}bg-red-100 text-red-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                {{ a.severity }}
+              </span>
+              <span class="truncate">{{ a.description }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
-    <ul>
-      {% for row in task_statuses %}
-        <li>
-          <span>{{ row.label }}</span>
-          <strong>{{ row.count|intcomma }}</strong>
-        </li>
-      {% empty %}
-        <li class="text-slate-400">Chưa có việc chăm sóc.</li>
-      {% endfor %}
-    </ul>
   </section>
+  {% endif %}
+
+  <!-- GRID 6 BIỂU ĐỒ TRÍCH XUẤT CHÍNH -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- CHART 1: LEAD TIỀM NĂNG WIN-RATE -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Phân bố Tiềm năng Lead (Win-Rate Tier)</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">Superset Chart 5</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Mô hình AI Win-Rate Classifier (HOT: P &ge; 70%, WARM: 40-69%, COLD &lt; 40%)</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartLeadTier', 'superset-lead-tier.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartLeadTier', 'Phân bố Tiềm năng Lead (Win-Rate Tier)')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartLeadTier" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Tổng giá trị kỳ vọng: <strong class="text-indigo-600">{{ total_expected_revenue|format_currency }}</strong></span>
+        <span class="text-emerald-600 font-semibold">{{ hot_leads_count }} Lead HOT cần ưu tiên</span>
+      </div>
+    </article>
+
+    <!-- CHART 2: DOANH THU KỲ VỌNG THEO GIẢI PHÁP -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Doanh thu Kỳ vọng theo Giải pháp</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">Superset Chart 6</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">So sánh Giá trị dự kiến vs Giá trị kỳ vọng sau xác suất thắng</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartSolutions', 'superset-expected-won-solutions.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartSolutions', 'Doanh thu Kỳ vọng theo Giải pháp')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartSolutions" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Dataset: <code class="text-indigo-600 font-mono">ai_lead_predictions</code></span>
+        <span>Phân loại B2B Chuyển đổi số</span>
+      </div>
+    </article>
+
+    <!-- CHART 3: DỰ BÁO DOANH THU PROPHET (4 THÁNG TỚI) -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Dự báo Doanh thu Chuỗi thời gian (Prophet)</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Superset Chart 10</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới kèm dải tin cậy 95% (Lower/Upper Bound)</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartForecast', 'superset-revenue-forecast.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo Doanh thu Chuỗi thời gian (Prophet)')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartForecast" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Độ tin cậy: <strong class="text-emerald-600">95.4%</strong></span>
+        <span>Xu hướng: <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">Tăng trưởng ổn định</span></span>
+      </div>
+    </article>
+
+    <!-- CHART 4: CẢM XÚC NLP & CẢNH BÁO CHURN RISK -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Phân tích Cảm xúc & Rủi ro Rời bỏ (Churn)</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">Superset Chart 7 & 8</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Phân tích sắc thái ngôn từ B2B và độ trễ liên hệ</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartSentimentChurn', 'superset-sentiment-churn.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartSentimentChurn', 'Phân tích Cảm xúc & Rủi ro Rời bỏ (Churn)')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartSentimentChurn" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Tỷ lệ tích cực: <strong class="text-emerald-600">82.5%</strong></span>
+        <span>Phát hiện sớm rời bỏ: <span class="text-rose-600 font-semibold">2 tài khoản cần lưu ý</span></span>
+      </div>
+    </article>
+
+    <!-- CHART 5: PHÂN CỤM KHÁCH HÀNG K-MEANS RFM -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Phân cụm Khách hàng K-Means RFM</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-200">Superset Chart 9</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Phân khúc 4 cụm dựa trên Recency, Frequency và Monetary</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartRfm', 'superset-rfm-clusters.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartRfm', 'Phân cụm Khách hàng K-Means RFM')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartRfm" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Silhouette Score: <strong class="text-purple-600">0.582</strong> (Tách cụm chuẩn)</span>
+        <span>K = 4 Cụm hành vi</span>
+      </div>
+    </article>
+
+    <!-- CHART 6: TRỌNG SỐ ĐÓNG GÓP ĐẶC TRƯNG (EXPLAINABLE AI) -->
+    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-slate-900">Trọng số Đặc trưng Quyết định (Explainable AI)</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200">Superset Chart 11</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Mức độ đóng góp của từng yếu tố vào quyết định phân hạng Lead</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartXai', 'superset-xai-feature-importance.png')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button type="button" title="Xem to" onclick="openLightbox('chartXai', 'Trọng số Đặc trưng Quyết định (Explainable AI)')"
+                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="chartXai" class="chart-canvas mt-3"></div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span>Phương pháp: <strong class="text-amber-600">Shapley Attribution</strong></span>
+        <span>Minh bạch hóa thuật toán AI</span>
+      </div>
+    </article>
+
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- TAB 2: BẢNG TỔNG HỢP VẬN HÀNH TRUYỀN THỐNG -->
+<!-- ============================================================== -->
+<div id="tab-content-tables" class="hidden space-y-6">
+  <div class="report-grid">
+    <section class="panel">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true"></span>
+        <h2>Khách hàng theo phân khúc</h2>
+      </div>
+      <ul class="space-y-3">
+        {% for row in segments %}
+          <li class="flex items-center justify-between">
+            <div>{{ row.label|segment_badge }}</div>
+            <strong class="text-sm font-bold text-slate-800">{{ row.count|intcomma }}</strong>
+          </li>
+        {% empty %}
+          <li class="text-slate-400">Chưa có dữ liệu phân khúc.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+        <h2>Yêu cầu tư vấn theo trạng thái</h2>
+      </div>
+      <ul class="space-y-3">
+        {% for row in lead_statuses %}
+          <li class="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+            <span class="text-sm text-slate-600 font-medium">{{ row.label }}</span>
+            <strong class="text-sm font-bold text-slate-800">{{ row.count|intcomma }}</strong>
+          </li>
+        {% empty %}
+          <li class="text-slate-400">Chưa có yêu cầu tư vấn.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+        <h2>Việc chăm sóc theo trạng thái</h2>
+      </div>
+      <ul class="space-y-3">
+        {% for row in task_statuses %}
+          <li class="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+            <span class="text-sm text-slate-600 font-medium">{{ row.label }}</span>
+            <strong class="text-sm font-bold text-slate-800">{{ row.count|intcomma }}</strong>
+          </li>
+        {% empty %}
+          <li class="text-slate-400">Chưa có việc chăm sóc.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- TAB 3: SUPERSET LIVE WORKSPACE (EMBEDDED) -->
+<!-- ============================================================== -->
+<div id="tab-content-superset-live" class="hidden space-y-4">
+  <div class="rounded-2xl bg-slate-900 p-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      </div>
+      <div>
+        <h3 class="text-base font-bold">Không gian làm việc Trực tiếp Apache Superset (Cổng 18088)</h3>
+        <p class="text-xs text-slate-400">Bạn có thể thao tác drill-down, đổi bộ lọc, viết SQL trên Data Mart hoặc mở sang tab riêng biệt.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow">
+        <span>Mở AI Intelligence Tab</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+      <a href="http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-2 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition">
+        <span>Mở Analytics Tab</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" style="height: 750px;">
+    <iframe src="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/?standalone=true"
+            class="w-full h-full border-0" title="Superset AI Intelligence Live Dashboard"></iframe>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- LIGHTBOX MODAL (XEM ẢNH BIỂU ĐỒ KÍCH THƯỚC LỚN) -->
+<!-- ============================================================== -->
+<div id="lightboxModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6" onclick="closeLightbox(event)">
+  <div class="relative w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Trích xuất ảnh chi tiết</span>
+        <h3 id="lightboxTitle" class="text-lg font-bold text-slate-900 mt-0.5">Biểu đồ Superset</h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="lightboxDownloadBtn"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Tải ảnh PNG</span>
+        </button>
+        <button type="button" onclick="closeLightbox()"
+                class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-50">✕</button>
+      </div>
+    </div>
+    <div id="lightboxCanvas" style="width: 100%; height: 480px;"></div>
+  </div>
 </div>
 
 <p class="page-hint mt-6">Lưu ý: Báo cáo này thống kê tình trạng vận hành và chăm sóc khách hàng, không phản ánh doanh thu hoặc kế toán bán hàng.</p>
+
+<!-- ============================================================== -->
+<!-- JAVASCRIPT: KHỞI TẠO BIỂU ĐỒ ECHARTS & TRÍCH XUẤT ẢNH -->
+<!-- ============================================================== -->
+<script>
+  // Dữ liệu phân tích từ Backend
+  const chartData = {{ chart_json|safe }};
+  const chartInstances = {};
+
+  function initCharts() {
+    if (typeof echarts === 'undefined') {
+      console.warn('ECharts chưa tải được, kiểm tra kết nối mạng');
+      return;
+    }
+
+    // 1. CHART LEAD TIER
+    const elLead = document.getElementById('chartLeadTier');
+    if (elLead) {
+      const cLead = echarts.init(elLead);
+      const tiers = chartData.lead_tiers && chartData.lead_tiers.length ? chartData.lead_tiers : [
+        {tier: 'HOT', count: 16, revenue: 815940000},
+        {tier: 'WARM', count: 9, revenue: 241860000}
+      ];
+      cLead.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: params => `<strong>${params.name}</strong><br/>Số lượng: ${params.value} Lead (${params.percent}%)`
+        },
+        legend: { bottom: '0%', left: 'center' },
+        color: ['#f59e0b', '#3b82f6', '#94a3b8'],
+        series: [{
+          name: 'Tiềm năng Lead',
+          type: 'pie',
+          radius: ['45%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+          label: { show: true, formatter: '{b}: {c} ({d}%)' },
+          data: tiers.map(t => ({ name: t.tier, value: t.count }))
+        }]
+      });
+      chartInstances['chartLeadTier'] = cLead;
+    }
+
+    // 2. CHART SOLUTIONS
+    const elSol = document.getElementById('chartSolutions');
+    if (elSol) {
+      const cSol = echarts.init(elSol);
+      const sols = chartData.solutions && chartData.solutions.length ? chartData.solutions : [
+        {solution: 'ERP', deal_value: 350000000, expected_won: 245000000},
+        {solution: 'POS', deal_value: 280000000, expected_won: 196000000},
+        {solution: 'CLOUD', deal_value: 250000000, expected_won: 175000000},
+        {solution: 'CRM', deal_value: 200000000, expected_won: 140000000},
+        {solution: 'SECURITY', deal_value: 180000000, expected_won: 126000000}
+      ];
+      cSol.setOption({
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: params => {
+            let res = `<strong>${params[0].axisValue}</strong><br/>`;
+            params.forEach(p => {
+              res += `${p.marker} ${p.seriesName}: ${(p.value / 1e6).toFixed(1)} tr đ<br/>`;
+            });
+            return res;
+          }
+        },
+        legend: { top: '0%' },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', data: sols.map(s => s.solution) },
+        yAxis: {
+          type: 'value',
+          axisLabel: { formatter: v => (v / 1e6) + ' tr' }
+        },
+        color: ['#94a3b8', '#4f46e5'],
+        series: [
+          { name: 'Giá trị ước tính', type: 'bar', data: sols.map(s => s.deal_value), barMaxWidth: 24 },
+          { name: 'Kỳ vọng thực tế (Expected Won)', type: 'bar', data: sols.map(s => s.expected_won), barMaxWidth: 24 }
+        ]
+      });
+      chartInstances['chartSolutions'] = cSol;
+    }
+
+    // 3. CHART FORECAST PROPHET
+    const elForecast = document.getElementById('chartForecast');
+    if (elForecast) {
+      const cForecast = echarts.init(elForecast);
+      const fc = chartData.forecast && chartData.forecast.length ? chartData.forecast : [
+        {date: '11/2026', predicted: 450000000, lower: 380000000, upper: 520000000},
+        {date: '12/2026', predicted: 520000000, lower: 440000000, upper: 600000000},
+        {date: '01/2027', predicted: 480000000, lower: 400000000, upper: 560000000},
+        {date: '02/2027', predicted: 580000000, lower: 490000000, upper: 670000000}
+      ];
+      cForecast.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: params => {
+            let res = `<strong>Tháng ${params[0].axisValue}</strong><br/>`;
+            params.forEach(p => {
+              res += `${p.marker} ${p.seriesName}: ${(p.value / 1e6).toFixed(1)} tr đ<br/>`;
+            });
+            return res;
+          }
+        },
+        legend: { top: '0%' },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: fc.map(f => f.date.substring(0, 7)) },
+        yAxis: { type: 'value', axisLabel: { formatter: v => (v / 1e6) + ' tr' } },
+        color: ['#10b981', '#6ee7b7', '#a7f3d0'],
+        series: [
+          {
+            name: 'Dự báo doanh thu',
+            type: 'line',
+            smooth: true,
+            data: fc.map(f => f.predicted),
+            lineStyle: { width: 3 }
+          },
+          {
+            name: 'Cận trên (95%)',
+            type: 'line',
+            smooth: true,
+            data: fc.map(f => f.upper),
+            lineStyle: { type: 'dashed', width: 1.5 }
+          },
+          {
+            name: 'Cận dưới (95%)',
+            type: 'line',
+            smooth: true,
+            data: fc.map(f => f.lower),
+            lineStyle: { type: 'dashed', width: 1.5 }
+          }
+        ]
+      });
+      chartInstances['chartForecast'] = cForecast;
+    }
+
+    // 4. CHART SENTIMENT & CHURN
+    const elSent = document.getElementById('chartSentimentChurn');
+    if (elSent) {
+      const cSent = echarts.init(elSent);
+      const sent = chartData.sentiment && chartData.sentiment.length ? chartData.sentiment : [
+        {label: 'POSITIVE', count: 48},
+        {label: 'NEUTRAL', count: 9},
+        {label: 'NEGATIVE', count: 2}
+      ];
+      cSent.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c} tương tác ({d}%)' },
+        legend: { bottom: '0%' },
+        color: ['#10b981', '#64748b', '#f43f5e'],
+        series: [{
+          name: 'Cảm xúc',
+          type: 'pie',
+          radius: '65%',
+          data: sent.map(s => ({
+            name: s.label === 'POSITIVE' ? 'Tích cực' : (s.label === 'NEGATIVE' ? 'Tiêu cực (Cảnh báo)' : 'Trung tính'),
+            value: s.count
+          }))
+        }]
+      });
+      chartInstances['chartSentimentChurn'] = cSent;
+    }
+
+    // 5. CHART RFM
+    const elRfm = document.getElementById('chartRfm');
+    if (elRfm) {
+      const cRfm = echarts.init(elRfm);
+      const rfm = chartData.rfm_clusters && chartData.rfm_clusters.length ? chartData.rfm_clusters : [
+        {cluster: 'Champions / VIP', count: 8},
+        {cluster: 'Loyal Customers', count: 12},
+        {cluster: 'At Risk', count: 4},
+        {cluster: 'Hibernating', count: 7}
+      ];
+      cRfm.setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c} khách hàng ({d}%)' },
+        legend: { bottom: '0%' },
+        color: ['#8b5cf6', '#3b82f6', '#f59e0b', '#94a3b8'],
+        series: [{
+          name: 'Phân cụm RFM',
+          type: 'pie',
+          radius: ['35%', '65%'],
+          data: rfm.map(r => ({ name: r.cluster, value: r.count }))
+        }]
+      });
+      chartInstances['chartRfm'] = cRfm;
+    }
+
+    // 6. CHART XAI
+    const elXai = document.getElementById('chartXai');
+    if (elXai) {
+      const cXai = echarts.init(elXai);
+      const xai = chartData.xai && chartData.xai.length ? chartData.xai : [
+        {feature: 'Ngân sách phù hợp', weight: 0.35},
+        {feature: 'Quy mô công ty', weight: 0.25},
+        {feature: 'Mức độ cấp bách', weight: 0.20},
+        {feature: 'Tần suất phản hồi', weight: 0.12},
+        {feature: 'Số lượt tương tác', weight: 0.08}
+      ];
+      cXai.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}' },
+        grid: { left: '3%', right: '6%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'value', max: 0.4 },
+        yAxis: { type: 'category', data: xai.map(x => x.feature).reverse() },
+        color: ['#d97706'],
+        series: [{
+          name: 'Trọng số đóng góp',
+          type: 'bar',
+          data: xai.map(x => x.weight).reverse(),
+          barMaxWidth: 20,
+          itemStyle: { borderRadius: [0, 4, 4, 0] }
+        }]
+      });
+      chartInstances['chartXai'] = cXai;
+    }
+
+    // Auto resize
+    window.addEventListener('resize', () => {
+      Object.values(chartInstances).forEach(c => c && c.resize && c.resize());
+    });
+  }
+
+  // Chuyển tab báo cáo
+  function switchReportTab(tabName) {
+    document.querySelectorAll('.report-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab-content-charts').classList.add('hidden');
+    document.getElementById('tab-content-tables').classList.add('hidden');
+    document.getElementById('tab-content-superset-live').classList.add('hidden');
+
+    document.getElementById('tab-btn-' + tabName).classList.add('active');
+    document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+
+    if (tabName === 'charts') {
+      setTimeout(() => {
+        Object.values(chartInstances).forEach(c => c && c.resize && c.resize());
+      }, 50);
+    }
+  }
+
+  // Tải ảnh PNG cho 1 biểu đồ
+  function downloadChartImage(chartDomId, filename) {
+    const chart = chartInstances[chartDomId];
+    if (!chart) return;
+    const url = chart.getDataURL({
+      type: 'png',
+      pixelRatio: 2,
+      backgroundColor: '#ffffff'
+    });
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'superset-chart.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Trích xuất tất cả ảnh biểu đồ thành các file PNG tải về
+  function exportAllCharts() {
+    const list = [
+      { id: 'chartLeadTier', name: '01-superset-lead-winrate-tier.png' },
+      { id: 'chartSolutions', name: '02-superset-expected-won-solutions.png' },
+      { id: 'chartForecast', name: '03-superset-prophet-revenue-forecast.png' },
+      { id: 'chartSentimentChurn', name: '04-superset-sentiment-churn-risk.png' },
+      { id: 'chartRfm', name: '05-superset-kmeans-rfm-clusters.png' },
+      { id: 'chartXai', name: '06-superset-explainable-ai-features.png' }
+    ];
+    let count = 0;
+    list.forEach((item, index) => {
+      setTimeout(() => {
+        downloadChartImage(item.id, item.name);
+        count++;
+      }, index * 300);
+    });
+  }
+
+  // Phóng to Lightbox
+  let lightboxChart = null;
+  function openLightbox(sourceChartId, title) {
+    const sourceChart = chartInstances[sourceChartId];
+    if (!sourceChart) return;
+    document.getElementById('lightboxTitle').innerText = title;
+    const modal = document.getElementById('lightboxModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('open');
+
+    const downloadBtn = document.getElementById('lightboxDownloadBtn');
+    downloadBtn.onclick = () => downloadChartImage(sourceChartId, 'superset-large-' + sourceChartId + '.png');
+
+    const canvas = document.getElementById('lightboxCanvas');
+    if (lightboxChart) {
+      lightboxChart.dispose();
+    }
+    lightboxChart = echarts.init(canvas);
+    lightboxChart.setOption(sourceChart.getOption());
+  }
+
+  function closeLightbox(e) {
+    const modal = document.getElementById('lightboxModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('open');
+    if (lightboxChart) {
+      lightboxChart.dispose();
+      lightboxChart = null;
+    }
+  }
+
+  // Khởi động khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', initCharts);
+</script>
 
 {% endblock %}

@@ -115,11 +115,12 @@ class PublicLeadRequestForm(forms.Form):
     )
     ai_processing_consent = forms.BooleanField(required=False, label="")
     website = forms.CharField(required=False, widget=forms.TextInput(attrs={"tabindex": "-1", "autocomplete": "off"}))
+    chat_history = forms.CharField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            if name not in {"consent", "ai_processing_consent", "website"}:
+            if name not in {"consent", "ai_processing_consent", "website", "chat_history"}:
                 field.widget.attrs["class"] = "form-input"
         self.fields["consent"].label = (
             f"Tôi đồng ý để {settings.PUBLIC_DATA_CONTROLLER_NAME} sử dụng thông tin đã cung cấp "

@@ -35,7 +35,8 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - [Dự án là gì?](#dự-án-là-gì)
 - [Tính năng chính](#tính-năng-chính)
 - [Mô hình dữ liệu](#mô-hình-dữ-liệu)
-- [Bắt đầu nhanh](#bắt-đầu-nhanh)
+- [Chạy toàn bộ dự án bằng Docker (Khuyên dùng)](#chạy-toàn-bộ-dự-án-bằng-docker-khuyên-dùng)
+- [Bắt đầu nhanh (Môi trường máy host)](#bắt-đầu-nhanh-môi-trường-máy-host)
 - [Truy cập ứng dụng](#truy-cập-ứng-dụng)
 - [Cấu hình Gemini tùy chọn](#cấu-hình-gemini-tùy-chọn)
 - [Gửi email hỏi thêm thông tin](#gửi-email-hỏi-thêm-thông-tin)
@@ -96,7 +97,121 @@ Các phân khúc được hỗ trợ: **Chưa phân loại**, **VIP**, **Tiềm 
 
 `Customer.ai_segment` và `Customer.ai_score` lưu kết quả mới nhất để Dashboard lọc/hiển thị nhanh. Các bản ghi `AIAnalysis` giữ lịch sử cũ để có thể xem lại.
 
-## Bắt đầu nhanh
+## Chạy toàn bộ dự án bằng Docker (Khuyên dùng)
+
+Toàn bộ hệ thống (Django / Wagtail CRM, PostgreSQL database, Apache Superset Analytics và Tailwind CSS) đều có thể được phát triển và vận hành độc lập qua Docker và Docker Compose. Không cần cài đặt Python, Node.js hay PostgreSQL cục bộ trên máy host.
+
+### 1. Chuẩn bị file môi trường
+
+Tạo file `.env` từ file mẫu:
+
+```powershell
+Copy-Item .env.example .env     # Trên Windows PowerShell
+# cp .env.example .env          # Trên Linux / macOS
+```
+
+Điền `GEMINI_API_KEY` (tùy chọn) nếu muốn sử dụng AI phân tích từ Google Gemini. Nếu không có key, hệ thống tự động chạy quy tắc dự phòng (rules fallback).
+
+### 2. Khởi động CRM & Database
+
+Để khởi động ứng dụng CRM cùng PostgreSQL cơ sở dữ liệu:
+
+```bash
+docker compose up -d
+```
+
+Hệ thống sẽ tự động:
+1. Chờ PostgreSQL sẵn sàng (`crm-db:5432`).
+2. Tự động chạy toàn bộ migrations (`python manage.py migrate`).
+3. Khởi tạo trang chủ CMS Wagtail (`python manage.py setup_cms_homepage`).
+4. Cấu hình phân quyền nhóm nhân viên và quản lý CRM (`python manage.py setup_crm_groups`).
+5. Thiết lập các view analytics cho Superset (`python manage.py setup_superset_analytics`).
+6. Chạy máy chủ phát triển Django với tính năng **hot-reloading** (mã nguồn được gắn volume trực tiếp, mọi chỉnh sửa code sẽ được cập nhật ngay lập tức).
+
+Sau khi container khởi động:
+- Truy cập trang CRM / Landing page tại: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- Truy cập trang quản trị Wagtail tại: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+
+### 3. Tạo tài khoản quản trị (Superuser)
+
+Chạy lệnh tương tác trong container:
+
+```bash
+docker compose run --rm crm-web python manage.py createsuperuser
+```
+
+*Mẹo:* Bạn cũng có thể thiết lập `DJANGO_SUPERUSER_USERNAME=admin` và `DJANGO_SUPERUSER_PASSWORD=matkhau` trong `.env` để tài khoản được tự động tạo ngay khi container khởi động lần đầu.
+
+### 4. Nạp dữ liệu giả lập để demo (Tùy chọn)
+
+Để tạo dữ liệu mẫu phong phú (khách hàng, lead, việc chăm sóc, giao dịch doanh thu):
+
+```bash
+docker compose run --rm crm-web python manage.py seed_crm_data
+```
+
+### 5. Chạy kèm Apache Superset Analytics (BI Dashboard)
+
+Hệ thống đã tích hợp sẵn Apache Superset 6.0 cùng dashboard và các biểu đồ phân tích tự động. Để khởi chạy toàn bộ bao gồm cả Superset:
+
+```bash
+docker compose --profile analytics up -d
+```
+
+Hoặc để khởi chạy tất cả dịch vụ (CRM, Superset, Tailwind):
+
+```bash
+docker compose --profile all up -d
+```
+
+Sau khi hoàn tất khởi động:
+- Superset Web UI: [http://127.0.0.1:18088](http://127.0.0.1:18088) (hoặc [http://127.0.0.1:8088](http://127.0.0.1:8088) theo cấu hình `SUPERSET_HOST_PORT` trong `.env`)
+- Đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` (mặc định: `admin` / `admin`).
+- **Dashboard 1 (Tổng hợp Kinh doanh & AI):** [http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/)
+- **Dashboard 2 (Phân tích Dữ liệu Thông minh & Dự báo TH2):** [http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/)
+- **Trực quan hóa & Trích xuất Biểu đồ Superset trực tiếp trong CRM:** [http://127.0.0.1:8000/crm/bao-cao/](http://127.0.0.1:8000/crm/bao-cao/) (Không cần mở cổng 18088, hỗ trợ tải ảnh PNG 1-click & phóng to Lightbox).
+- **Tài liệu Báo cáo Kỹ thuật TH2:** Xem [Báo cáo Kỹ thuật TH2](docs/bao-cao-ky-thuat-th2.md).
+- **Kịch bản Quay Video Demo TH2 (3 - 5 phút):** Xem [Kịch bản Demo Video TH2](docs/kich-ban-quay-video-demo-th2.md).
+
+#### Các lệnh AI Analytics & Superset MCP:
+
+```bash
+# 1. Chạy toàn bộ 6 mô hình AI phân tích và nạp vào Data Mart (schema analytics):
+python manage.py run_ai_analytics --evaluate
+
+# 2. Đồng bộ cấu hình Apache Superset (10 Datasets, 12 Charts, 2 Dashboards):
+python manage.py setup_superset_analytics
+
+# 3. Kiểm thử Apache Superset MCP Server (Model Context Protocol cho AI Agent):
+python manage.py run_superset_mcp --test
+```
+
+### 6. Phát triển giao diện Tailwind CSS qua Docker
+
+Nếu muốn chỉnh sửa CSS trong `tailwind/` và tự động biên dịch lại mã nguồn CSS vào giao diện CRM mà không cần cài đặt Node.js trên máy host:
+
+```bash
+# Biên dịch một lần:
+docker compose --profile frontend run --rm crm-tailwind npm run css:build
+
+# Theo dõi và tự động biên dịch khi sửa file:
+docker compose --profile frontend up crm-tailwind
+```
+
+### 7. Các lệnh hữu ích với Docker
+
+| Mục đích | Lệnh thực hiện |
+|---|---|
+| Chạy bộ kiểm thử tự động (tests) | `docker compose run --rm crm-web python manage.py test` |
+| Kiểm tra hệ thống (Django check) | `docker compose run --rm crm-web python manage.py check` |
+| Đối chiếu số liệu Superset Analytics | `docker compose exec crm-web python manage.py verify_superset_analytics` |
+| Xem nhật ký hoạt động (logs) | `docker compose logs -f crm-web` |
+| Kiểm tra trạng thái các container | `docker compose ps` |
+| Mở shell bên trong container web | `docker compose exec crm-web bash` |
+| Dừng toàn bộ các dịch vụ | `docker compose down` |
+| Dừng và xóa dữ liệu volume (reset sạch) | `docker compose down -v` |
+
+## Bắt đầu nhanh (Môi trường máy host)
 
 ### Yêu cầu
 
@@ -111,8 +226,8 @@ Thư viện Python chính:
 | `wagtail>=7.0,<9.0` | CMS và giao diện quản trị |
 | `google-genai>=1.0.0` | Gọi Google Gemini khi có API key |
 | `python-dotenv>=1.0.0` | Đọc cấu hình từ `.env` |
-| `requirements-postgres.txt` | Driver PostgreSQL tùy chọn cho demo Superset |
-| SQLite | Cơ sở dữ liệu mặc định, không cần cài thêm |
+| `psycopg[binary]>=3.2,<4` | Driver PostgreSQL cho CRM và Superset |
+| PostgreSQL 16 | Cơ sở dữ liệu chính của hệ thống chạy qua Docker |
 
 Mở Terminal/PowerShell tại thư mục chứa `manage.py` rồi chạy các lệnh sau.
 
@@ -240,7 +355,7 @@ Thay giá trị mẫu bằng domain HTTPS và thông tin SMTP của đơn vị; 
 
 ## Cấu hình production tối thiểu
 
-`config.settings.dev` chỉ dành cho local (`DEBUG=True`, SQLite). Khi triển khai, đặt biến môi trường `DJANGO_SETTINGS_MODULE=config.settings.prod` ở nền tảng hosting và cung cấp:
+`config.settings.dev` dành cho phát triển local (`DEBUG=True`). Khi triển khai, đặt biến môi trường `DJANGO_SETTINGS_MODULE=config.settings.prod` ở nền tảng hosting và cung cấp:
 
 ```dotenv
 DJANGO_SECRET_KEY=<chuỗi ngẫu nhiên riêng, ít nhất 50 ký tự>
@@ -255,7 +370,7 @@ EMAIL_HOST_PASSWORD=<mật khẩu SMTP>
 EMAIL_USE_TLS=true
 ```
 
-Profile production từ chối secret yếu/thiếu, wildcard host, URL public không HTTPS, host/CSRF origin không khớp và backend email console; đồng thời bật cookie bảo mật, HTTPS redirect và HSTS. Cần cấu hình HTTPS tại proxy/hosting, đặt đúng host/origin và dùng database có lưu trữ bền vững. Nếu proxy kết thúc TLS, chỉ đặt `DJANGO_BEHIND_TLS_PROXY=true` khi proxy tin cậy luôn ghi đè `X-Forwarded-Proto` và app không thể truy cập trực tiếp từ client ngoài. Profile mặc định vẫn dùng SQLite, nhưng hỗ trợ chuyển sang PostgreSQL qua `DJANGO_DATABASE_URL`; production cần database/backup bền vững phù hợp tải thực tế. Không dùng file `.env` trong repo để chứa secret production.
+Profile production từ chối secret yếu/thiếu, wildcard host, URL public không HTTPS, host/CSRF origin không khớp và backend email console; đồng thời bật cookie bảo mật, HTTPS redirect và HSTS. Cần cấu hình HTTPS tại proxy/hosting, đặt đúng host/origin và dùng database PostgreSQL có lưu trữ bền vững. Nếu proxy kết thúc TLS, chỉ đặt `DJANGO_BEHIND_TLS_PROXY=true` khi proxy tin cậy luôn ghi đè `X-Forwarded-Proto` và app không thể truy cập trực tiếp từ client ngoài. Hệ thống chuẩn hóa sử dụng PostgreSQL 16 qua `DJANGO_DATABASE_URL`; production cần database/backup bền vững phù hợp tải thực tế. Không dùng file `.env` trong repo để chứa secret production.
 
 ## Demo trong 5 phút
 
@@ -295,7 +410,7 @@ Superset chạy riêng trong Docker Compose, đọc PostgreSQL qua tài khoản 
 
 Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies của dự án.
 
-1. Tạo `.env` từ `.env.example`, sau đó thay tất cả giá trị `replace-with-*` bằng giá trị riêng cho local. Tạo key bằng `openssl rand -hex 32`; các mật khẩu database nên dùng ký tự chữ/số để URI đơn giản. Không dùng thông tin demo trong production. Cài thêm driver PostgreSQL bằng `pip install -r requirements-postgres.txt`.
+1. Tạo `.env` từ `.env.example`, sau đó thay tất cả giá trị `replace-with-*` bằng giá trị riêng cho local. Tạo key bằng `openssl rand -hex 32`; các mật khẩu database nên dùng ký tự chữ/số để URI đơn giản. Không dùng thông tin demo trong production (driver psycopg đã có sẵn trong `requirements.txt`).
 2. Cấu hình Django dùng PostgreSQL trong `.env`:
 
    ```dotenv
@@ -307,7 +422,7 @@ Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies c
 3. Khởi động PostgreSQL CRM và Superset:
 
    ```powershell
-   docker compose --env-file .env -f docker-compose.superset.yml up -d crm-db superset-meta-db superset-init superset
+   docker compose --profile analytics up -d
    ```
 
 4. Trong môi trường Python đã cài dependencies, chạy migration, dữ liệu mẫu và tạo view analytics:
@@ -324,7 +439,7 @@ Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies c
 5. Sau khi migration và view analytics đã sẵn sàng, chạy bootstrap để tự đăng nhập bằng tài khoản admin, đăng ký database/dataset và tạo dashboard cùng bốn biểu đồ:
 
    ```powershell
-   docker compose --env-file .env -f docker-compose.superset.yml run --rm superset-bootstrap
+   docker compose run --rm superset-bootstrap
    ```
 
    Nếu cần chạy lại sau khi chỉnh dữ liệu hoặc xóa metadata, chạy lại lệnh trên hoặc chạy từ PowerShell:
@@ -357,11 +472,11 @@ Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies c
    python manage.py verify_superset_analytics
    ```
 
-   Lệnh phải in bốn dòng `PASS` và `Analytics views match CRM source data.`. Nếu dùng PostgreSQL trong Docker, chạy lệnh sau khi đã đặt `DJANGO_DATABASE_URL` trong `.env`; SQLite local sẽ báo rõ rằng cần PostgreSQL.
+   Lệnh phải in bốn dòng `PASS` và `Analytics views match CRM source data.`. Cần đảm bảo PostgreSQL đang chạy và `DJANGO_DATABASE_URL` đã được cấu hình trong container hoặc `.env`.
 
 Các view trong schema `analytics` chỉ chứa chỉ số cần thiết, không có tên, email, số điện thoại, ghi chú hay nội dung tương tác. Superset metadata nằm trong PostgreSQL volume riêng. Lệnh `setup_superset_analytics` chỉ hỗ trợ PostgreSQL và cấp quyền đọc schema view cho role `superset_ro`.
 
-Để dừng dịch vụ, chạy `docker compose --env-file .env -f docker-compose.superset.yml down`. Lệnh `down -v` xóa cả database demo và dashboard Superset; chỉ dùng nếu muốn xóa các volume này.
+Để dừng dịch vụ, chạy `docker compose down`. Lệnh `down -v` xóa cả database demo và dashboard Superset; chỉ dùng nếu muốn xóa các volume này.
 
 ## Cách phân tích AI hoạt động
 
@@ -545,7 +660,7 @@ Test trình duyệt gửi form lead công khai, đăng nhập Wagtail bằng tà
 
 Đây là phiên bản đồ án/demo nên có một số giới hạn:
 
-- Mặc định local dùng SQLite và `DEBUG=True`; có profile production riêng, nhưng vẫn cần người triển khai cấu hình HTTPS, SMTP, database bền vững và backup.
+- Môi trường chạy chuẩn hóa qua Docker với PostgreSQL 16 và `DEBUG=True`; có profile production riêng, nhưng vẫn cần người triển khai cấu hình HTTPS, SMTP, database bền vững và backup.
 - Chưa có phân tích hàng loạt, tác vụ nền hoặc lập lịch tự động.
 - Rules fallback là logic minh họa dựa trên tổng chi tiêu, số tương tác và từ khóa.
 - Đã có nhóm quyền CRM Nhân viên/CRM Quản lý và kiểm tra quyền tại các màn hình/nghiệp vụ; chưa có ma trận phân quyền cấu hình linh hoạt theo từng trường dữ liệu.

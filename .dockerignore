@@ -1,0 +1,33 @@
+# Git and IDE
+.git/
+.github/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Local database and media
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Node / Tailwind
+tailwind/node_modules/
+tailwind/npm-debug.log*
+
+# Test / Coverage
+.coverage
+htmlcov/
+.pytest_cache/

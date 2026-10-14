@@ -1,5 +1,5 @@
 {% extends "crm/base.html" %}
-{% load humanize %}
+{% load humanize crm_tags %}
 {% block title %}Khách hàng{% endblock %}
 {% block content %}
 <section class="page-heading">
@@ -21,12 +21,23 @@
       <thead><tr><th scope="col">KHÁCH HÀNG</th><th scope="col">CÔNG TY</th><th scope="col">PHÂN KHÚC</th><th scope="col">ĐIỂM TIỀM NĂNG</th><th scope="col">CHI TIÊU</th><th scope="col"><span class="sr-only">Thao tác</span></th></tr></thead>
       <tbody>
       {% for customer in customers %}
-        <tr>
+        <tr class="hover:bg-slate-50/90 transition-colors">
           <td><div class="customer-cell"><span class="customer-avatar">{{ customer.full_name|slice:":1"|upper }}</span><span><a class="customer-name" href="{% url 'crm:customer_detail' customer.pk %}">{{ customer.full_name }}</a><small>{{ customer.email }}</small></span></div></td>
-          <td>{{ customer.company|default:"Chưa cập nhật" }}</td>
-          <td><span class="segment-badge segment-{{ customer.ai_segment|lower }}">{{ customer.get_ai_segment_display }}</span></td>
-          <td><div class="score-cell"><div class="score-track" role="progressbar" aria-label="Điểm tiềm năng" aria-valuenow="{{ customer.ai_score }}" aria-valuemin="0" aria-valuemax="100"><div class="score-fill" style="width: {{ customer.ai_score }}%"></div></div><span class="score-label">{{ customer.ai_score }}</span></div></td>
-          <td class="money-cell">{{ customer.total_spent|intcomma }} ₫</td>
+          <td><span class="font-medium text-slate-700">{{ customer.company|default:"Chưa cập nhật" }}</span></td>
+          <td>{{ customer.get_ai_segment_display|segment_badge }}</td>
+          <td>
+            <div class="score-cell">
+              {% if customer.ai_score > 0 %}
+                <div class="score-track" role="progressbar" aria-label="Điểm tiềm năng" aria-valuenow="{{ customer.ai_score }}" aria-valuemin="0" aria-valuemax="100">
+                  <div class="score-fill {% if customer.ai_score >= 80 %}bg-gradient-to-r from-blue-600 to-indigo-600{% elif customer.ai_score >= 50 %}bg-blue-500{% else %}bg-slate-400{% endif %}" style="width: {{ customer.ai_score }}%"></div>
+                </div>
+                <span class="score-label font-bold text-slate-800">{{ customer.ai_score }}</span>
+              {% else %}
+                <span class="text-xs text-slate-400 italic">Chưa chấm</span>
+              {% endif %}
+            </div>
+          </td>
+          <td class="money-cell">{{ customer.total_spent|format_currency }}</td>
           <td><a class="row-action" href="{% url 'crm:customer_detail' customer.pk %}" aria-label="Mở hồ sơ {{ customer.full_name }}">Mở hồ sơ <span aria-hidden="true">→</span></a></td>
         </tr>
       {% empty %}

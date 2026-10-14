@@ -69,6 +69,17 @@ class Command(BaseCommand):
                 "Hãy kiểm tra role được tạo bởi Docker Compose Superset và quyền database."
             ) from exc
 
+        # Khởi chạy toàn bộ AI Pipeline để nạp các bảng phân tích AI vào schema analytics
+        try:
+            from crm.analytics.pipeline import AnalyticsPipeline
+            ai_summary = AnalyticsPipeline().run_all()
+            self.stdout.write(self.style.SUCCESS(
+                f"Populated AI analytics tables ({ai_summary['leads_analyzed']} leads, "
+                f"{ai_summary['sentiments_analyzed']} sentiments, {ai_summary['customers_segmented']} RFM segments)."
+            ))
+        except Exception as ai_exc:
+            self.stdout.write(self.style.WARNING(f"Cảnh báo khi chạy AI pipeline: {ai_exc}"))
+
         self.stdout.write(self.style.SUCCESS(
-            "Created 4 views in schema analytics and granted Superset read-only access."
+            "Created 4 views and 6 AI tables in schema analytics and granted Superset read-only access."
         ))

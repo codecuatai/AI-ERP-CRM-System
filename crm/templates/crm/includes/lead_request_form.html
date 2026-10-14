@@ -43,7 +43,14 @@
     <label class="consent-label" for="id_ai_processing_consent"><span class="consent-checkbox">{{ form.ai_processing_consent }}</span><span>{{ form.ai_processing_consent.label }}</span></label>
     {% for error in form.ai_processing_consent.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
   </div>
-  <div class="form-honeypot-wrap" aria-hidden="true">{{ form.website }}</div>
+  <div id="aiContextBadge" class="hidden mb-4 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900 items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="text-base">✨</span>
+      <span class="font-medium">Đã tự động đính kèm lịch sử tư vấn cùng AI vào yêu cầu này.</span>
+    </div>
+    <button type="button" id="btnClearAiContext" class="text-indigo-600 hover:text-indigo-900 font-bold underline cursor-pointer text-[11px]">Xóa</button>
+  </div>
+  <div class="form-honeypot-wrap" aria-hidden="true">{{ form.website }}{{ form.chat_history }}</div>
   <button class="button-primary form-submit" type="submit">{{ submit_label|default:"Gửi yêu cầu tư vấn" }} <span aria-hidden="true">→</span></button>
   <p class="privacy-note">Nhân viên sẽ xem và phản hồi thủ công. Không có email, tin nhắn hay phân tích AI nào tự chạy khi gửi form.</p>
 </form>

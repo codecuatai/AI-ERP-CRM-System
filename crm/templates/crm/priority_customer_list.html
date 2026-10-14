@@ -1,4 +1,5 @@
 {% extends "crm/base.html" %}
+{% load crm_tags %}
 {% block title %}Khách hàng cần ưu tiên{% endblock %}
 {% block content %}
 
@@ -70,9 +71,9 @@
             </div>
           </td>
           <td>
-            <div class="priority-reasons">
+            <div class="flex flex-wrap gap-1.5">
               {% for reason in item.reasons %}
-                <span class="priority-reason-tag">{{ reason }}</span>
+                {{ reason|priority_reason_badge }}
               {% endfor %}
             </div>
           </td>

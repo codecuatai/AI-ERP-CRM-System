@@ -6,6 +6,12 @@
   <span class="public-eyebrow">GỬI THÀNH CÔNG</span>
   <h1>Cảm ơn bạn đã liên hệ</h1>
   <p>Yêu cầu đã được ghi nhận. Nhân viên sẽ xem thông tin và liên hệ lại theo địa chỉ bạn cung cấp. Nếu cần làm rõ nhu cầu, chúng tôi có thể gửi email biểu mẫu bổ sung.</p>
-  <a class="button-secondary" href="{% url 'crm:lead_request' %}">Gửi yêu cầu khác</a>
+  <div class="flex flex-wrap items-center gap-3 justify-center mt-6">
+    <a class="button-secondary" href="{% url 'crm:lead_request' %}">Gửi yêu cầu khác</a>
+    <a class="button-primary flex items-center gap-1.5" href="{% url 'landing_page' %}#tu-van-ai">
+      <span>🤖 Hỏi đáp thêm cùng Trợ lý AI</span>
+      <span>→</span>
+    </a>
+  </div>
 </section>
 {% endblock %}
