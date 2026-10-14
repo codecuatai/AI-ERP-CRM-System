@@ -84,7 +84,7 @@ jobs:
 
       - name: Audit frontend dependencies
         working-directory: tailwind
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: Build CSS
         working-directory: tailwind

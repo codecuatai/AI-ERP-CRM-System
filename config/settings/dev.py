@@ -53,32 +53,40 @@ for origin in extra_origins:
     if origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(origin)
 
-# ── Database: PostgreSQL 16 (chuẩn hóa toàn bộ hệ thống qua Docker) ──
+# ── Database: SQLite mặc định, PostgreSQL qua DJANGO_DATABASE_URL / CRM_DB_HOST ──
 database_url = os.environ.get("DJANGO_DATABASE_URL", "").strip()
-if not database_url:
+if not database_url and os.environ.get("CRM_DB_HOST"):
     db_user = os.environ.get("CRM_DB_USER", "crm_app")
     db_pass = os.environ.get("CRM_DB_PASSWORD", "crm_password")
-    db_host = os.environ.get("CRM_DB_HOST", "crm-db")
+    db_host = os.environ.get("CRM_DB_HOST")
     db_port = os.environ.get("CRM_DB_PORT", "5432")
     db_name = os.environ.get("CRM_DB_NAME", "crm")
     database_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
-parsed_database_url = urlsplit(database_url)
-if parsed_database_url.scheme not in {"postgres", "postgresql"}:
-    raise ValueError("DJANGO_DATABASE_URL must use the postgres:// or postgresql:// scheme.")
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": unquote(parsed_database_url.path.lstrip("/")),
-        "USER": unquote(parsed_database_url.username or ""),
-        "PASSWORD": unquote(parsed_database_url.password or ""),
-        "HOST": parsed_database_url.hostname or "localhost",
-        "PORT": parsed_database_url.port or 5432,
-        "OPTIONS": {"sslmode": "require"} if parsed_database_url.query == "sslmode=require" else {},
+if database_url:
+    parsed_database_url = urlsplit(database_url)
+    if parsed_database_url.scheme not in {"postgres", "postgresql"}:
+        raise ValueError("DJANGO_DATABASE_URL must use the postgres:// or postgresql:// scheme.")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": unquote(parsed_database_url.path.lstrip("/")),
+            "USER": unquote(parsed_database_url.username or ""),
+            "PASSWORD": unquote(parsed_database_url.password or ""),
+            "HOST": parsed_database_url.hostname or "localhost",
+            "PORT": parsed_database_url.port or 5432,
+            "OPTIONS": {"sslmode": "require"} if parsed_database_url.query == "sslmode=require" else {},
+        }
     }
-}
-if "django.contrib.postgres" not in INSTALLED_APPS:
-    INSTALLED_APPS.append("django.contrib.postgres")
+    if "django.contrib.postgres" not in INSTALLED_APPS:
+        INSTALLED_APPS.append("django.contrib.postgres")
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.environ.get("DJANGO_DATABASE_PATH", BASE_DIR / "db.sqlite3"),  # noqa: F405
+        }
+    }
 
 # ── AI API Keys (đọc từ .env) ────────────────────────────────
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
