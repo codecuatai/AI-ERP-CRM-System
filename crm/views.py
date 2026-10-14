@@ -50,75 +50,76 @@ def _get_report_analytics_context(today):
         "anomalies": [],
     }
     try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'analytics' AND table_name = 'ai_lead_predictions'"
-            )
-            row = cursor.fetchone()
-            if row and row[0] > 0:
-                data["has_ai_datamart"] = True
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'analytics' AND table_name = 'ai_lead_predictions'"
+                )
+                row = cursor.fetchone()
+                if row and row[0] > 0:
+                    data["has_ai_datamart"] = True
 
-                cursor.execute("""
-                    SELECT tier, count(*), coalesce(sum(expected_won_value), 0)::numeric
-                    FROM analytics.ai_lead_predictions
-                    GROUP BY tier ORDER BY tier
-                """)
-                data["lead_tiers"] = [
-                    {"tier": r[0], "count": r[1], "revenue": float(r[2])}
-                    for r in cursor.fetchall()
-                ]
-                data["total_expected_revenue"] = sum(item["revenue"] for item in data["lead_tiers"])
-                data["hot_leads_count"] = sum(item["count"] for item in data["lead_tiers"] if item["tier"] == "HOT")
+                    cursor.execute("""
+                        SELECT tier, count(*), coalesce(sum(expected_won_value), 0)::numeric
+                        FROM analytics.ai_lead_predictions
+                        GROUP BY tier ORDER BY tier
+                    """)
+                    data["lead_tiers"] = [
+                        {"tier": r[0], "count": r[1], "revenue": float(r[2])}
+                        for r in cursor.fetchall()
+                    ]
+                    data["total_expected_revenue"] = sum(item["revenue"] for item in data["lead_tiers"])
+                    data["hot_leads_count"] = sum(item["count"] for item in data["lead_tiers"] if item["tier"] == "HOT")
 
-                cursor.execute("""
-                    SELECT solution_interest, coalesce(sum(estimated_deal_value), 0)::numeric,
-                           coalesce(sum(expected_won_value), 0)::numeric, count(*)
-                    FROM analytics.ai_lead_predictions
-                    GROUP BY solution_interest ORDER BY 2 DESC
-                """)
-                data["solutions"] = [
-                    {"solution": r[0], "deal_value": float(r[1]), "expected_won": float(r[2]), "count": r[3]}
-                    for r in cursor.fetchall()
-                ]
+                    cursor.execute("""
+                        SELECT solution_interest, coalesce(sum(estimated_deal_value), 0)::numeric,
+                               coalesce(sum(expected_won_value), 0)::numeric, count(*)
+                        FROM analytics.ai_lead_predictions
+                        GROUP BY solution_interest ORDER BY 2 DESC
+                    """)
+                    data["solutions"] = [
+                        {"solution": r[0], "deal_value": float(r[1]), "expected_won": float(r[2]), "count": r[3]}
+                        for r in cursor.fetchall()
+                    ]
 
-                cursor.execute("""
-                    SELECT forecast_date, predicted_revenue, lower_bound_95, upper_bound_95, trend_direction
-                    FROM analytics.ai_revenue_forecast ORDER BY forecast_date
-                """)
-                data["forecast"] = [
-                    {"date": str(r[0]), "predicted": float(r[1]), "lower": float(r[2]), "upper": float(r[3]), "trend": r[4]}
-                    for r in cursor.fetchall()
-                ]
+                    cursor.execute("""
+                        SELECT forecast_date, predicted_revenue, lower_bound_95, upper_bound_95, trend_direction
+                        FROM analytics.ai_revenue_forecast ORDER BY forecast_date
+                    """)
+                    data["forecast"] = [
+                        {"date": str(r[0]), "predicted": float(r[1]), "lower": float(r[2]), "upper": float(r[3]), "trend": r[4]}
+                        for r in cursor.fetchall()
+                    ]
 
-                cursor.execute("""
-                    SELECT sentiment_label, count(*)
-                    FROM analytics.ai_sentiment_churn GROUP BY sentiment_label
-                """)
-                data["sentiment"] = [{"label": r[0], "count": r[1]} for r in cursor.fetchall()]
+                    cursor.execute("""
+                        SELECT sentiment_label, count(*)
+                        FROM analytics.ai_sentiment_churn GROUP BY sentiment_label
+                    """)
+                    data["sentiment"] = [{"label": r[0], "count": r[1]} for r in cursor.fetchall()]
 
-                cursor.execute("""
-                    SELECT churn_risk_level, count(*)
-                    FROM analytics.ai_sentiment_churn GROUP BY churn_risk_level
-                """)
-                data["churn_risk"] = [{"level": r[0], "count": r[1]} for r in cursor.fetchall()]
+                    cursor.execute("""
+                        SELECT churn_risk_level, count(*)
+                        FROM analytics.ai_sentiment_churn GROUP BY churn_risk_level
+                    """)
+                    data["churn_risk"] = [{"level": r[0], "count": r[1]} for r in cursor.fetchall()]
 
-                cursor.execute("""
-                    SELECT cluster_name, count(*)
-                    FROM analytics.ai_customer_rfm_segments GROUP BY cluster_name
-                """)
-                data["rfm_clusters"] = [{"cluster": r[0], "count": r[1]} for r in cursor.fetchall()]
+                    cursor.execute("""
+                        SELECT cluster_name, count(*)
+                        FROM analytics.ai_customer_rfm_segments GROUP BY cluster_name
+                    """)
+                    data["rfm_clusters"] = [{"cluster": r[0], "count": r[1]} for r in cursor.fetchall()]
 
-                cursor.execute("""
-                    SELECT feature_name, importance_weight, category
-                    FROM analytics.ai_explainability_summary ORDER BY importance_weight DESC
-                """)
-                data["xai"] = [{"feature": r[0], "weight": float(r[1]), "category": r[2]} for r in cursor.fetchall()]
+                    cursor.execute("""
+                        SELECT feature_name, importance_weight, category
+                        FROM analytics.ai_explainability_summary ORDER BY importance_weight DESC
+                    """)
+                    data["xai"] = [{"feature": r[0], "weight": float(r[1]), "category": r[2]} for r in cursor.fetchall()]
 
-                cursor.execute("""
-                    SELECT entity_type, severity, description
-                    FROM analytics.ai_anomaly_alerts ORDER BY id LIMIT 5
-                """)
-                data["anomalies"] = [{"entity_type": r[0], "severity": r[1], "description": r[2]} for r in cursor.fetchall()]
+                    cursor.execute("""
+                        SELECT entity_type, severity, description
+                        FROM analytics.ai_anomaly_alerts ORDER BY id LIMIT 5
+                    """)
+                    data["anomalies"] = [{"entity_type": r[0], "severity": r[1], "description": r[2]} for r in cursor.fetchall()]
     except Exception as exc:
         logger.debug("Analytics datamart query failed/skipped: %s", exc)
 

@@ -89,13 +89,17 @@ class SupersetMCPServer:
             insights = {}
             has_analytics_tables = False
             
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT count(*) FROM information_schema.tables 
-                    WHERE table_schema = 'analytics' AND table_name = 'ai_lead_predictions'
-                """)
-                row = cursor.fetchone()
-                has_analytics_tables = bool(row and row[0] > 0)
+            if connection.vendor == "postgresql":
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("""
+                            SELECT count(*) FROM information_schema.tables 
+                            WHERE table_schema = 'analytics' AND table_name = 'ai_lead_predictions'
+                        """)
+                        row = cursor.fetchone()
+                        has_analytics_tables = bool(row and row[0] > 0)
+                except Exception:
+                    has_analytics_tables = False
 
             if has_analytics_tables:
                 with connection.cursor() as cursor:
