@@ -81,6 +81,17 @@ def analyze_customer(customer, permitted_requests=None, permitted_follow_up_resp
             )
             for response in permitted_follow_up_responses[:remaining_slots]
         )
+        remaining_slots = max(0, 20 - len(interactions))
+        if remaining_slots > 0 and getattr(customer, "pk", None):
+            ai_chats = customer.interactions.filter(subject__icontains="Trợ lý AI")[:remaining_slots]
+            for chat in ai_chats:
+                interactions.append(
+                    SimpleNamespace(
+                        kind="Hội thoại Trợ lý AI",
+                        subject="Lịch sử trao đổi cùng AI",
+                        content=chat.content[:2000],
+                    )
+                )
     else:
         interactions = list(customer.interactions.all()[:20])
     fallback = _rule_based_analysis(

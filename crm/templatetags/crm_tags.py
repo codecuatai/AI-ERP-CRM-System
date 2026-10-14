@@ -147,3 +147,123 @@ def lead_status_badge(status_label):
         )
     return mark_safe(f'<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{label}</span>')
 
+
+@register.filter(name="is_ai_chat")
+def is_ai_chat(subject):
+    """Check if the interaction subject represents an AI chatbot session."""
+    return bool(subject and "Trợ lý AI" in str(subject))
+
+
+@register.filter(name="interaction_marker")
+def interaction_marker(item):
+    """Render semantic styled icon marker for timeline item."""
+    subject = str(getattr(item, "subject", ""))
+    kind = str(getattr(item, "kind", ""))
+
+    if "Trợ lý AI" in subject:
+        return mark_safe(
+            '<span class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-tr from-indigo-600 to-blue-600 text-white text-xs shadow-xs" title="Hội thoại cùng Trợ lý AI">🤖</span>'
+        )
+    elif kind == "EMAIL":
+        return mark_safe(
+            '<span class="grid h-8 w-8 place-items-center rounded-full bg-blue-100 text-blue-700 text-xs font-bold" title="Email">✉</span>'
+        )
+    elif kind == "PHONE":
+        return mark_safe(
+            '<span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold" title="Cuộc gọi">📞</span>'
+        )
+    elif kind == "MEETING":
+        return mark_safe(
+            '<span class="grid h-8 w-8 place-items-center rounded-full bg-purple-100 text-purple-700 text-xs font-bold" title="Cuộc họp">🤝</span>'
+        )
+    return mark_safe(
+        '<span class="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs font-bold" title="Ghi chú">📝</span>'
+    )
+
+
+@register.filter(name="render_chat_transcript")
+def render_chat_transcript(content):
+    """Format AI chat transcript into modern interactive chat bubbles."""
+    import html
+    if not content:
+        return ""
+
+    lines = str(content).strip().splitlines()
+    bubbles = []
+    current_role = None
+    current_text = []
+
+    def flush_bubble():
+        if not current_role or not current_text:
+            return
+        text = html.escape("\n".join(current_text))
+        text_formatted = text.replace("\n", "<br>")
+        if current_role == "user":
+            bubbles.append(
+                f'<div class="flex items-start gap-2.5 my-2.5 max-w-[90%]">'
+                f'  <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-700 text-xs font-bold shadow-2xs" title="Khách hàng">👤</span>'
+                f'  <div class="flex-1 rounded-2xl rounded-tl-xs bg-slate-100/90 border border-slate-200/80 px-3.5 py-2.5 text-xs text-slate-800 leading-relaxed shadow-2xs">'
+                f'    <div class="flex items-center justify-between mb-1">'
+                f'      <strong class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Khách hàng</strong>'
+                f'    </div>'
+                f'    <div>{text_formatted}</div>'
+                f'  </div>'
+                f'</div>'
+            )
+        else:
+            bubbles.append(
+                f'<div class="flex items-start gap-2.5 my-2.5 max-w-[95%]">'
+                f'  <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-xs" title="Trợ lý AI DigiFlow">🤖</span>'
+                f'  <div class="flex-1 rounded-2xl rounded-tl-xs bg-gradient-to-br from-blue-50/90 to-indigo-50/50 border border-blue-100 px-3.5 py-2.5 text-xs text-slate-900 leading-relaxed shadow-2xs">'
+                f'    <div class="flex items-center justify-between mb-1">'
+                f'      <strong class="text-[10px] uppercase font-bold text-blue-700 tracking-wider flex items-center gap-1"><span>DigiFlow AI</span><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span></strong>'
+                f'    </div>'
+                f'    <div class="text-slate-800">{text_formatted}</div>'
+                f'  </div>'
+                f'</div>'
+            )
+
+    for line in lines:
+        line_stripped = line.strip()
+        if line_stripped.startswith("Khách hàng:") or line_stripped.startswith("Khách:"):
+            flush_bubble()
+            current_role = "user"
+            prefix = "Khách hàng:" if line_stripped.startswith("Khách hàng:") else "Khách:"
+            current_text = [line_stripped[len(prefix):].strip()]
+        elif line_stripped.startswith("DigiFlow AI:") or line_stripped.startswith("AI:"):
+            flush_bubble()
+            current_role = "bot"
+            prefix = "DigiFlow AI:" if line_stripped.startswith("DigiFlow AI:") else "AI:"
+            current_text = [line_stripped[len(prefix):].strip()]
+        else:
+            if current_role:
+                current_text.append(line_stripped)
+            else:
+                current_role = "user"
+                current_text = [line_stripped]
+
+    flush_bubble()
+
+    if not bubbles:
+        return mark_safe(f'<p class="text-xs text-slate-700 leading-relaxed">{html.escape(content)}</p>')
+
+    count = len(bubbles)
+    rendered = "".join(bubbles)
+    return mark_safe(
+        f'<div class="rounded-xl border border-indigo-100 bg-white p-3.5 shadow-2xs my-1">'
+        f'  <div class="flex items-center justify-between border-b border-indigo-50 pb-2 mb-2 text-xs">'
+        f'    <span class="inline-flex items-center gap-1.5 font-bold text-indigo-900">'
+        f'      <span class="relative flex h-2 w-2">'
+        f'        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>'
+        f'        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>'
+        f'      </span>'
+        f'      Trích xuất phiên tư vấn tự động ({count} tin nhắn)'
+        f'    </span>'
+        f'    <span class="text-[11px] text-slate-400 font-medium">Website Assistant 24/7</span>'
+        f'  </div>'
+        f'  <div class="space-y-1 max-h-[450px] overflow-y-auto pr-1">'
+        f'    {rendered}'
+        f'  </div>'
+        f'</div>'
+    )
+

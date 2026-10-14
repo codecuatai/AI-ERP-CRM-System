@@ -32,12 +32,50 @@
       <div class="customer-task-list">{% for task in care_tasks %}<a class="customer-task-row" href="{% url 'crm:care_task_edit' task.pk %}"><span class="task-status task-status-{{ task.status|lower }}">{{ task.get_status_display }}</span><span class="customer-task-title"><strong>{{ task.title }}</strong><small>{{ task.get_kind_display }} · Hạn {{ task.due_at|date:"d/m/Y" }} · {{ task.get_priority_display }} ưu tiên</small></span><span class="quick-arrow">→</span></a>{% empty %}<div class="empty-state compact"><span class="empty-icon">✓</span><strong>Chưa có việc chăm sóc</strong><p>Tạo việc để biến kế hoạch chăm sóc thành hành động có hạn xử lý.</p><a href="{% url 'crm:customer_care_task_create' customer.pk %}">＋ Tạo việc đầu tiên</a></div>{% endfor %}</div>
     </article>
     <article class="content-card">
-      <div class="content-card-heading"><div><h2>Lịch sử trao đổi</h2><p>Các lần liên hệ và nội dung đã ghi nhận.</p></div><a class="button-secondary" href="/admin/snippets/crm/interaction/">Quản lý trao đổi <span aria-hidden="true">↗</span></a></div>
+      <div class="content-card-heading">
+        <div>
+          <h2>Lịch sử trao đổi & tương tác</h2>
+          <p>Dòng thời gian các phiên tư vấn AI, cuộc gọi, email và cuộc họp.</p>
+        </div>
+        <a class="button-secondary" href="/admin/snippets/crm/interaction/">Quản lý trao đổi <span aria-hidden="true">↗</span></a>
+      </div>
       <div class="timeline">
         {% for item in interactions %}
-          <div class="timeline-item"><span class="timeline-marker">{% if item.kind == "EMAIL" %}@{% elif item.kind == "PHONE" %}☎{% elif item.kind == "MEETING" %}●{% else %}•{% endif %}</span><div class="timeline-content"><div class="timeline-heading"><strong>{{ item.subject }}</strong><time>{{ item.occurred_at|date:"d/m/Y · H:i" }}</time></div><span class="interaction-type">{{ item.get_kind_display }}</span><p>{{ item.content|linebreaksbr }}</p></div></div>
+          <div class="timeline-item">
+            <span class="timeline-marker !bg-transparent !border-0 flex items-center justify-center">
+              {{ item|interaction_marker }}
+            </span>
+            <div class="timeline-content w-full">
+              <div class="timeline-heading flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <strong class="text-slate-900 font-bold text-sm">{{ item.subject }}</strong>
+                  {% if item.subject|is_ai_chat %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      ⚡ Trợ lý AI
+                    </span>
+                  {% else %}
+                    <span class="interaction-type">{{ item.get_kind_display }}</span>
+                  {% endif %}
+                </div>
+                <time class="text-xs text-slate-400 font-medium">{{ item.occurred_at|date:"d/m/Y · H:i" }}</time>
+              </div>
+
+              {% if item.subject|is_ai_chat %}
+                {{ item.content|render_chat_transcript }}
+              {% else %}
+                <div class="mt-2 text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  {{ item.content|linebreaksbr }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
         {% empty %}
-          <div class="empty-state compact"><span class="empty-icon">○</span><strong>Chưa có lịch sử trao đổi</strong><p>Ghi lại lần gọi, email hoặc gặp mặt để AI có thêm ngữ cảnh.</p><a href="/admin/snippets/crm/interaction/">Thêm trao đổi trong Wagtail Admin →</a></div>
+          <div class="empty-state compact">
+            <span class="empty-icon">○</span>
+            <strong>Chưa có lịch sử trao đổi</strong>
+            <p>Ghi lại lần gọi, email hoặc gặp mặt để AI có thêm ngữ cảnh phân tích.</p>
+            <a href="/admin/snippets/crm/interaction/">Thêm trao đổi trong Wagtail Admin →</a>
+          </div>
         {% endfor %}
       </div>
     </article>

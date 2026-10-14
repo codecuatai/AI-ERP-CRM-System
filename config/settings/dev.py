@@ -54,7 +54,7 @@ for origin in extra_origins:
         CSRF_TRUSTED_ORIGINS.append(origin)
 
 # ── Database: SQLite mặc định, PostgreSQL qua DJANGO_DATABASE_URL / CRM_DB_HOST ──
-database_url = os.environ.get("DJANGO_DATABASE_URL", "").strip()
+database_url = "" if os.environ.get("USE_SQLITE") == "1" else os.environ.get("DJANGO_DATABASE_URL", "").strip()
 if not database_url and os.environ.get("CRM_DB_HOST"):
     db_user = os.environ.get("CRM_DB_USER", "crm_app")
     db_pass = os.environ.get("CRM_DB_PASSWORD", "crm_password")
