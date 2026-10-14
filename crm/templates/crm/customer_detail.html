@@ -1,60 +1,223 @@
 {% extends "crm/base.html" %}
 {% load humanize crm_tags %}
-{% block title %}{{ customer.full_name }}{% endblock %}
+{% block title %}{{ customer.full_name }} — Hồ sơ khách hàng{% endblock %}
 {% block content %}
-<nav aria-label="Điều hướng" class="breadcrumb-wrap"><a href="{% url 'crm:customers' %}">Khách hàng</a><span aria-hidden="true">/</span><span>{{ customer.full_name }}</span></nav>
 
-<section class="profile-card">
-  <div class="profile-main">
-    <span class="profile-avatar">{{ customer.full_name|slice:":1"|upper }}</span>
-    <div>
-      <div class="eyebrow flex items-center gap-2">
-        <span>HỒ SƠ KHÁCH HÀNG</span>
-        {{ customer.get_ai_segment_display|segment_badge }}
+<!-- Thanh điều hướng & Quay lại -->
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <nav aria-label="Điều hướng" class="breadcrumb-wrap mb-0">
+    <a href="{% url 'crm:customers' %}" class="hover:text-blue-600 font-medium">Khách hàng</a>
+    <span aria-hidden="true" class="text-slate-400">/</span>
+    <span class="text-slate-800 font-semibold">{{ customer.full_name }}</span>
+  </nav>
+  <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:customers' %}">
+    ← Danh sách khách hàng
+  </a>
+</div>
+
+<!-- Hồ sơ khách hàng Hero Card -->
+<section class="profile-card rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
+  <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <!-- Cụm thông tin khách hàng chính -->
+    <div class="flex items-start gap-4 min-w-0">
+      <span class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 text-2xl font-black text-white shadow-sm">
+        {{ customer.full_name|slice:":1"|upper }}
+      </span>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2 flex-wrap mb-1">
+          <span class="eyebrow text-[11px] font-bold uppercase tracking-wider text-slate-500">HỒ SƠ KHÁCH HÀNG</span>
+          {{ customer.get_ai_segment_display|segment_badge }}
+          <span class="status-pill {% if customer.is_active %}status-active{% else %}status-inactive{% endif %}">
+            <span></span>
+            {% if customer.is_active %}Đang hoạt động{% else %}Ngừng hoạt động{% endif %}
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          {{ customer.full_name }}
+        </h1>
+        <div class="mt-1 flex items-center gap-2 text-sm text-slate-600 flex-wrap">
+          <span class="font-medium inline-flex items-center gap-1 text-slate-700">
+            🏢 {{ customer.company|default:"Doanh nghiệp chưa cập nhật tên" }}
+          </span>
+          <span class="text-slate-300">·</span>
+          <span class="text-xs text-slate-500">Nguồn: {{ customer.source|default:"Website / Trực tiếp" }}</span>
+        </div>
+        <!-- Cụm liên hệ nhanh -->
+        <div class="mt-2.5 flex items-center gap-2.5 text-xs flex-wrap">
+          {% if customer.phone %}
+            <a href="tel:{{ customer.phone }}" class="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-colors">
+              📞 {{ customer.phone }}
+            </a>
+          {% endif %}
+          <a href="mailto:{{ customer.email }}" class="inline-flex items-center gap-1 text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 hover:text-blue-600 hover:bg-slate-100 transition-colors">
+            ✉ {{ customer.email }}
+          </a>
+        </div>
       </div>
-      <h1>{{ customer.full_name }}</h1>
-      <p>{{ customer.company|default:"Khách hàng cá nhân" }} <span class="dot-separator">·</span> {{ customer.email }}</p>
+    </div>
+
+    <!-- Cụm nút hành động nhanh -->
+    <div class="flex flex-wrap items-center gap-2 shrink-0 md:self-start">
+      {% if customer.phone %}
+        <a class="button-secondary text-xs py-2 px-3 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" href="tel:{{ customer.phone }}">
+          📞 Gọi ngay
+        </a>
+      {% endif %}
+      <a class="button-secondary text-xs py-2 px-3" href="{% url 'crm:customer_email_draft' customer.pk %}">
+        ✉️ Soạn email AI
+      </a>
+      <a class="button-primary text-xs py-2 px-3.5 shadow-sm" href="{% url 'crm:customer_care_task_create' customer.pk %}">
+        ＋ Tạo việc chăm sóc
+      </a>
+      <a class="button-secondary text-xs py-2 px-3" href="/admin/snippets/crm/customer/" title="Chỉnh sửa thông tin hồ sơ chi tiết trong Wagtail CMS">
+        ⚙️ Sửa hồ sơ
+      </a>
     </div>
   </div>
-  <div class="profile-actions"><span class="status-pill {% if customer.is_active %}status-active{% else %}status-inactive{% endif %}"><span></span>{% if customer.is_active %}Đang hoạt động{% else %}Ngừng hoạt động{% endif %}</span><a class="button-secondary" href="{% url 'crm:customer_email_draft' customer.pk %}">Soạn email</a><a class="button-secondary" href="/admin/snippets/crm/customer/">Chỉnh sửa hồ sơ</a></div>
 </section>
 
-<section class="my-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-  <article class="detail-stat"><span>Email</span><strong>{{ customer.email }}</strong><small>Địa chỉ liên hệ</small></article>
-  <article class="detail-stat"><span>Điện thoại</span><strong>{{ customer.phone|default:"Chưa cung cấp" }}</strong><small>Nguồn: {{ customer.source|default:"Chưa cập nhật" }}</small></article>
-  <article class="detail-stat"><span>Tổng chi tiêu</span><strong>{{ customer.total_spent|format_currency }}</strong><small>Ghi nhận trong hồ sơ</small></article>
+<!-- KPI Cards mini tóm tắt chỉ số khách hàng -->
+<section class="my-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div class="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
+      <span>Doanh số tích lũy</span>
+      <span class="text-base" aria-hidden="true">💰</span>
+    </div>
+    <div class="mt-1.5 text-2xl font-black text-slate-900">{{ customer.total_spent|format_currency }}</div>
+    <span class="text-[11px] text-slate-400">Doanh thu ghi nhận trong hồ sơ</span>
+  </div>
+
+  <div class="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 shadow-sm">
+    <div class="flex items-center justify-between text-indigo-700 text-xs font-bold uppercase tracking-wider">
+      <span>Điểm tiềm năng AI</span>
+      <span class="text-base" aria-hidden="true">⚡</span>
+    </div>
+    <div class="mt-1.5 text-2xl font-black text-indigo-900">
+      {{ latest_analysis.score|default:customer.ai_score|default:0 }}<span class="text-xs text-indigo-500 font-normal">/100</span>
+    </div>
+    <span class="text-[11px] text-indigo-600 font-medium">Chỉ số ưu tiên chăm sóc</span>
+  </div>
+
+  <div class="rounded-xl border border-amber-200 bg-amber-50/40 p-4 shadow-sm">
+    <div class="flex items-center justify-between text-amber-700 text-xs font-bold uppercase tracking-wider">
+      <span>Việc chăm sóc</span>
+      <span class="text-base" aria-hidden="true">📋</span>
+    </div>
+    <div class="mt-1.5 text-2xl font-black text-amber-900">{{ care_tasks|length }}</div>
+    <span class="text-[11px] text-amber-600 font-medium">Kế hoạch đang theo dõi</span>
+  </div>
+
+  <div class="rounded-xl border border-blue-200 bg-blue-50/40 p-4 shadow-sm">
+    <div class="flex items-center justify-between text-blue-700 text-xs font-bold uppercase tracking-wider">
+      <span>Tổng tương tác</span>
+      <span class="text-base" aria-hidden="true">💬</span>
+    </div>
+    <div class="mt-1.5 text-2xl font-black text-blue-900">{{ interactions|length }}</div>
+    <span class="text-[11px] text-blue-600 font-medium">Cuộc gọi, email & chat AI</span>
+  </div>
 </section>
 
-<section class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(320px,5fr)]">
-  <div>
-    <article class="content-card customer-task-card">
-      <div class="content-card-heading"><div><h2>Việc chăm sóc</h2><p>Theo dõi hành động tiếp theo dành cho khách hàng này.</p></div><a class="button-primary" href="{% url 'crm:customer_care_task_create' customer.pk %}">＋ Tạo việc</a></div>
-      <div class="customer-task-list">{% for task in care_tasks %}<a class="customer-task-row" href="{% url 'crm:care_task_edit' task.pk %}"><span class="task-status task-status-{{ task.status|lower }}">{{ task.get_status_display }}</span><span class="customer-task-title"><strong>{{ task.title }}</strong><small>{{ task.get_kind_display }} · Hạn {{ task.due_at|date:"d/m/Y" }} · {{ task.get_priority_display }} ưu tiên</small></span><span class="quick-arrow">→</span></a>{% empty %}<div class="empty-state compact"><span class="empty-icon">✓</span><strong>Chưa có việc chăm sóc</strong><p>Tạo việc để biến kế hoạch chăm sóc thành hành động có hạn xử lý.</p><a href="{% url 'crm:customer_care_task_create' customer.pk %}">＋ Tạo việc đầu tiên</a></div>{% endfor %}</div>
-    </article>
-    <article class="content-card">
-      <div class="content-card-heading">
+<!-- Bố cục chính 2 cột: Trái (Việc chăm sóc & Lịch sử tương tác), Phải (Trợ lý AI phân tích & Checklist) -->
+<section class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(340px,5fr)]">
+  
+  <!-- CỘT TRÁI: VIỆC CHĂM SÓC & LỊCH SỬ TRAO ĐỔI -->
+  <div class="space-y-6">
+    
+    <!-- Khối 1: Việc chăm sóc (Care Tasks) -->
+    <article class="content-card customer-task-card rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="content-card-heading flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <div>
-          <h2>Lịch sử trao đổi & tương tác</h2>
-          <p>Dòng thời gian các phiên tư vấn AI, cuộc gọi, email và cuộc họp.</p>
+          <h2 class="text-base font-bold text-slate-900">Việc chăm sóc khách hàng</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Theo dõi các đầu việc tiếp xúc, tư vấn và chốt hợp đồng có hạn xử lý.</p>
         </div>
-        <a class="button-secondary" href="/admin/snippets/crm/interaction/">Quản lý trao đổi <span aria-hidden="true">↗</span></a>
+        <a class="button-primary text-xs py-1.5 px-3" href="{% url 'crm:customer_care_task_create' customer.pk %}">
+          ＋ Tạo việc
+        </a>
       </div>
-      <div class="timeline">
+      
+      <div class="p-4 sm:p-5 space-y-3 bg-slate-50/40">
+        {% for task in care_tasks %}
+          <a class="flex items-start justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-xs transition-all"
+             href="{% url 'crm:care_task_edit' task.pk %}">
+            <div class="flex items-start gap-3 min-w-0 flex-1">
+              <span class="mt-0.5 text-base" aria-hidden="true">
+                {% if task.kind == 'CALL' %}📞
+                {% elif task.kind == 'MEETING' %}🤝
+                {% elif task.kind == 'QUOTE' %}📄
+                {% elif task.kind == 'FOLLOW_UP' %}🔄
+                {% else %}📝{% endif %}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                  <strong class="text-sm font-bold text-slate-900 hover:text-blue-600">{{ task.title }}</strong>
+                  {{ task.get_priority_display|task_priority_badge }}
+                </div>
+                <div class="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                  <span class="font-medium text-slate-600">{{ task.get_kind_display }}</span>
+                  <span>·</span>
+                  <span class="font-medium {% if task.status != 'DONE' and task.due_at < today %}text-red-600 font-bold{% endif %}">
+                    Hạn: {{ task.due_at|date:"d/m/Y" }}
+                  </span>
+                  {% if task.assignee %}
+                    <span>·</span>
+                    <span>Phụ trách: {{ task.assignee.get_full_name|default:task.assignee.username }}</span>
+                  {% endif %}
+                </div>
+                {% if task.description %}
+                  <p class="mt-2 text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded border border-slate-100">
+                    {{ task.description }}
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              {{ task.get_status_display|task_status_badge }}
+              <span class="text-slate-400 font-bold text-sm" aria-hidden="true">→</span>
+            </div>
+          </a>
+        {% empty %}
+          <div class="empty-state compact bg-white rounded-xl border border-dashed border-slate-200 p-8 text-center">
+            <span class="empty-icon text-2xl">✓</span>
+            <strong class="block text-sm font-bold text-slate-800 mt-2">Chưa có việc chăm sóc nào</strong>
+            <p class="text-xs text-slate-500 mt-1 mb-3">Tạo việc để biến kế hoạch chăm sóc thành hành động có hạn xử lý cụ thể.</p>
+            <a class="button-secondary text-xs py-1.5 px-3" href="{% url 'crm:customer_care_task_create' customer.pk %}">
+              ＋ Tạo việc đầu tiên
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <!-- Khối 2: Lịch sử trao đổi & Tương tác (Interactive Timeline) -->
+    <article class="content-card rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div class="content-card-heading flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Lịch sử trao đổi & tương tác</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Dòng thời gian các phiên tư vấn AI, cuộc gọi, email và cuộc họp.</p>
+        </div>
+        <a class="button-secondary text-xs py-1.5 px-3" href="/admin/snippets/crm/interaction/">
+          Quản lý trao đổi <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      
+      <div class="timeline p-6">
         {% for item in interactions %}
-          <div class="timeline-item">
-            <span class="timeline-marker !bg-transparent !border-0 flex items-center justify-center">
+          <div class="timeline-item pb-6 border-l-2 border-slate-200 pl-6 relative">
+            <span class="timeline-marker absolute -left-4 top-0 bg-white p-0.5">
               {{ item|interaction_marker }}
             </span>
-            <div class="timeline-content w-full">
-              <div class="timeline-heading flex items-center justify-between flex-wrap gap-2">
+            <div class="timeline-content w-full bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 shadow-2xs">
+              <div class="timeline-heading flex items-center justify-between flex-wrap gap-2 mb-2">
                 <div class="flex items-center gap-2 flex-wrap">
                   <strong class="text-slate-900 font-bold text-sm">{{ item.subject }}</strong>
                   {% if item.subject|is_ai_chat %}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      ⚡ Trợ lý AI
+                      ⚡ Trợ lý AI 24/7
                     </span>
                   {% else %}
-                    <span class="interaction-type">{{ item.get_kind_display }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200/80 text-slate-700">
+                      {{ item.get_kind_display }}
+                    </span>
                   {% endif %}
                 </div>
                 <time class="text-xs text-slate-400 font-medium">{{ item.occurred_at|date:"d/m/Y · H:i" }}</time>
@@ -63,61 +226,187 @@
               {% if item.subject|is_ai_chat %}
                 {{ item.content|render_chat_transcript }}
               {% else %}
-                <div class="mt-2 text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <div class="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200/60 shadow-2xs">
                   {{ item.content|linebreaksbr }}
                 </div>
               {% endif %}
             </div>
           </div>
         {% empty %}
-          <div class="empty-state compact">
-            <span class="empty-icon">○</span>
-            <strong>Chưa có lịch sử trao đổi</strong>
-            <p>Ghi lại lần gọi, email hoặc gặp mặt để AI có thêm ngữ cảnh phân tích.</p>
-            <a href="/admin/snippets/crm/interaction/">Thêm trao đổi trong Wagtail Admin →</a>
+          <div class="empty-state compact text-center py-8">
+            <span class="empty-icon text-2xl">○</span>
+            <strong class="block text-sm font-bold text-slate-800 mt-2">Chưa có lịch sử trao đổi</strong>
+            <p class="text-xs text-slate-500 mt-1 mb-3">Ghi lại lần gọi, email hoặc gặp mặt để AI có thêm ngữ cảnh phân tích chính xác.</p>
+            <a class="button-secondary text-xs py-1.5 px-3" href="/admin/snippets/crm/interaction/">
+              Thêm trao đổi trong Wagtail Admin →
+            </a>
           </div>
         {% endfor %}
       </div>
     </article>
   </div>
 
-  <div>
-    <article class="ai-card">
-      <div class="ai-card-top"><span class="ai-spark">✦</span><div><div class="eyebrow">TRỢ LÝ AI</div><h2>Phân tích khách hàng</h2></div></div>
-      <p class="ai-intro">{% if has_public_requests %}AI chỉ phân tích nhu cầu đã được khách đồng ý; tên, email và số điện thoại không gửi đến Gemini.{% else %}AI phân tích hồ sơ nội bộ để đề xuất cách chăm sóc phù hợp.{% endif %}</p>
-      <details class="ai-help">
-        <summary>AI dùng dữ liệu nào? Điểm số có nghĩa gì?</summary>
-        <div>
+  <!-- CỘT PHẢI: TRỢ LÝ AI PHÂN TÍCH CHUYÊN SÂU & CHECKLIST HÀNH ĐỘNG -->
+  <div class="space-y-6">
+    
+    <!-- Khối Trợ lý AI -->
+    <article class="ai-card rounded-2xl border border-indigo-200/90 bg-gradient-to-b from-indigo-50/40 via-white to-blue-50/30 p-5 sm:p-6 shadow-sm">
+      
+      <!-- Đầu card AI -->
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white font-bold text-sm shadow-xs">
+            ✦
+          </span>
+          <div>
+            <div class="text-[10px] uppercase font-extrabold tracking-wider text-indigo-700">TRỢ LÝ AI CHUYÊN SÂU</div>
+            <h2 class="text-lg font-black text-slate-900">Phân tích & Lập kế hoạch</h2>
+          </div>
+        </div>
+        {% if latest_analysis %}
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
+            Điểm AI: {{ latest_analysis.score }}/100
+          </span>
+        {% endif %}
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed mb-4">
+        {% if has_public_requests %}
+          AI chỉ phân tích nhu cầu đã được khách đồng ý; thông tin cá nhân nhạy cảm được bảo vệ nghiêm ngặt.
+        {% else %}
+          AI phân tích toàn diện hồ sơ và lịch sử tương tác để xây dựng kế hoạch chăm sóc theo từng checklist cụ thể.
+        {% endif %}
+      </p>
+
+      <!-- Accordion giải thích cơ chế AI -->
+      <details class="ai-help mb-4 rounded-xl border border-indigo-100 bg-white/90 p-3.5 text-xs text-slate-600">
+        <summary class="font-semibold text-indigo-950 cursor-pointer select-none flex items-center justify-between">
+          <span>💡 AI dùng dữ liệu nào? Điểm số có nghĩa gì?</span>
+          <span class="text-[10px] text-indigo-600 font-bold">Chi tiết ▼</span>
+        </summary>
+        <div class="mt-2.5 pt-2 border-t border-indigo-50 text-xs text-slate-600 space-y-2 leading-relaxed">
           {% if has_public_requests %}
             <p>Chỉ nội dung yêu cầu hoặc phản hồi mà khách đã đồng ý phân tích mới được dùng. Tên, email và số điện thoại không được đưa vào yêu cầu gửi Gemini.</p>
           {% else %}
             <p>Với hồ sơ do nhân viên tạo, Gemini có thể nhận tên, công ty, tổng chi tiêu, ghi chú và tối đa 20 tương tác gần đây. Không đưa bí mật kinh doanh hoặc dữ liệu nhạy cảm vào ghi chú.</p>
           {% endif %}
-          <ul><li>Điểm 0–100 là chỉ báo tham khảo, không phải xác suất mua hàng.</li><li>AI không tự sửa hồ sơ, gửi email hay quyết định thay nhân viên.</li><li>Nếu Gemini không khả dụng, hệ thống dùng quy tắc cục bộ.</li></ul>
+          <ul class="list-disc pl-4 space-y-1 text-slate-600">
+            <li>Điểm 0–100 là chỉ báo tham khảo, không phải xác suất mua hàng.</li>
+            <li>AI không tự sửa hồ sơ, gửi email hay quyết định thay nhân viên.</li>
+            <li>Đề xuất của AI được chuẩn hóa thành <strong>Checklist hành động từng bước</strong> để nhân viên kinh doanh dễ dàng thực hiện.</li>
+            <li>Nếu Gemini không khả dụng, hệ thống dùng quy tắc cục bộ.</li>
+          </ul>
         </div>
       </details>
+
+      <!-- Nút kích hoạt phân tích AI -->
       {% if can_run_ai_analysis %}
-        <form method="post" action="{% url 'crm:analyze_customer' customer.pk %}">{% csrf_token %}<button class="button-primary w-full" type="submit">✦ &nbsp; Phân tích ngay</button></form>
+        <form method="post" action="{% url 'crm:analyze_customer' customer.pk %}">
+          {% csrf_token %}
+          <button class="button-primary w-full py-2.5 text-xs font-bold shadow-sm flex items-center justify-center gap-2" type="submit">
+            <span>✦</span>
+            <span>{% if latest_analysis %}Phân tích lại hồ sơ với AI{% else %}Chạy phân tích AI cho khách hàng này{% endif %}</span>
+          </button>
+        </form>
       {% else %}
-        <p class="ai-consent-required">Khách chưa đồng ý phân tích AI. Bạn vẫn có thể tiếp nhận và phản hồi yêu cầu như bình thường.</p>
+        <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+          ⚠ Khách hàng chưa đồng ý phân tích AI. Bạn vẫn có thể tiếp nhận và chăm sóc theo quy trình thông thường.
+        </div>
       {% endif %}
+
+      <!-- Kết quả phân tích AI chi tiết -->
       {% if latest_analysis %}
-        <div class="ai-result">
-          <div class="result-heading items-center justify-between">
-            <div>{{ latest_analysis.get_segment_display|segment_badge }}</div>
-            <span class="result-score font-bold text-slate-800">{{ latest_analysis.score }}<small class="text-xs text-slate-400 font-normal">/100</small></span>
+        <div class="mt-5 space-y-4">
+          
+          <!-- Banner Phân khúc & Điểm số -->
+          <div class="rounded-xl border border-indigo-200/90 bg-white p-4 shadow-2xs">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Phân khúc khách hàng</span>
+                {{ latest_analysis.get_segment_display|segment_badge }}
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Điểm tiềm năng</span>
+                <span class="text-2xl font-black text-indigo-900 leading-none">
+                  {{ latest_analysis.score }}<small class="text-xs text-slate-400 font-normal">/100</small>
+                </span>
+              </div>
+            </div>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Nguồn: <strong>{% if latest_analysis.provider == "gemini" %}Google Gemini 2.5{% else %}Quy tắc phân tích B2B{% endif %}</strong></span>
+              <time>{{ latest_analysis.created_at|date:"d/m/Y · H:i" }}</time>
+            </div>
           </div>
-          <div class="result-block"><h3>Nhận định</h3><p>{{ latest_analysis.summary }}</p></div>
-          <div class="recommendation-block"><h3>Đề xuất tiếp theo</h3><p>{{ latest_analysis.recommendation }}</p><a class="text-link" href="{% url 'crm:customer_care_task_create' customer.pk %}?suggestion=1">Tạo việc từ đề xuất này →</a></div>
-          <div class="result-meta">Nguồn: {% if latest_analysis.provider == "gemini" %}Gemini{% else %}Phân tích cục bộ{% endif %} <span>·</span> {{ latest_analysis.created_at|date:"d/m/Y · H:i" }}</div>
+
+          <!-- Khối 1: Nhận định chuyên sâu toàn diện -->
+          <div class="rounded-xl border border-blue-200/80 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 shadow-2xs">
+            <div class="flex items-center gap-1.5 font-extrabold text-xs text-blue-900 uppercase tracking-wider mb-2">
+              <span aria-hidden="true">🧠</span>
+              <span>Nhận định toàn diện từ AI</span>
+            </div>
+            <div class="text-xs text-slate-800 leading-relaxed font-normal">
+              {{ latest_analysis.summary|linebreaksbr }}
+            </div>
+          </div>
+
+          <!-- Khối 2: Kế hoạch hành động từng bước theo CHECKLIST (Không gạch đầu dòng, từng checklist 1) -->
+          <div class="rounded-xl border border-indigo-200/90 bg-white p-4 shadow-2xs">
+            <div class="mb-2">
+              <div class="flex items-center gap-1.5 font-extrabold text-xs text-indigo-950 uppercase tracking-wider">
+                <span aria-hidden="true">📋</span>
+                <span>Kế hoạch hành động chi tiết (Checklist)</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                Các đầu việc khuyến nghị theo thứ tự ưu tiên — bấm để tạo việc chăm sóc trực tiếp:
+              </p>
+            </div>
+
+            <!-- Render thành các thẻ Checklist độc lập có checkbox và nút tạo việc -->
+            <div class="ai-checklist-container">
+              {{ latest_analysis.recommendation|render_ai_checklist:customer.pk }}
+            </div>
+
+            <!-- Nút tạo việc tổng quan dự phòng -->
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Hoặc tạo việc nhanh từ toàn bộ đề xuất:</span>
+              <a class="text-link font-semibold text-xs" href="{% url 'crm:customer_care_task_create' customer.pk %}?suggestion=1">
+                Tạo việc tổng hợp →
+              </a>
+            </div>
+          </div>
+
         </div>
       {% else %}
-        <div class="ai-empty"><span>✦</span><strong>Chưa có phân tích</strong><p>Chọn nút phía trên để xem nhận định và đề xuất chăm sóc.</p></div>
+        <div class="ai-empty text-center p-8 bg-white/80 rounded-xl border border-dashed border-indigo-200 mt-4">
+          <span class="grid h-10 w-10 place-items-center rounded-full bg-indigo-50 text-indigo-600 mx-auto text-lg mb-2">✦</span>
+          <strong class="block text-sm font-bold text-slate-800">Chưa có dữ liệu phân tích AI</strong>
+          <p class="text-xs text-slate-500 mt-1 mb-3">Bấm nút phía trên để AI phân tích chi tiết hồ sơ và lập checklist chăm sóc cho khách hàng này.</p>
+        </div>
       {% endif %}
     </article>
+
+    <!-- Khối Lịch sử các lần phân tích trước -->
     {% if analysis_history %}
-      <article class="content-card history-card"><div class="content-card-heading"><div><h2>Lần phân tích trước</h2><p>Lịch sử gần đây</p></div></div>{% for analysis in analysis_history %}<div class="history-row items-center justify-between"><div>{{ analysis.get_segment_display|segment_badge }}</div><span class="font-semibold text-slate-700">{{ analysis.score }}/100</span><time class="text-xs text-slate-400">{{ analysis.created_at|date:"d/m/Y" }}</time></div>{% endfor %}</article>
+      <article class="content-card history-card rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden p-5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Lần phân tích trước</h2>
+            <p class="text-[11px] text-slate-500">Lịch sử đánh giá điểm số gần đây</p>
+          </div>
+          <span class="count-pill text-[11px]">{{ analysis_history|length }} bản ghi</span>
+        </div>
+        <div class="divide-y divide-slate-100">
+          {% for analysis in analysis_history %}
+            <div class="py-2.5 flex items-center justify-between gap-3 text-xs">
+              <div>{{ analysis.get_segment_display|segment_badge }}</div>
+              <div class="font-bold text-slate-800">{{ analysis.score }}<span class="text-slate-400 text-[10px] font-normal">/100</span></div>
+              <time class="text-[11px] text-slate-400">{{ analysis.created_at|date:"d/m/Y · H:i" }}</time>
+            </div>
+          {% endfor %}
+        </div>
+      </article>
     {% endif %}
+
   </div>
 </section>
 {% endblock %}

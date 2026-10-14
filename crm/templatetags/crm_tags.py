@@ -267,3 +267,109 @@ def render_chat_transcript(content):
         f'</div>'
     )
 
+
+@register.filter(name="render_ai_checklist")
+def render_ai_checklist(recommendation, customer_pk=None):
+    """Format AI recommendations into structured, actionable checklist cards with direct task creation."""
+    import html
+    import re
+    from django.urls import reverse
+    from django.utils.http import urlencode
+
+    if not recommendation:
+        return ""
+
+    text = str(recommendation).strip()
+
+    # Split recommendation text into individual checklist blocks
+    pattern = re.compile(r'(?:^|\n\n+)(?=Checklist\s*\d+|Mục\s*\d+|Bước\s*\d+|\d+\.\s+)', re.IGNORECASE)
+    parts = [p.strip() for p in pattern.split(text) if p.strip()]
+
+    if not parts or (len(parts) == 1 and not re.match(r'^(?:Checklist|Mục|Bước|\d+\.)', parts[0], re.IGNORECASE)):
+        parts = [p.strip() for p in text.split("\n\n") if p.strip()]
+        if len(parts) <= 1:
+            parts = [p.strip() for p in text.split("\n") if p.strip()]
+
+    cards = []
+    for idx, part in enumerate(parts, 1):
+        lines = [line.strip() for line in part.splitlines() if line.strip()]
+        if not lines:
+            continue
+
+        first_line = lines[0]
+        # Clean title prefix
+        clean_title = re.sub(
+            r'^(?:Checklist\s*\d+[:.]?|Mục\s*\d+[:.]?|Bước\s*\d+[:.]?|\d+\.[:.]?)\s*',
+            '',
+            first_line,
+            flags=re.IGNORECASE,
+        ).strip()
+        if not clean_title:
+            clean_title = first_line
+
+        # Format details
+        body_lines = lines[1:] if len(lines) > 1 else []
+        body_html_parts = []
+        for bl in body_lines:
+            bl_clean = re.sub(r'^[-•*☑\[\]\s]+', '', bl).strip()
+            if bl_clean:
+                bl_formatted = html.escape(bl_clean)
+                for label in (
+                    "Hành động cụ thể:",
+                    "Hành động:",
+                    "Mục tiêu:",
+                    "Thời hạn khuyến nghị:",
+                    "Thời hạn:",
+                ):
+                    if bl_formatted.startswith(label):
+                        bl_formatted = f'<strong class="text-slate-900 font-semibold">{label}</strong> ' + bl_formatted[len(label):].strip()
+                        break
+                body_html_parts.append(
+                    f'<li class="flex items-start gap-2 py-0.5">'
+                    f'  <span class="text-blue-500 font-bold shrink-0 mt-0.5">›</span>'
+                    f'  <span class="text-slate-700">{bl_formatted}</span>'
+                    f'</li>'
+                )
+
+        create_task_url = ""
+        if customer_pk:
+            params = urlencode({"title": clean_title[:180], "desc": "\n".join(body_lines)})
+            create_task_url = f"{reverse('crm:customer_care_task_create', args=[customer_pk])}?{params}"
+
+        action_btn_html = ""
+        if create_task_url:
+            action_btn_html = (
+                f'<a href="{create_task_url}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 border border-blue-200/90 px-3 py-1 rounded-lg transition-all shadow-2xs">'
+                f'  <span>＋ Tạo việc chăm sóc từ mục này</span>'
+                f'</a>'
+            )
+
+        body_html = ""
+        if body_html_parts:
+            body_html = f'<ul class="mt-2.5 space-y-1 text-xs leading-relaxed pl-0 list-none border-t border-slate-100 pt-2">' + "".join(body_html_parts) + '</ul>'
+
+        cards.append(
+            f'<div class="rounded-xl border border-blue-100/90 bg-white p-4 shadow-2xs hover:border-blue-300 hover:shadow-xs transition-all my-3">'
+            f'  <div class="flex items-start justify-between gap-3 flex-wrap">'
+            f'    <div class="flex items-start gap-3 min-w-0 flex-1">'
+            f'      <div class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-2xs" title="Mục việc trong Checklist">'
+            f'        ✓'
+            f'      </div>'
+            f'      <div class="min-w-0 flex-1">'
+            f'        <div class="flex items-center gap-2 flex-wrap mb-1">'
+            f'          <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">Checklist #{idx}</span>'
+            f'          <strong class="text-sm font-bold text-slate-900 leading-snug">{html.escape(clean_title)}</strong>'
+            f'        </div>'
+            f'        {body_html}'
+            f'      </div>'
+            f'    </div>'
+            f'  </div>'
+            f'  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-end">'
+            f'    {action_btn_html}'
+            f'  </div>'
+            f'</div>'
+        )
+
+    return mark_safe("".join(cards))
+
+

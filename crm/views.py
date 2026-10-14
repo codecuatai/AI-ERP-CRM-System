@@ -590,12 +590,17 @@ def care_task_form(request, pk=None, customer_pk=None):
             return redirect("crm:care_tasks")
     else:
         initial = {} if task.pk else {"due_at": timezone.localdate()}
-        if customer is not None and request.GET.get("suggestion") == "1":
-            analysis = customer.ai_analyses.first()
-            if analysis:
-                suggestion = analysis.recommendation.strip()
-                initial["title"] = suggestion[:177].rsplit(" ", 1)[0] + "…" if len(suggestion) > 180 else suggestion
-                initial["description"] = suggestion
+        if customer is not None:
+            if request.GET.get("title"):
+                initial["title"] = request.GET.get("title").strip()[:180]
+                if request.GET.get("desc"):
+                    initial["description"] = request.GET.get("desc").strip()
+            elif request.GET.get("suggestion") == "1":
+                analysis = customer.ai_analyses.first()
+                if analysis:
+                    suggestion = analysis.recommendation.strip()
+                    initial["title"] = suggestion[:177].rsplit(" ", 1)[0] + "…" if len(suggestion) > 180 else suggestion
+                    initial["description"] = suggestion
         form = CareTaskForm(instance=task, customer=customer, initial=initial)
     return render(request, "crm/care_task_form.html", {
         "form": form,
