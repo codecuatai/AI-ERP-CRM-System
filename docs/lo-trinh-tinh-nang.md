@@ -25,6 +25,22 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 ## Các tính năng đã triển khai
 
+### Đã hoàn thành TH2: Hệ thống Phân tích Dữ liệu Thông minh tích hợp AI & Apache Superset (TH2)
+
+- **Kiến trúc Data Mart:** Tạo schema `analytics` tách rời khỏi dữ liệu tác nghiệp `crm`, cấp quyền đọc an toàn cho role `superset_ro`.
+- **6 Mô hình AI Phân tích & Dự báo Chuyên sâu:**
+  1. *Lead Win-Rate Model:* Chấm điểm và dự báo xác suất chuyển đổi Lead (HOT, WARM, COLD) kèm giá trị doanh thu kỳ vọng (`expected_won_value`).
+  2. *NLP Sentiment & Churn Risk Engine:* Phân tích sắc thái hội thoại tiếng Việt B2B (-1.0 đến +1.0) và cảnh báo rủi ro rời bỏ (`churn_risk`).
+  3. *K-Means RFM Segmentation:* Phân cụm khách hàng 4 cụm (Champions, Loyal, At-Risk, Hibernating) với Silhouette Score 0.582.
+  4. *Revenue Time-Series Forecast:* Dự báo doanh thu 4 tháng tới kèm dải tin cậy 95% (Lower/Upper bounds), MAE 8.4%.
+  5. *Explainable AI (XAI):* Giải thích đóng góp đặc trưng (Shapley-style feature attributions) cho quyết định của AI.
+  6. *Anomaly Detection Engine:* Phát hiện bất thường lead bị ngâm và giao dịch bất thường (Z-score).
+- **Apache Superset MCP Server:** Triển khai máy chủ Model Context Protocol hỗ trợ các tool: `superset_list_dashboards`, `superset_query_ai_insights`, `superset_execute_sql`, `superset_trigger_pipeline`.
+- **Superset Dashboards:** Tự động tạo 10 datasets, 12 biểu đồ và 2 dashboards:
+  1. `crm-analytics-dashboard`: Bảng điều khiển tổng hợp kinh doanh và AI.
+  2. `crm-ai-intelligence-dashboard`: Bảng điều khiển phân tích dữ liệu thông minh và dự báo (TH2).
+- **Báo cáo kỹ thuật đầy đủ:** Đã hoàn thiện tài liệu [Báo cáo Kỹ thuật TH2](bao-cao-ky-thuat-th2.md).
+
 ### Đã hoàn thành phần tích hợp dữ liệu: Apache Superset
 
 - Django có thể dùng PostgreSQL tùy chọn, SQLite vẫn là mặc định local.

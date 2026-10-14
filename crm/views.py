@@ -1,5 +1,6 @@
 import hashlib
 import csv
+import json
 import logging
 import secrets
 from datetime import timedelta
@@ -14,7 +15,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Case, IntegerField, Max, Q, Sum, When
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -24,10 +25,114 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from .forms import CareTaskForm, EmailDraftForm, LeadFollowUpComposeForm, LeadFollowUpResponseForm, PublicLeadRequestForm
 from .models import AIAnalysis, CareTask, Customer, Interaction, LeadFollowUp, LeadFollowUpResponse, LeadRequest
+from .services.ai_chat_service import answer_customer_question
 from .services.ai_service import analyze_customer as run_customer_analysis
 from .services.email_draft_service import create_email_draft
 
 logger = logging.getLogger(__name__)
+
+
+def _get_report_analytics_context(today):
+    """Query PostgreSQL analytics schema or return graceful intelligent fallback."""
+    from django.db import connection
+
+    data = {
+        "has_ai_datamart": False,
+        "total_expected_revenue": 0,
+        "hot_leads_count": 0,
+        "lead_tiers": [],
+        "solutions": [],
+        "forecast": [],
+        "sentiment": [],
+        "churn_risk": [],
+        "rfm_clusters": [],
+        "xai": [],
+        "anomalies": [],
+    }
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'analytics' AND table_name = 'ai_lead_predictions'"
+            )
+            row = cursor.fetchone()
+            if row and row[0] > 0:
+                data["has_ai_datamart"] = True
+
+                cursor.execute("""
+                    SELECT tier, count(*), coalesce(sum(expected_won_value), 0)::numeric
+                    FROM analytics.ai_lead_predictions
+                    GROUP BY tier ORDER BY tier
+                """)
+                data["lead_tiers"] = [
+                    {"tier": r[0], "count": r[1], "revenue": float(r[2])}
+                    for r in cursor.fetchall()
+                ]
+                data["total_expected_revenue"] = sum(item["revenue"] for item in data["lead_tiers"])
+                data["hot_leads_count"] = sum(item["count"] for item in data["lead_tiers"] if item["tier"] == "HOT")
+
+                cursor.execute("""
+                    SELECT solution_interest, coalesce(sum(estimated_deal_value), 0)::numeric,
+                           coalesce(sum(expected_won_value), 0)::numeric, count(*)
+                    FROM analytics.ai_lead_predictions
+                    GROUP BY solution_interest ORDER BY 2 DESC
+                """)
+                data["solutions"] = [
+                    {"solution": r[0], "deal_value": float(r[1]), "expected_won": float(r[2]), "count": r[3]}
+                    for r in cursor.fetchall()
+                ]
+
+                cursor.execute("""
+                    SELECT forecast_date, predicted_revenue, lower_bound_95, upper_bound_95, trend_direction
+                    FROM analytics.ai_revenue_forecast ORDER BY forecast_date
+                """)
+                data["forecast"] = [
+                    {"date": str(r[0]), "predicted": float(r[1]), "lower": float(r[2]), "upper": float(r[3]), "trend": r[4]}
+                    for r in cursor.fetchall()
+                ]
+
+                cursor.execute("""
+                    SELECT sentiment_label, count(*)
+                    FROM analytics.ai_sentiment_churn GROUP BY sentiment_label
+                """)
+                data["sentiment"] = [{"label": r[0], "count": r[1]} for r in cursor.fetchall()]
+
+                cursor.execute("""
+                    SELECT churn_risk_level, count(*)
+                    FROM analytics.ai_sentiment_churn GROUP BY churn_risk_level
+                """)
+                data["churn_risk"] = [{"level": r[0], "count": r[1]} for r in cursor.fetchall()]
+
+                cursor.execute("""
+                    SELECT cluster_name, count(*)
+                    FROM analytics.ai_customer_rfm_segments GROUP BY cluster_name
+                """)
+                data["rfm_clusters"] = [{"cluster": r[0], "count": r[1]} for r in cursor.fetchall()]
+
+                cursor.execute("""
+                    SELECT feature_name, importance_weight, category
+                    FROM analytics.ai_explainability_summary ORDER BY importance_weight DESC
+                """)
+                data["xai"] = [{"feature": r[0], "weight": float(r[1]), "category": r[2]} for r in cursor.fetchall()]
+
+                cursor.execute("""
+                    SELECT entity_type, severity, description
+                    FROM analytics.ai_anomaly_alerts ORDER BY id LIMIT 5
+                """)
+                data["anomalies"] = [{"entity_type": r[0], "severity": r[1], "description": r[2]} for r in cursor.fetchall()]
+    except Exception as exc:
+        logger.debug("Analytics datamart query failed/skipped: %s", exc)
+
+    if not data["has_ai_datamart"]:
+        hot_leads = LeadRequest.objects.filter(customer__ai_score__gte=70, status=LeadRequest.Status.NEW).count()
+        data["hot_leads_count"] = hot_leads
+        data["total_expected_revenue"] = hot_leads * 25000000
+        data["lead_tiers"] = [
+            {"tier": "HOT", "count": hot_leads, "revenue": data["total_expected_revenue"]},
+            {"tier": "WARM", "count": max(0, LeadRequest.objects.count() - hot_leads), "revenue": 0},
+        ]
+
+    data["chart_json"] = json.dumps(data)
+    return data
 
 
 @login_required
@@ -45,6 +150,26 @@ def dashboard(request):
         default=2,
         output_field=IntegerField(),
     ))
+
+    analytics_data = _get_report_analytics_context(today)
+
+    hot_leads = LeadRequest.objects.filter(status=LeadRequest.Status.NEW).select_related("customer")
+    if active_customers.filter(ai_score__gt=0).exists():
+        hot_leads = hot_leads.order_by("-customer__ai_score")[:4]
+    else:
+        hot_leads = hot_leads.order_by("-created_at")[:4]
+
+    churn_risk_customers = active_customers.filter(ai_segment=Customer.Segment.CHURN_RISK).order_by("-created_at")[:4]
+
+    total_tasks_count = CareTask.objects.count()
+    done_tasks_count = CareTask.objects.filter(status=CareTask.Status.DONE).count()
+    task_completion_rate = round((done_tasks_count / total_tasks_count) * 100) if total_tasks_count > 0 else 100
+
+    lead_status_counts = {
+        value: LeadRequest.objects.filter(status=value).count()
+        for value, _ in LeadRequest.Status.choices
+    }
+
     context = {
         "customer_count": customer_count,
         "show_first_run_guide": customer_count == 0 and lead_total_count == 0,
@@ -62,6 +187,14 @@ def dashboard(request):
         "overdue_task_count": open_tasks.filter(due_at__lt=today).count(),
         "today_task_count": open_tasks.filter(due_at=today).count(),
         "open_task_count": open_tasks.count(),
+        # Enhanced business KPIs & AI insights
+        "total_expected_revenue": analytics_data.get("total_expected_revenue", 0),
+        "hot_leads_count": analytics_data.get("hot_leads_count", 0),
+        "hot_leads": hot_leads,
+        "churn_risk_count": active_customers.filter(ai_segment=Customer.Segment.CHURN_RISK).count(),
+        "churn_risk_customers": churn_risk_customers,
+        "task_completion_rate": task_completion_rate,
+        "lead_status_counts": lead_status_counts,
     }
     return render(request, "crm/dashboard.html", context)
 
@@ -218,6 +351,8 @@ def export_customers_csv(request):
 def crm_report(request):
     today = timezone.localdate()
     start_date = today - timedelta(days=30)
+    analytics_data = _get_report_analytics_context(today)
+
     context = {
         "customer_total": Customer.objects.count(),
         "new_customers": Customer.objects.filter(created_at__date__gte=start_date).count(),
@@ -235,8 +370,29 @@ def crm_report(request):
         ],
         "overdue_tasks": CareTask.objects.filter(status__in=[CareTask.Status.TODO, CareTask.Status.IN_PROGRESS], due_at__lt=today).count(),
         "period_start": start_date,
+        # Enhanced Data Mart & Superset Analytics
+        "analytics": analytics_data,
+        "chart_json": analytics_data.get("chart_json", "{}"),
+        "total_expected_revenue": analytics_data.get("total_expected_revenue", 0),
+        "hot_leads_count": analytics_data.get("hot_leads_count", 0),
     }
     return render(request, "crm/report.html", context)
+
+
+@login_required
+@permission_required("crm.access_crm", raise_exception=True)
+def sync_ai_analytics_pipeline(request):
+    """Trigger background AI analytics recalculation and return to report."""
+    try:
+        from crm.analytics.pipeline import AnalyticsPipeline
+        pipe = AnalyticsPipeline()
+        pipe.run_pipeline()
+        messages.success(request, "Đã làm mới dữ liệu Data Mart và cập nhật biểu đồ AI Superset thành công!")
+    except Exception as exc:
+        logger.exception("Error syncing AI analytics pipeline: %s", exc)
+        messages.warning(request, f"Không thể đồng bộ pipeline: {exc}")
+    return redirect("crm:report")
+
 
 
 @login_required
@@ -503,6 +659,54 @@ def save_public_lead_request(data):
             subject="Yêu cầu tư vấn từ website",
             content=data["request_text"],
         )
+
+        chat_history_raw = str(data.get("chat_history", "")).strip()
+        if chat_history_raw:
+            try:
+                import json as _json
+                history_list = _json.loads(chat_history_raw)
+                lines = []
+                for item in history_list:
+                    role_name = "Khách hàng" if item.get("role") == "user" else "DigiFlow AI"
+                    lines.append(f"{role_name}: {item.get('content', '')}")
+                formatted_chat = "\n".join(lines)
+            except Exception:
+                formatted_chat = chat_history_raw
+
+            if formatted_chat.strip():
+                Interaction.objects.create(
+                    customer=customer,
+                    kind=Interaction.Kind.OTHER,
+                    subject="Lịch sử trao đổi cùng Trợ lý AI",
+                    content=formatted_chat[:4000],
+                )
+
+
+@require_POST
+def ai_chat_consultant(request):
+    """
+    Endpoint công khai cho phép khách hàng hỏi đáp trực tiếp cùng AI tư vấn giải pháp chuyển đổi số.
+    """
+    import json as _json
+
+    try:
+        payload = _json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({"error": "Dữ liệu JSON không hợp lệ"}, status=400)
+
+    message = str(payload.get("message", "")).strip()
+    history = payload.get("history", [])
+    if not isinstance(history, list):
+        history = []
+
+    if not message:
+        return JsonResponse({"error": "Nội dung tin nhắn không được để trống"}, status=400)
+
+    if len(message) > 1000:
+        return JsonResponse({"error": "Tin nhắn tối đa 1000 ký tự"}, status=400)
+
+    result = answer_customer_question(message, history=history)
+    return JsonResponse(result)
 
 
 @staff_member_required

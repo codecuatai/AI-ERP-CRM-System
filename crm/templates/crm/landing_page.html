@@ -1,202 +1,1269 @@
 {% extends "crm/public_base.html" %}
-{% block title %}Giải pháp chuyển đổi số{% endblock %}
+{% load static %}
+{% block title %}Giải pháp Chuyển đổi số & AI CRM B2B{% endblock %}
 {% block main_class %}landing-main{% endblock %}
 
 {% block public_header %}
-<header class="landing-header">
-  <div class="landing-header-inner">
-    <a class="landing-brand" href="#dau-trang" aria-label="{{ brand_name }} — đầu trang">
-      <span class="landing-brand-mark">D</span>
-      <span><strong>{{ brand_name }}</strong><small>Giải pháp số doanh nghiệp</small></span>
+<header class="landing-header sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 transition-colors">
+  <div class="landing-header-inner mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+    <a class="landing-brand flex items-center gap-3 text-slate-900 transition hover:opacity-90" href="#dau-trang" aria-label="{{ brand_name|default:'DigiFlow' }} — đầu trang">
+      <span class="landing-brand-mark grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 text-base font-black text-white shadow-md shadow-indigo-500/25">D</span>
+      <span>
+        <strong class="block text-base font-extrabold tracking-tight text-slate-900 leading-tight">{{ brand_name|default:"DigiFlow" }}</strong>
+        <small class="block text-[11px] font-semibold text-indigo-600 tracking-wider uppercase">AI CRM &amp; Giải pháp số B2B</small>
+      </span>
     </a>
-    <nav class="landing-nav-links" aria-label="Điều hướng chính">
-      <a href="#giai-phap">Giải pháp</a>
-      <a href="#cach-lam">Cách chúng tôi làm</a>
-      <a href="#lien-he">Liên hệ</a>
+
+    <nav class="landing-nav-links hidden items-center gap-8 text-sm font-semibold text-slate-600 md:flex" aria-label="Điều hướng chính">
+      <a href="#giai-phap" class="transition hover:text-indigo-600">Giải pháp</a>
+      <a href="#uu-the" class="transition hover:text-indigo-600">Ưu thế AI</a>
+      <a href="#cach-lam" class="transition hover:text-indigo-600">Quy trình</a>
+      <a href="#danh-gia" class="transition hover:text-indigo-600">Đánh giá</a>
+      <a href="{% url 'crm:dashboard' %}" class="inline-flex items-center gap-1.5 font-bold text-indigo-600 bg-indigo-50/80 hover:bg-indigo-100/80 px-3 py-1.5 rounded-lg transition border border-indigo-200/60">
+        <span>Cổng CRM</span>
+        <svg class="icon-inline" width="13" height="13" style="width:13px;height:13px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
     </nav>
-    <a class="landing-nav-cta" href="#lien-he">
-      Trao đổi nhu cầu
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-    </a>
+
+    <div class="flex items-center gap-3">
+      <button type="button" class="btn-open-lead-modal inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-indigo-500/20 transition duration-200 hover:shadow-indigo-500/35 hover:scale-105 active:scale-95 cursor-pointer">
+        <svg class="icon-inline" width="16" height="16" style="width:16px;height:16px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span>Trao đổi nhu cầu</span>
+      </button>
+    </div>
   </div>
 </header>
 {% endblock %}
 
 {% block content %}
-<div id="dau-trang" class="landing-content">
+<div id="dau-trang" class="landing-content overflow-hidden">
 
-  <!-- ═══════════ HERO ═══════════ -->
-  <section class="landing-hero">
-    <div class="hero-copy">
-      <span class="hero-kicker">
-        <span class="hero-kicker-dot" aria-hidden="true"></span>
-        Đồng hành cùng doanh nghiệp đang phát triển
-      </span>
-      <h1>{{ page.hero_title }} <em>{{ page.hero_emphasis }}</em></h1>
-      <p class="hero-lead">{{ page.hero_text }}</p>
-      <div class="hero-actions">
-        <a class="button-primary hero-primary" href="#lien-he">
-          Bắt đầu cuộc trao đổi
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        <a class="hero-text-link" href="#giai-phap">
-          Khám phá giải pháp
-          <span aria-hidden="true"> ↓</span>
-        </a>
-      </div>
-      <div class="hero-note">
-        <span class="hero-note-icon" aria-hidden="true">✓</span>
-        <span>Tư vấn theo nhu cầu thực tế — bắt đầu từ vấn đề bạn muốn giải quyết, không phải từ sản phẩm.</span>
-      </div>
+  <!-- ═══════════ HERO SECTION (HIGH-IMPACT SAAS DESIGN) ═══════════ -->
+  <section class="relative bg-gradient-to-b from-[#f8faff] via-white to-slate-50/50 text-slate-900 pt-12 pb-20 sm:pt-16 sm:pb-28 border-b border-slate-200/80 overflow-hidden">
+    <!-- Ambient Animated Glow Lights (Smooth Blur, No Striped Grid) -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div class="glow-orb glow-orb-cyan w-[550px] h-[550px] -top-32 -right-10 animate-float opacity-30"></div>
+      <div class="glow-orb glow-orb-violet w-[500px] h-[500px] -bottom-28 -left-10 animate-float-delay opacity-25"></div>
+      <div class="glow-orb glow-orb-blue w-[400px] h-[400px] top-1/4 left-1/3 animate-float-slow opacity-20"></div>
     </div>
 
-    <div class="hero-visual" aria-label="Minh họa các hệ thống doanh nghiệp được kết nối">
-      <div class="visual-glow"></div>
-      <div class="visual-caption">
-        <span class="visual-caption-dot" aria-hidden="true"></span>
-        Một hệ thống kết nối
-      </div>
-      <div class="visual-center">
-        <span class="visual-center-mark">D</span>
-        <strong>Dữ liệu<br>liền mạch</strong>
-        <small>Doanh nghiệp</small>
-      </div>
-      <div class="visual-node node-customer">
-        <span class="node-icon node-purple" aria-hidden="true">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        </span>
-        <span><small>Quan hệ</small><strong>Khách hàng</strong></span>
-      </div>
-      <div class="visual-node node-operations">
-        <span class="node-icon node-green" aria-hidden="true">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        </span>
-        <span><small>Vận hành</small><strong>Kho &amp; bán hàng</strong></span>
-      </div>
-      <div class="visual-node node-data">
-        <span class="node-icon node-orange" aria-hidden="true">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        </span>
-        <span><small>Hạ tầng</small><strong>Dữ liệu &amp; hệ thống</strong></span>
-      </div>
-      <div class="visual-orbit orbit-one"></div>
-      <div class="visual-orbit orbit-two"></div>
-      <span class="orbit-point point-one"></span>
-      <span class="orbit-point point-two"></span>
-      <span class="orbit-point point-three"></span>
-      <p class="visual-footnote">Minh họa các mảng giải pháp có thể kết nối</p>
-    </div>
-  </section>
+    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
-  <!-- ═══════════ TRUST STRIP ═══════════ -->
-  <section class="landing-trust-strip" aria-label="Nguyên tắc tư vấn">
-    <span>Hiểu quy trình trước</span><span class="trust-divider" aria-hidden="true"></span>
-    <span>Chọn giải pháp phù hợp</span><span class="trust-divider" aria-hidden="true"></span>
-    <span>Đồng hành khi triển khai</span>
-  </section>
+        <!-- Left Column: Value Prop & Actions -->
+        <div class="lg:col-span-7 space-y-6 text-left">
+          <div class="inline-flex items-center gap-2 rounded-full border border-indigo-200/90 bg-white/95 backdrop-blur-md px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm">
+            <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Trợ lý AI &amp; Hệ sinh thái Quản trị Doanh nghiệp B2B</span>
+          </div>
 
-  <!-- ═══════════ SOLUTIONS ═══════════ -->
-  <section class="landing-section" id="giai-phap">
-    <div class="section-heading">
-      <div>
-        <span class="section-kicker">Giải pháp</span>
-        <h2>{{ page.solutions_heading }}</h2>
-      </div>
-      <p>{{ page.solutions_intro }}</p>
-    </div>
-    <div class="solutions-grid">
-      {% for solution in page.solutions %}
-        <article class="solution-card {% cycle 'solution-purple' 'solution-green' 'solution-orange' 'solution-blue' %}">
-          <span class="solution-icon" aria-hidden="true">{{ solution.value.icon|default:"✳" }}</span>
-          <span class="solution-number">{{ solution.value.category }}</span>
-          <h3>{{ solution.value.title }}</h3>
-          <p>{{ solution.value.description }}</p>
-          <a href="#lien-he">{{ solution.value.link_label }} <span aria-hidden="true">→</span></a>
-        </article>
-      {% empty %}
-        <p>Đang cập nhật danh mục giải pháp.</p>
-      {% endfor %}
-    </div>
-    <div class="solutions-bottom">
-      <p>Chưa chắc nên bắt đầu ở đâu? <strong>Hãy kể cho chúng tôi vấn đề bạn đang gặp.</strong></p>
-      <a href="#lien-he">Nhận tư vấn ban đầu <span aria-hidden="true">→</span></a>
-    </div>
-  </section>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-black tracking-tight text-slate-900 leading-[1.15]">
+            {{ page.hero_title|default:"Nền tảng Quản trị &amp; AI CRM cho" }}
+            <span class="block mt-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
+              {{ page.hero_emphasis|default:"Doanh nghiệp B2B Đột phá" }}
+            </span>
+          </h1>
 
-  <!-- ═══════════ APPROACH ═══════════ -->
-  <section class="approach-section" id="cach-lam">
-    <div class="approach-inner">
-      <div class="approach-intro">
-        <span class="section-kicker section-kicker-light">Cách chúng tôi làm</span>
-        <h2>{{ page.approach_heading }}</h2>
-        <p>{{ page.approach_intro }}</p>
-        <a href="#lien-he" class="approach-link">
-          Kể cho chúng tôi nghe
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-      </div>
-      <div class="approach-steps">
-        {% for step in page.approach_steps %}
-          <article class="approach-step">
-            <span>0{{ forloop.counter }}</span>
+          <p class="max-w-xl text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+            {{ page.hero_text|default:"Hợp nhất toàn bộ dữ liệu khách hàng B2B, chuẩn hóa phễu bán hàng và tự động phân tích tiềm năng chốt đơn với Trợ lý AI Gemini thế hệ mới." }}
+          </p>
+
+          <!-- Action Buttons (Clean & Aligned) -->
+          <div class="pt-2 flex flex-wrap items-center gap-3">
+            <button type="button" class="btn-open-lead-modal inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3.5 text-sm sm:text-base font-bold text-white shadow-lg shadow-indigo-500/25 transition duration-200 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95 cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              <span>Đăng ký trao đổi nhu cầu</span>
+              <span aria-hidden="true">→</span>
+            </button>
+            <button type="button" class="btn-open-lead-modal inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm sm:text-base font-semibold text-slate-700 shadow-sm transition hover:bg-indigo-50/70 hover:border-indigo-300 hover:text-indigo-700 hover:-translate-y-0.5 active:scale-95 cursor-pointer" data-tab="chat">
+              <svg class="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 00-8 8c0 1.85.63 3.55 1.69 4.9L2.3 18.7a1 1 0 001.27 1.27l3.8-1.39A7.96 7.96 0 0010 18a8 8 0 100-16zm-3 8a1 1 0 112 0 1 1 0 01-2 0zm4 0a1 1 0 112 0 1 1 0 01-2 0z"/></svg>
+              <span>Trợ lý AI Tư vấn</span>
+              <span class="ml-1 px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded-full font-bold">24/7</span>
+            </button>
+            <a href="#giai-phap" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition ml-1 py-2">
+              <span>Xem 4 giải pháp</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+
+          <!-- Proof Metrics with Digital Counters -->
+          <div class="pt-6 border-t border-slate-200/80 grid grid-cols-3 gap-6 text-left">
             <div>
-              <h3>{{ step.value.title }}</h3>
-              <p>{{ step.value.description }}</p>
+              <div class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 metric-counter" data-target="500" data-suffix="+">500+</div>
+              <p class="text-xs font-semibold text-slate-500 mt-1">Doanh nghiệp tin dùng</p>
             </div>
-          </article>
+            <div>
+              <div class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 metric-counter" data-target="42" data-suffix="%">42%</div>
+              <p class="text-xs font-semibold text-slate-500 mt-1">Tăng tỷ lệ chốt hợp đồng</p>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 metric-counter" data-target="99.8" data-suffix="%">99.8%</div>
+              <p class="text-xs font-semibold text-slate-500 mt-1">Thời gian hoạt động ổn định</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive Ecosystem UI Mockup (Linear / Stripe Style) -->
+        <div class="lg:col-span-5 relative">
+          <!-- Ambient Glow behind Mockup -->
+          <div class="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/15 to-purple-500/10 rounded-3xl blur-2xl pointer-events-none" aria-hidden="true"></div>
+
+          <!-- Floating Accessory Badge 1 (Top Right) -->
+          <div class="absolute -top-4 -right-3 z-20 hidden sm:flex items-center gap-2.5 rounded-xl border border-emerald-200/80 bg-white/95 px-3.5 py-2 shadow-lg shadow-emerald-500/10 text-xs font-bold text-slate-800 backdrop-blur-md animate-float">
+            <span class="grid h-6 w-6 place-items-center rounded-lg bg-emerald-100 text-emerald-700 text-sm">📈</span>
+            <span>Tỷ lệ chốt đơn <strong class="text-emerald-600">+42%</strong></span>
+          </div>
+
+          <!-- Main Dashboard Window Card -->
+          <div class="relative mx-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-2xl shadow-indigo-500/10 text-slate-900 backdrop-blur-xl animate-float-slow z-10">
+            <!-- App Chrome Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-rose-400 inline-block"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="ml-2 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 font-mono">app.digiflow.vn/crm/leads</span>
+              </div>
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                AI Đang hoạt động
+              </span>
+            </div>
+
+            <!-- Pipeline Summary Bar -->
+            <div class="mt-3.5 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+              <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 mb-1.5">
+                <span>Phễu cơ hội (Pipeline)</span>
+                <span class="text-indigo-600">29 Khách hàng đang xử lý</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-bold">
+                <div class="rounded-md bg-blue-100 text-blue-800 py-1">Tiếp nhận (12)</div>
+                <div class="rounded-md bg-indigo-100 text-indigo-800 py-1">Khảo sát (8)</div>
+                <div class="rounded-md bg-purple-100 text-purple-800 py-1">Báo giá (5)</div>
+                <div class="rounded-md bg-emerald-100 text-emerald-800 py-1">Chốt đơn (4)</div>
+              </div>
+            </div>
+
+            <!-- Lead Detail Focus Card -->
+            <div class="mt-3.5 rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-blue-50/30 p-4 shadow-xs">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black grid place-items-center text-sm shadow-sm">
+                    NV
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-900 leading-tight">Công ty CP Công Nghệ Nam Việt</h4>
+                    <p class="text-xs text-slate-500 mt-0.5">Sản xuất &amp; Kho vận · Hà Nội</p>
+                  </div>
+                </div>
+                <span class="shrink-0 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 px-2.5 py-1 text-xs font-black text-white shadow-xs">
+                  HOT: 92/100
+                </span>
+              </div>
+
+              <!-- AI Analysis Highlight Box -->
+              <div class="mt-3 rounded-lg border border-purple-100 bg-purple-50/60 p-3">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-purple-700">
+                  <svg class="w-3.5 h-3.5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                  <span>Gemini 2.5 Pro · Khuyến nghị tức thì</span>
+                </div>
+                <p class="mt-1 text-xs text-slate-700 leading-relaxed">
+                  "Nhu cầu cấp thiết: Mở rộng quản lý 5 kho &amp; đồng bộ POS. Đề xuất: Phân công Sales Lead liên hệ và gửi bản chào gói ERP Cloud trong 2 giờ."
+                </p>
+              </div>
+
+              <div class="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+                <span>Giá trị dự kiến: <strong class="text-slate-900 font-bold">180.000.000 đ</strong></span>
+                <span class="inline-flex items-center gap-1 font-semibold text-indigo-600">Đã gán cho Sales Lead ✓</span>
+              </div>
+            </div>
+
+            <!-- Floating Accessory Badge 2 (Bottom Left) -->
+            <div class="absolute -bottom-4 -left-3 z-20 hidden sm:flex items-center gap-2 rounded-xl border border-indigo-200/80 bg-white/95 px-3.5 py-2 shadow-lg shadow-indigo-500/10 text-xs font-bold text-slate-800 backdrop-blur-md animate-float-delay">
+              <span class="grid h-6 w-6 place-items-center rounded-lg bg-indigo-100 text-indigo-700 text-sm">⚡</span>
+              <span>Phản hồi khách hàng <strong class="text-indigo-600">&lt; 15 phút</strong></span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TRUST & CLIENTS STRIP ═══════════ -->
+  <section class="border-b border-indigo-100/80 bg-gradient-to-r from-blue-50/40 via-indigo-50/30 to-cyan-50/40 py-10 sm:py-12" aria-label="Lĩnh vực thế mạnh">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="text-center md:text-left">
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Hệ thống chuẩn hoá cho</span>
+          <p class="text-sm font-extrabold text-slate-900 mt-0.5">Doanh nghiệp chuyển đổi số tại Việt Nam</p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          <span class="inline-flex items-center gap-2 rounded-xl bg-white border border-cyan-200/80 px-4 py-2.5 text-xs font-bold text-cyan-800 shadow-sm transition hover:border-cyan-400 hover:scale-105">
+            <span class="h-2 w-2 rounded-full bg-cyan-500"></span> Bán lẻ &amp; Chuỗi POS
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-xl bg-white border border-emerald-200/80 px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-sm transition hover:border-emerald-400 hover:scale-105">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Sản xuất &amp; Kho vận ERP
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-xl bg-white border border-indigo-200/80 px-4 py-2.5 text-xs font-bold text-indigo-800 shadow-sm transition hover:border-indigo-400 hover:scale-105">
+            <span class="h-2 w-2 rounded-full bg-indigo-500"></span> Dịch vụ &amp; Quản trị CRM
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-xl bg-white border border-amber-200/80 px-4 py-2.5 text-xs font-bold text-amber-800 shadow-sm transition hover:border-amber-400 hover:scale-105">
+            <span class="h-2 w-2 rounded-full bg-amber-500"></span> Hạ tầng Cloud &amp; Sao lưu
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SOLUTIONS SECTION ═══════════ -->
+  <section class="py-24 sm:py-28 bg-slate-50/80 border-b border-slate-200/80" id="giai-phap">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl text-left space-y-3">
+        <span class="inline-block text-xs font-bold uppercase tracking-wider text-cyan-600 bg-cyan-50 border border-cyan-200/80 rounded-full px-3.5 py-1">
+          DANH MỤC GIẢI PHÁP
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          {{ page.solutions_heading|default:"Bộ 4 Giải pháp Chuyển đổi số Toàn diện" }}
+        </h2>
+        <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+          {{ page.solutions_intro|default:"Từng mảnh ghép công nghệ được thiết kế tương thích cao, giúp doanh nghiệp giải quyết chính xác bài toán nghẽn vận hành và mở rộng quy mô." }}
+        </p>
+      </div>
+
+      <!-- Solutions Cards Grid -->
+      <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for solution in page.solutions %}
+        <article class="gradient-border-card relative flex flex-col justify-between p-6 group bg-white shadow-sm hover:shadow-xl transition-all duration-300">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              {% if forloop.counter == 1 or "CRM" in solution.value.title or "CRM" in solution.value.category %}
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-gradient-to-br group-hover:from-blue-600 group-hover:to-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200/60">
+                {{ solution.value.category }}
+              </span>
+              {% elif forloop.counter == 2 or "KHO" in solution.value.title or "ERP" in solution.value.title %}
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-teal-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
+                {{ solution.value.category }}
+              </span>
+              {% elif forloop.counter == 3 or "POS" in solution.value.title %}
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-gradient-to-br group-hover:from-amber-500 group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60">
+                {{ solution.value.category }}
+              </span>
+              {% else %}
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-purple-50 text-purple-600 group-hover:bg-gradient-to-br group-hover:from-purple-500 group-hover:to-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200/60">
+                {{ solution.value.category }}
+              </span>
+              {% endif %}
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+              {{ solution.value.title }}
+            </h3>
+            <p class="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              {{ solution.value.description }}
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <button type="button" class="btn-open-lead-modal w-full inline-flex items-center justify-between text-xs font-bold text-indigo-600 hover:text-indigo-800 transition cursor-pointer" data-solution="{{ solution.value.category }}">
+              <span>{{ solution.value.link_label|default:"Trao đổi về giải pháp" }}</span>
+              <span class="text-base group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
+        </article>
+        {% empty %}
+        <!-- Solution 1: CRM -->
+        <article class="gradient-border-card relative flex flex-col justify-between p-6 group">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-cyan-50 text-cyan-600 text-2xl group-hover:bg-gradient-to-br group-hover:from-cyan-500 group-hover:to-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                👥
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-md border border-cyan-200/60">
+                CRM
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-cyan-600 transition-colors">
+              CRM &amp; Chăm sóc Khách hàng
+            </h3>
+            <p class="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Tập trung dữ liệu khách hàng B2B, theo dõi hành trình cơ hội, chấm điểm tiềm năng và tạo kịch bản chăm sóc với AI Gemini.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-slate-600">
+              <li class="flex items-center gap-2"><span class="text-cyan-600 font-bold">✓</span> Phân tích và chấm điểm lead tự động</li>
+              <li class="flex items-center gap-2"><span class="text-cyan-600 font-bold">✓</span> Hàng đợi ưu tiên cho nhân viên kinh doanh</li>
+              <li class="flex items-center gap-2"><span class="text-cyan-600 font-bold">✓</span> Soạn email nháp thông minh có phê duyệt</li>
+            </ul>
+          </div>
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <button type="button" class="btn-open-lead-modal w-full inline-flex items-center justify-between text-xs font-bold text-cyan-600 hover:text-cyan-700 transition cursor-pointer" data-solution="CRM">
+              <span>Tư vấn giải pháp CRM</span>
+              <span class="text-base">→</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Solution 2: ERP -->
+        <article class="gradient-border-card relative flex flex-col justify-between p-6 group">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-emerald-50 text-emerald-600 text-2xl group-hover:bg-gradient-to-br group-hover:from-emerald-500 group-hover:to-teal-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                📦
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
+                ERP
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+              Quản lý Kho &amp; Vận hành ERP
+            </h3>
+            <p class="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Kiểm soát xuất nhập tồn kho đa điểm, cảnh báo tồn kho an toàn và tối ưu hoá chuỗi cung ứng sản xuất kinh doanh.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-slate-600">
+              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Theo dõi số lượng tồn kho theo thời gian thực</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Quản lý nhà cung cấp và đơn đặt hàng</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Báo cáo luân chuyển kho tự động</li>
+            </ul>
+          </div>
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <button type="button" class="btn-open-lead-modal w-full inline-flex items-center justify-between text-xs font-bold text-emerald-600 hover:text-emerald-700 transition cursor-pointer" data-solution="ERP">
+              <span>Tư vấn giải pháp Kho &amp; ERP</span>
+              <span class="text-base">→</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Solution 3: POS -->
+        <article class="gradient-border-card relative flex flex-col justify-between p-6 group">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-amber-50 text-amber-600 text-2xl group-hover:bg-gradient-to-br group-hover:from-amber-500 group-hover:to-orange-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                💳
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60">
+                POS
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+              POS &amp; Bán hàng Đa kênh
+            </h3>
+            <p class="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Giải pháp tính tiền tốc độ cao, hỗ trợ đa phương thức thanh toán, tích hợp máy in bill và hóa đơn điện tử chuẩn thuế.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-slate-600">
+              <li class="flex items-center gap-2"><span class="text-amber-600 font-bold">✓</span> Thanh toán QR Code, thẻ ngân hàng liền mạch</li>
+              <li class="flex items-center gap-2"><span class="text-amber-600 font-bold">✓</span> Kết nối trực tiếp máy quét mã vạch và máy in</li>
+              <li class="flex items-center gap-2"><span class="text-amber-600 font-bold">✓</span> Đồng bộ số liệu ngay lập tức về kho trung tâm</li>
+            </ul>
+          </div>
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <button type="button" class="btn-open-lead-modal w-full inline-flex items-center justify-between text-xs font-bold text-amber-600 hover:text-amber-700 transition cursor-pointer" data-solution="POS">
+              <span>Tư vấn giải pháp POS</span>
+              <span class="text-base">→</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Solution 4: INFRA -->
+        <article class="gradient-border-card relative flex flex-col justify-between p-6 group">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="grid h-12 w-12 place-items-center rounded-xl bg-violet-50 text-violet-600 text-2xl group-hover:bg-gradient-to-br group-hover:from-violet-500 group-hover:to-purple-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                ☁️
+              </span>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-violet-700 bg-violet-50 px-2.5 py-1 rounded-md border border-violet-200/60">
+                CLOUD &amp; DATA
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
+              Hạ tầng Cloud &amp; Sao lưu Dữ liệu
+            </h3>
+            <p class="mt-2.5 text-sm text-slate-600 leading-relaxed">
+              Triển khai máy chủ đám mây chuyên dụng, sao lưu tự động định kỳ, bảo vệ an toàn thông tin doanh nghiệp trước rủi ro.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-slate-600">
+              <li class="flex items-center gap-2"><span class="text-violet-600 font-bold">✓</span> Máy chủ đám mây tốc độ cao, độ trễ cực thấp</li>
+              <li class="flex items-center gap-2"><span class="text-violet-600 font-bold">✓</span> Sao lưu dữ liệu đa vùng bảo mật 256-bit</li>
+              <li class="flex items-center gap-2"><span class="text-violet-600 font-bold">✓</span> Giám sát hệ thống 24/7 và cảnh báo sự cố</li>
+            </ul>
+          </div>
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <button type="button" class="btn-open-lead-modal w-full inline-flex items-center justify-between text-xs font-bold text-violet-600 hover:text-violet-700 transition cursor-pointer" data-solution="INFRA">
+              <span>Tư vấn Hạ tầng &amp; Cloud</span>
+              <span class="text-base">→</span>
+            </button>
+          </div>
+        </article>
         {% endfor %}
       </div>
+
+      <!-- Quick Guidance Banner (Vibrant Tech Gradient) -->
+      <div class="mt-14 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 sm:p-10 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+        <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden="true"></div>
+        <div class="space-y-1.5 text-center sm:text-left relative z-10">
+          <h4 class="text-xl sm:text-2xl font-black text-white">Chưa biết bắt đầu từ giải pháp nào?</h4>
+          <p class="text-sm sm:text-base text-indigo-100 max-w-2xl">Hãy chia sẻ bài toán khó khăn nhất của doanh nghiệp bạn. Đội ngũ chuyên gia sẽ khảo sát và tư vấn lộ trình phù hợp.</p>
+        </div>
+        <button type="button" class="btn-open-lead-modal shrink-0 rounded-xl bg-white px-6 py-3.5 text-sm font-black text-indigo-700 shadow-md hover:bg-indigo-50 hover:scale-105 transition cursor-pointer relative z-10">
+          Nhận tư vấn lộ trình 1:1 →
+        </button>
+      </div>
+    </div>
+  </section>
+  <!-- ═══════════ WHY CHOOSE US ═══════════ -->
+  <section class="py-24 sm:py-28 bg-white border-b border-slate-200/80" id="uu-the">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto space-y-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200/80 rounded-full px-3.5 py-1">
+          ƯU THẾ VƯỢT TRỘI
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          Tại sao chọn DigiFlow AI CRM cho Doanh nghiệp?
+        </h2>
+        <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+          Khác biệt hoàn toàn so với các phần mềm đóng gói thông thường — chúng tôi kết hợp sức mạnh AI với sự kiểm soát chặt chẽ của con người.
+        </p>
+      </div>
+
+      <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        
+        <div class="gradient-border-card p-6 space-y-3 group bg-gradient-to-br from-cyan-50/50 to-blue-50/30">
+          <div class="h-12 w-12 rounded-xl bg-cyan-100 text-cyan-700 grid place-items-center text-xl font-bold shadow-sm group-hover:scale-110 transition-transform">🎯</div>
+          <h3 class="text-base font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">Giải đúng bài toán thực tế</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Không áp đặt phần mềm cồng kềnh. Khảo sát kỹ lưỡng và chỉ triển khai những tính năng thực sự tạo ra doanh thu và tiết kiệm thời gian.
+          </p>
+        </div>
+
+        <div class="gradient-border-card p-6 space-y-3 group bg-gradient-to-br from-indigo-50/50 to-purple-50/30">
+          <div class="h-12 w-12 rounded-xl bg-indigo-100 text-indigo-700 grid place-items-center text-xl font-bold shadow-sm group-hover:scale-110 transition-transform">🤖</div>
+          <h3 class="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">AI hỗ trợ, Con người quyết định</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Mô hình Human-in-the-loop: AI Gemini gợi ý phân tích và soạn thảo, nhân viên kiểm tra và xác nhận trước khi thực hiện hành động.
+          </p>
+        </div>
+
+        <div class="gradient-border-card p-6 space-y-3 group bg-gradient-to-br from-emerald-50/50 to-teal-50/30">
+          <div class="h-12 w-12 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center text-xl font-bold shadow-sm group-hover:scale-110 transition-transform">⚡</div>
+          <h3 class="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Triển khai thần tốc 2-4 tuần</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Kiến trúc Docker hóa và module linh hoạt giúp đưa hệ thống vào vận hành nhanh gấp 3 lần so với các giải pháp ERP truyền thống.
+          </p>
+        </div>
+
+        <div class="gradient-border-card p-6 space-y-3 group bg-gradient-to-br from-rose-50/50 to-amber-50/30">
+          <div class="h-12 w-12 rounded-xl bg-rose-100 text-rose-700 grid place-items-center text-xl font-bold shadow-sm group-hover:scale-110 transition-transform">🔒</div>
+          <h3 class="text-base font-bold text-slate-900 group-hover:text-rose-700 transition-colors">Bảo mật chuẩn B2B</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Dữ liệu lưu trữ độc lập trên PostgreSQL máy chủ riêng. Tuân thủ nghiêm ngặt quy định về bảo vệ dữ liệu cá nhân theo Nghị định 13.
+          </p>
+        </div>
+
+      </div>
     </div>
   </section>
 
-  <!-- ═══════════ CONTACT ═══════════ -->
-  <section class="contact-section" id="lien-he">
-    <div class="contact-copy">
-      <span class="section-kicker">Bắt đầu từ một cuộc trao đổi</span>
-      <h2>{{ page.contact_heading }}</h2>
-      <p>{{ page.contact_intro }}</p>
-      <div class="contact-promise">
-        <span aria-hidden="true">✓</span>
-        <p><strong>Không có quy trình bán hàng tự động.</strong><br>Thông tin được nhân viên xem và phản hồi trực tiếp.</p>
-      </div>
-      {% if contact_email %}
-      <div class="contact-detail">
-        <span class="contact-detail-icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </span>
-        <span>
-          <small>Email liên hệ</small>
-          <strong>
-            {% if contact_email_is_demo %}
-              Email minh họa — không nhận thư
-            {% else %}
-              <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
-            {% endif %}
-          </strong>
-        </span>
-      </div>
-      {% endif %}
+  <!-- ═══════════ APPROACH SECTION (LUMINOUS VIBRANT TECH) ═══════════ -->
+  <section class="py-24 sm:py-28 bg-gradient-to-b from-slate-50 via-indigo-50/40 to-white text-slate-900 border-b border-indigo-100/80 relative overflow-hidden" id="cach-lam">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div class="glow-orb glow-orb-cyan w-[450px] h-[450px] -top-20 -left-20 opacity-20"></div>
+      <div class="glow-orb glow-orb-violet w-[400px] h-[400px] -bottom-20 -right-20 opacity-20"></div>
     </div>
-    <div class="contact-form-card">
-      <div class="contact-form-heading">
-        <span class="form-step">Bước 01 <i></i> 02</span>
-        <h3>Gửi yêu cầu tư vấn</h3>
-        <p>Các trường có dấu <span class="text-red-500">*</span> là bắt buộc.</p>
+    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div class="lg:col-span-5 space-y-4">
+          <span class="inline-block text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-3.5 py-1">
+            CÁCH CHÚNG TÔI LÀM
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            {{ page.approach_heading|default:"Quy trình 4 Bước Triển khai Chặt chẽ" }}
+          </h2>
+          <p class="text-base text-slate-600 leading-relaxed">
+            {{ page.approach_intro|default:"Một giải pháp thành công bắt đầu từ sự thấu hiểu quy trình vận hành và con người sử dụng nó. Chúng tôi đồng hành xuyên suốt từ ngày đầu đến sau nghiệm thu." }}
+          </p>
+          <div class="pt-4">
+            <button type="button" class="btn-open-lead-modal inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/35 hover:scale-105 transition cursor-pointer active:scale-95">
+              <span>Đăng ký trao đổi quy trình</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-4">
+          {% for step in page.approach_steps %}
+          <div class="flex gap-5 rounded-2xl border border-indigo-100/90 bg-white p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 text-base font-black text-white shadow-sm">0{{ forloop.counter }}</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">{{ step.value.title }}</h3>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">{{ step.value.description }}</p>
+            </div>
+          </div>
+          {% empty %}
+          <!-- Step 1 -->
+          <div class="flex gap-5 rounded-2xl border border-indigo-100/90 bg-white p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-base font-black text-white shadow-sm">01</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Khảo sát &amp; Phân tích hiện trạng</h3>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">Đội ngũ chuyên gia ngồi lại cùng bộ phận kinh doanh và vận hành để lắng nghe bài toán, luồng dữ liệu và điểm nghẽn.</p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex gap-5 rounded-2xl border border-indigo-100/90 bg-white p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-base font-black text-white shadow-sm">02</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Thiết kế kiến trúc &amp; Demo thực tế</h3>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">Xây dựng mô hình luồng dữ liệu, cấu hình mô phỏng CRM/ERP và trình diễn giải pháp trực tiếp với ban lãnh đạo.</p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex gap-5 rounded-2xl border border-indigo-100/90 bg-white p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-base font-black text-white shadow-sm">03</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Triển khai, Đồng bộ &amp; Đào tạo</h3>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">Cài đặt hệ thống trên máy chủ Docker/Cloud bảo mật, chuyển giao dữ liệu cũ và đào tạo nhân viên sử dụng thành thạo.</p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="flex gap-5 rounded-2xl border border-indigo-100/90 bg-white p-6 shadow-sm hover:border-indigo-300 hover:shadow-md transition">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 text-base font-black text-white shadow-sm">04</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">AI Đồng hành &amp; Tối ưu liên tục</h3>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">Theo dõi hiệu quả, tinh chỉnh mô hình chấm điểm AI Gemini và hỗ trợ kỹ thuật 24/7 trong suốt quá trình hoạt động.</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
-      {% include "crm/includes/lead_request_form.html" with submit_label="Gửi thông tin cho đội ngũ" %}
     </div>
   </section>
 
+  <!-- ═══════════ TESTIMONIALS ═══════════ -->
+  <section class="py-24 sm:py-28 bg-slate-50/80 border-b border-slate-200/80" id="danh-gia">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto space-y-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200/80 rounded-full px-3.5 py-1">
+          ĐÁNH GIÁ TỪ DOANH NGHIỆP
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          Hiệu quả Đo lường được từ Khách hàng
+        </h2>
+        <p class="text-base sm:text-lg text-slate-600">
+          Lắng nghe chia sẻ từ những người trực tiếp vận hành hệ thống DigiFlow hàng ngày.
+        </p>
+      </div>
+
+      <div class="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div class="gradient-border-card p-7 space-y-4 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex text-amber-400 text-sm mb-3 font-bold tracking-wider" aria-label="5 trên 5 sao">★★★★★</div>
+            <p class="text-sm text-slate-700 leading-relaxed italic">
+              "Tính năng chấm điểm lead bằng AI giúp đội ngũ kinh doanh của tôi biết chính xác cần ưu tiên chăm sóc khách hàng nào trước. Tỷ lệ phản hồi nhanh tăng rõ rệt, doanh thu quý vừa qua tăng hơn 35%."
+            </p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-bold grid place-items-center text-sm shadow-sm">H</div>
+            <div>
+              <strong class="block text-sm font-bold text-slate-900">Hoàng Nam</strong>
+              <small class="block text-xs text-slate-500">Giám đốc Kinh doanh · Phân phối Thiết bị Điện tử</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="gradient-border-card p-7 space-y-4 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex text-amber-400 text-sm mb-3 font-bold tracking-wider" aria-label="5 trên 5 sao">★★★★★</div>
+            <p class="text-sm text-slate-700 leading-relaxed italic">
+              "Trước đây kho và bán hàng rời rạc, thường xuyên lệch tồn kho. Giải pháp kết nối đồng bộ từ DigiFlow giúp chúng tôi kiểm soát 5 kho hàng trên toàn quốc một cách chính xác tuyệt đối."
+            </p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold grid place-items-center text-sm shadow-sm">T</div>
+            <div>
+              <strong class="block text-sm font-bold text-slate-900">Trần Thị Mai</strong>
+              <small class="block text-xs text-slate-500">Trưởng phòng Vận hành · Chuỗi Cung ứng FMCG</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="gradient-border-card p-7 space-y-4 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex text-amber-400 text-sm mb-3 font-bold tracking-wider" aria-label="5 trên 5 sao">★★★★★</div>
+            <p class="text-sm text-slate-700 leading-relaxed italic">
+              "Điều tôi thích nhất là hệ thống không làm phức tạp hóa vấn đề. Triển khai bằng Docker rất gọn gàng, dữ liệu máy chủ riêng biệt giúp chúng tôi hoàn toàn yên tâm về bảo mật."
+            </p>
+          </div>
+          <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold grid place-items-center text-sm shadow-sm">L</div>
+            <div>
+              <strong class="block text-sm font-bold text-slate-900">Lê Anh Tuấn</strong>
+              <small class="block text-xs text-slate-500">CTO · Doanh nghiệp Giải pháp Công nghệ</small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FINAL CTA BANNER (VIBRANT TECH GRADIENT) ═══════════ -->
+  <section class="py-20 sm:py-24 bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-8" id="lien-he">
+    <div class="mx-auto max-w-6xl rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-8 sm:p-14 text-white shadow-2xl shadow-indigo-500/25 relative overflow-hidden border border-indigo-400/30">
+      <!-- Ambient Glow decoration -->
+      <div class="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-cyan-400/15 blur-3xl" aria-hidden="true"></div>
+
+      <div class="relative z-10 text-center max-w-3xl mx-auto space-y-6">
+        <span class="inline-block text-xs font-bold uppercase tracking-wider text-indigo-100 bg-white/15 border border-white/25 rounded-full px-4 py-1.5 backdrop-blur-sm shadow-sm">
+          BẮT ĐẦU NGAY HÔM NAY
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          {{ page.contact_heading|default:"Sẵn sàng Chuyển đổi số cùng DigiFlow?" }}
+        </h2>
+        <p class="text-base sm:text-lg text-indigo-100 leading-relaxed">
+          {{ page.contact_intro|default:"Nhấn nút bên dưới để mở form trao đổi nhu cầu. Đội ngũ chuyên gia của chúng tôi sẽ liên hệ lại trực tiếp và gửi phương án kiến trúc giải pháp tối ưu trong vòng 24 giờ." }}
+        </p>
+        
+        <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button type="button" class="btn-open-lead-modal w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-2xl bg-white hover:bg-indigo-50 px-8 py-4 text-base font-black text-indigo-700 shadow-xl transition hover:scale-105 active:scale-95 cursor-pointer">
+            <svg class="icon-lg text-indigo-700" width="20" height="20" style="width:20px;height:20px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span>Trao đổi nhu cầu ngay</span>
+          </button>
+        </div>
+
+        <!-- Contact Email Notice (required for E2E and transparency) -->
+        <div class="pt-6 text-xs text-indigo-100 space-y-1">
+          <p>
+            Email liên hệ hỗ trợ:
+            <strong class="text-white underline">
+              {% if contact_email_is_demo %}
+                Email minh họa — không nhận thư
+              {% else %}
+                <a href="mailto:{{ contact_email }}" class="text-white underline">{{ contact_email }}</a>
+              {% endif %}
+            </strong>
+          </p>
+          <p class="text-indigo-200">Thông tin được nhân viên tiếp nhận và xử lý thủ công. Không tự động spam email.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══════════ CENTER MODAL: TRAO ĐỔI & TRỢ LÝ AI TƯ VẤN ═══════════ -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="leadModal" class="lead-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  
+  <!-- Blurred Dark Backdrop -->
+  <div id="modalBackdrop" class="lead-modal-backdrop"></div>
+
+  <!-- Modal Dialog Card (Centered) -->
+  <div id="modalCard" class="lead-modal-container">
+    
+    <!-- Compact, Modern Modal Header -->
+    <div class="lead-modal-header">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="relative grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs text-xs font-bold">
+          <span>⚡</span>
+          <span class="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 border border-white"></span>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h3 id="modalTitle" class="text-sm font-bold text-slate-900 truncate">Trợ lý AI Tư vấn</h3>
+            <span class="rounded bg-indigo-50 px-1.5 py-0.2 text-[10px] font-semibold text-indigo-600 border border-indigo-100">Gemini</span>
+          </div>
+          <p id="modalSubtitle" class="text-[11px] text-slate-500 truncate">Giải đáp chi phí, tính năng &amp; lộ trình 24/7</p>
+        </div>
+      </div>
+
+      <!-- Right: Tab Switcher & Close Button -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="lead-modal-tabs">
+          <button type="button" id="tabBtnChat" class="lead-modal-tab-btn is-active" data-pane="tabPaneChat">
+            <span>💬 Chat AI</span>
+          </button>
+          <button type="button" id="tabBtnForm" class="lead-modal-tab-btn" data-pane="tabPaneForm">
+            <span>📋 Điền form</span>
+          </button>
+        </div>
+
+        <button type="button" class="btn-close-lead-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer" aria-label="Đóng cửa sổ">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="lead-modal-body">
+      
+      <!-- PANE 1: FORM ĐIỀN THÔNG TIN (Single Clean Scroll Area) -->
+      <div id="tabPaneForm" class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-1 min-h-0 bg-[#fbfcfd] hidden">
+        <!-- Quick Switch Hint -->
+        <div class="mb-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 flex items-center justify-between text-xs text-indigo-950">
+          <div class="flex items-center gap-2">
+            <span>💬</span>
+            <span>Cần gợi ý nhanh giải pháp phù hợp với doanh nghiệp?</span>
+          </div>
+          <button type="button" id="btnSwitchToChatHint" class="shrink-0 font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer">
+            Hỏi AI ngay →
+          </button>
+        </div>
+
+        {% include "crm/includes/lead_request_form.html" with submit_label="Gửi thông tin cho đội ngũ" %}
+      </div>
+
+      <!-- PANE 2: AI CHAT CONSULTANT (Streamlined, Friendly & Focused) -->
+      <div id="tabPaneChat" class="chat-pane flex-1 min-h-0 flex flex-col">
+        <!-- Chat Messages Container (Single Clean Scroll Area) -->
+        <div id="chatMessages" class="chat-messages custom-scrollbar">
+          
+          <!-- Bot Welcome Message (Crisp & warm) -->
+          <div class="chat-msg chat-msg-bot">
+            <div class="chat-avatar chat-avatar-bot">⚡</div>
+            <div class="chat-bubble chat-bubble-bot">
+              <p class="text-slate-800 text-sm leading-relaxed">
+                Xin chào anh/chị! Em có thể giải đáp nhanh về chi phí, giải pháp phần mềm (CRM, ERP, POS, Cloud) hoặc thời gian triển khai.
+              </p>
+              <p class="text-slate-500 text-xs mt-1.5">
+                Doanh nghiệp mình đang quan tâm đến giải pháp nào của DigiFlow ạ?
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Question Chips -->
+        <div class="px-4 py-2 bg-slate-50/80 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto text-xs shrink-0 no-scrollbar">
+          <span class="text-[11px] font-semibold text-slate-400 shrink-0">Gợi ý:</span>
+          <button type="button" class="quick-chip shrink-0 rounded-full bg-white px-2.5 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-300 border border-slate-200 transition cursor-pointer text-xs font-medium shadow-2xs" data-query="Chi phí triển khai giải pháp khoảng bao nhiêu?">
+            💰 Chi phí triển khai?
+          </button>
+          <button type="button" class="quick-chip shrink-0 rounded-full bg-white px-2.5 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-300 border border-slate-200 transition cursor-pointer text-xs font-medium shadow-2xs" data-query="Thời gian triển khai và bàn giao thông thường mất bao lâu?">
+            ⏱️ Thời gian triển khai?
+          </button>
+          <button type="button" class="quick-chip shrink-0 rounded-full bg-white px-2.5 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-300 border border-slate-200 transition cursor-pointer text-xs font-medium shadow-2xs" data-query="Quản lý kho có đồng bộ tức thời với máy POS không?">
+            📦 Kho &amp; POS đồng bộ?
+          </button>
+          <button type="button" class="quick-chip shrink-0 rounded-full bg-white px-2.5 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-300 border border-slate-200 transition cursor-pointer text-xs font-medium shadow-2xs" data-query="Hệ thống có bảo mật và sao lưu dữ liệu máy chủ riêng không?">
+            🔒 Bảo mật dữ liệu?
+          </button>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chatForm" class="p-3 bg-white border-t border-slate-100 flex flex-col gap-1.5 shrink-0">
+          <div class="flex items-center gap-2">
+            <input type="text" id="chatInput" class="flex-1 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition" placeholder="Nhập câu hỏi của bạn (ví dụ: tư vấn CRM, chi phí)..." maxlength="1000" autocomplete="off" />
+            <button type="submit" id="chatSubmitBtn" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 transition flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-sm">
+              <span>Gửi</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
+          <div class="flex items-center justify-between px-1 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <span>Nhấn Enter để gửi · Gemini 3.5 AI</span>
+              <span id="chatSavedHint" class="hidden text-emerald-600 font-medium items-center gap-1">
+                <span>·</span>
+                <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <span>Tự động lưu lịch sử 14 ngày</span>
+              </span>
+            </span>
+            <button type="button" id="btnClearChat" class="hover:text-slate-600 transition cursor-pointer text-slate-400" title="Bắt đầu cuộc trò chuyện mới">
+              Làm mới hội thoại ↺
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
 </div>
 {% endblock %}
 
 {% block public_footer %}
-<footer class="landing-footer">
-  <a class="landing-brand footer-brand" href="#dau-trang">
-    <span class="landing-brand-mark">D</span>
-    <span><strong>{{ brand_name }}</strong><small>Giải pháp số doanh nghiệp</small></span>
-  </a>
-  <span>© {% now "Y" %} {{ brand_name }} · Trang giới thiệu bản demo AI CRM</span>
-  <a href="{% url 'crm:lead_request' %}">Mở form riêng <span aria-hidden="true">↗</span></a>
+<footer class="landing-footer border-t border-slate-200 bg-white py-8 px-4 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+    <div class="flex items-center gap-3">
+      <span class="grid h-7 w-7 place-items-center rounded-lg bg-blue-600 text-xs font-black text-white">D</span>
+      <span><strong>{{ brand_name|default:"DigiFlow" }}</strong> · Hệ thống AI CRM &amp; Chuyển đổi số</span>
+    </div>
+    <div>
+      © {% now "Y" %} {{ brand_name|default:"DigiFlow" }} · DigiFlow (đơn vị vận hành bản demo)
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'privacy_notice' %}" class="hover:text-blue-600 transition underline underline-offset-2">Thông báo quyền riêng tư</a>
+      <a href="{% url 'crm:lead_request' %}" class="hover:text-blue-600 transition">Form riêng ↗</a>
+      <a href="{% url 'crm:dashboard' %}" class="hover:text-blue-600 transition font-semibold text-blue-600">Đăng nhập CRM</a>
+    </div>
+  </div>
 </footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = document.getElementById("leadModal");
+  const backdrop = document.getElementById("modalBackdrop");
+  const openBtns = document.querySelectorAll(".btn-open-lead-modal");
+  const closeBtns = document.querySelectorAll(".btn-close-lead-modal");
+  const solutionSelect = document.getElementById("id_solution_interest");
+
+  // Chat & Tabs Elements
+  const tabBtnForm = document.getElementById("tabBtnForm");
+  const tabBtnChat = document.getElementById("tabBtnChat");
+  const tabPaneForm = document.getElementById("tabPaneForm");
+  const tabPaneChat = document.getElementById("tabPaneChat");
+  const btnSwitchToChatHint = document.getElementById("btnSwitchToChatHint");
+  const btnTransferToForm = document.getElementById("btnTransferToForm");
+  const aiContextBadge = document.getElementById("aiContextBadge");
+  const btnClearAiContext = document.getElementById("btnClearAiContext");
+  const chatHistoryInput = document.getElementById("id_chat_history");
+  const requestTextInput = document.getElementById("id_request_text");
+  const chatMessages = document.getElementById("chatMessages");
+  const chatForm = document.getElementById("chatForm");
+  const chatInput = document.getElementById("chatInput");
+  const chatSubmitBtn = document.getElementById("chatSubmitBtn");
+  const quickChips = document.querySelectorAll(".quick-chip");
+  const btnClearChat = document.getElementById("btnClearChat");
+  const chatSavedHint = document.getElementById("chatSavedHint");
+
+  const CHAT_STORAGE_KEY = "digiflow_chat_session_v1";
+  const CHAT_STORAGE_TTL = 14 * 24 * 60 * 60 * 1000; // 14 ngày
+
+  let chatHistory = [];
+  let detectedSolution = "";
+  let hasPersonalizedGreeted = false;
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatMessageText(text) {
+    let escaped = escapeHtml(text);
+    // Render bold markdown **text**
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    // Render bullet points
+    escaped = escaped.replace(/\n• /g, "<br>• ");
+    escaped = escaped.replace(/\n\n/g, "<br><br>");
+    escaped = escaped.replace(/\n/g, "<br>");
+    return escaped;
+  }
+
+  function appendBotMessage(contentHtml) {
+    if (!chatMessages) return;
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "chat-msg chat-msg-bot";
+    msgDiv.innerHTML = `
+      <div class="chat-avatar chat-avatar-bot">⚡</div>
+      <div class="chat-bubble chat-bubble-bot">
+        <div class="text-slate-800 leading-relaxed text-sm">${contentHtml}</div>
+      </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function appendUserMessage(text) {
+    if (!chatMessages) return;
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "chat-msg chat-msg-user";
+    msgDiv.innerHTML = `
+      <div class="chat-avatar chat-avatar-user">👤</div>
+      <div class="chat-bubble chat-bubble-user">
+        <div class="leading-relaxed text-sm text-white">${escapeHtml(text)}</div>
+      </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    if (!chatMessages) return null;
+    const indicator = document.createElement("div");
+    indicator.className = "chat-msg chat-msg-bot chat-indicator";
+    indicator.innerHTML = `
+      <div class="chat-avatar chat-avatar-bot">⚡</div>
+      <div class="chat-bubble chat-bubble-bot">
+        <div class="chat-typing">
+          <span class="chat-typing-dot"></span>
+          <span class="chat-typing-dot"></span>
+          <span class="chat-typing-dot"></span>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(indicator);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return indicator;
+  }
+
+  // Tự động đồng bộ lịch sử hội thoại sang Form điền thông tin
+  function syncChatToForm() {
+    if (chatHistory && chatHistory.length > 0) {
+      if (chatHistoryInput) {
+        chatHistoryInput.value = JSON.stringify(chatHistory);
+      }
+      if (detectedSolution && solutionSelect && (!solutionSelect.value || solutionSelect.value === "OTHER")) {
+        solutionSelect.value = detectedSolution;
+      }
+      const userQuestions = chatHistory.filter(m => m.role === "user").map(m => m.content);
+      if (userQuestions.length > 0 && requestTextInput && !requestTextInput.value.trim()) {
+        requestTextInput.value = "Khách hàng đã trao đổi với Trợ lý AI về:\n" + userQuestions.map(q => "- " + q).join("\n");
+      }
+      if (aiContextBadge) {
+        aiContextBadge.classList.remove("hidden");
+        aiContextBadge.style.display = "flex";
+      }
+    }
+  }
+
+  // Lưu hội thoại vào LocalStorage (lưu 14 ngày)
+  function saveChatStorage() {
+    try {
+      const data = {
+        history: chatHistory,
+        solution: detectedSolution,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(data));
+      if (chatSavedHint) {
+        chatSavedHint.classList.remove("hidden");
+        chatSavedHint.classList.add("inline-flex");
+      }
+    } catch (e) {
+      console.warn("Không thể lưu localStorage:", e);
+    }
+    syncChatToForm();
+  }
+
+  // Khôi phục hội thoại từ LocalStorage nếu còn trong hạn 14 ngày
+  function loadChatStorage() {
+    try {
+      const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const age = Date.now() - (data.timestamp || 0);
+      if (age > CHAT_STORAGE_TTL) {
+        localStorage.removeItem(CHAT_STORAGE_KEY);
+        return;
+      }
+      if (Array.isArray(data.history) && data.history.length > 0) {
+        chatHistory = data.history;
+        detectedSolution = data.solution || "";
+
+        // Hiển thị lại các tin nhắn đã lưu
+        chatHistory.forEach(item => {
+          if (item.role === "user") {
+            appendUserMessage(item.content);
+          } else {
+            appendBotMessage(formatMessageText(item.content));
+          }
+        });
+
+        if (chatSavedHint) {
+          chatSavedHint.classList.remove("hidden");
+          chatSavedHint.classList.add("inline-flex");
+        }
+        syncChatToForm();
+      }
+    } catch (e) {
+      console.warn("Không thể tải localStorage:", e);
+    }
+  }
+
+  // Làm mới/xóa hội thoại
+  function resetChatHistory() {
+    try {
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+    } catch (e) {}
+    chatHistory = [];
+    detectedSolution = "";
+    if (chatHistoryInput) chatHistoryInput.value = "";
+    if (chatSavedHint) {
+      chatSavedHint.classList.add("hidden");
+      chatSavedHint.classList.remove("inline-flex");
+    }
+    if (aiContextBadge) {
+      aiContextBadge.classList.add("hidden");
+      aiContextBadge.style.display = "none";
+    }
+    if (chatMessages) {
+      chatMessages.innerHTML = `
+        <div class="chat-msg chat-msg-bot">
+          <div class="chat-avatar chat-avatar-bot">⚡</div>
+          <div class="chat-bubble chat-bubble-bot">
+            <p class="text-slate-800 text-sm leading-relaxed">
+              Xin chào anh/chị! Em có thể giải đáp nhanh về chi phí, giải pháp phần mềm (CRM, ERP, POS, Cloud) hoặc thời gian triển khai.
+            </p>
+            <p class="text-slate-500 text-xs mt-1.5">
+              Doanh nghiệp mình đang quan tâm đến giải pháp nào của DigiFlow ạ?
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function switchTab(target) {
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    if (target === "chat") {
+      if (tabBtnChat) tabBtnChat.classList.add("is-active");
+      if (tabBtnForm) tabBtnForm.classList.remove("is-active");
+      if (tabPaneChat) tabPaneChat.classList.remove("hidden");
+      if (tabPaneForm) tabPaneForm.classList.add("hidden");
+      if (modalTitle) modalTitle.textContent = "Trợ lý AI Tư vấn";
+      if (modalSubtitle) modalSubtitle.textContent = "Giải đáp chi phí, tính năng & lộ trình 24/7";
+      if (chatInput) setTimeout(() => chatInput.focus(), 120);
+
+      // Personalize greeting if user entered information in form
+      const fullName = (document.getElementById("id_full_name")?.value || "").trim();
+      const company = (document.getElementById("id_company")?.value || "").trim();
+      const sol = solutionSelect ? solutionSelect.value : "";
+      if (fullName && !hasPersonalizedGreeted) {
+        hasPersonalizedGreeted = true;
+        let greet = `Chào anh/chị <strong>${escapeHtml(fullName)}</strong>`;
+        if (company) greet += ` (${escapeHtml(company)})`;
+        greet += `! Em thấy anh/chị đang quan tâm đến giải pháp <strong>${sol ? (solutionSelect.options[solutionSelect.selectedIndex]?.text || sol) : 'Chuyển đổi số'}</strong>. Em có thể giải đáp thêm thắc mắc nào cho mình ạ?`;
+        appendBotMessage(greet);
+      }
+    } else {
+      if (tabBtnForm) tabBtnForm.classList.add("is-active");
+      if (tabBtnChat) tabBtnChat.classList.remove("is-active");
+      if (tabPaneForm) tabPaneForm.classList.remove("hidden");
+      if (tabPaneChat) tabPaneChat.classList.add("hidden");
+      if (modalTitle) modalTitle.textContent = "Gửi yêu cầu tư vấn giải pháp";
+      if (modalSubtitle) modalSubtitle.textContent = "Chuyên viên DigiFlow sẽ khảo sát & liên hệ trong 24 giờ";
+      // Tự động mang toàn bộ hội thoại AI sang Form
+      syncChatToForm();
+      const firstInput = modal.querySelector("#id_full_name");
+      if (firstInput) setTimeout(() => firstInput.focus(), 120);
+    }
+  }
+
+  if (tabBtnForm) tabBtnForm.addEventListener("click", () => switchTab("form"));
+  if (tabBtnChat) tabBtnChat.addEventListener("click", () => switchTab("chat"));
+  if (btnSwitchToChatHint) btnSwitchToChatHint.addEventListener("click", () => switchTab("chat"));
+  if (btnClearChat) btnClearChat.addEventListener("click", resetChatHistory);
+
+  // Clear AI context on form
+  if (btnClearAiContext) {
+    btnClearAiContext.addEventListener("click", function () {
+      if (chatHistoryInput) chatHistoryInput.value = "";
+      if (aiContextBadge) {
+        aiContextBadge.classList.add("hidden");
+        aiContextBadge.style.display = "none";
+      }
+    });
+  }
+
+  // Khôi phục cuộc trò chuyện trước đó từ LocalStorage (14 ngày)
+  loadChatStorage();
+
+  // Send message to AI endpoint
+  async function sendMessage(text) {
+    if (!text || !text.trim()) return;
+    text = text.trim();
+    appendUserMessage(text);
+    chatHistory.push({ role: "user", content: text });
+    saveChatStorage();
+
+    if (chatInput) chatInput.value = "";
+    if (chatSubmitBtn) chatSubmitBtn.disabled = true;
+
+    const indicator = showTypingIndicator();
+
+    try {
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || "";
+      const res = await fetch("{% url 'crm:ai_chat_consultant' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        body: JSON.stringify({
+          message: text,
+          history: chatHistory,
+        }),
+      });
+
+      if (indicator) indicator.remove();
+      if (chatSubmitBtn) chatSubmitBtn.disabled = false;
+
+      if (!res.ok) {
+        throw new Error("Lỗi phản hồi (" + res.status + ")");
+      }
+
+      const data = await res.json();
+      const reply = data.reply || "Dạ em đã ghi nhận thông tin!";
+      if (data.suggested_solution && data.suggested_solution !== "OTHER") {
+        detectedSolution = data.suggested_solution;
+      }
+      appendBotMessage(formatMessageText(reply));
+      chatHistory.push({ role: "assistant", content: reply });
+      saveChatStorage();
+
+    } catch (err) {
+      if (indicator) indicator.remove();
+      if (chatSubmitBtn) chatSubmitBtn.disabled = false;
+      appendBotMessage("Xin lỗi anh/chị, kết nối hiện đang gián đoạn. Anh/chị có thể chuyển sang tab 'Điền form' để chuyên viên DigiFlow liên hệ hỗ trợ trực tiếp nhé!");
+    }
+  }
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (chatInput) sendMessage(chatInput.value);
+    });
+  }
+
+  // Đảm bảo trước khi submit form thì chat_history luôn được đồng bộ
+  const publicForm = document.querySelector(".public-form");
+  if (publicForm) {
+    publicForm.addEventListener("submit", function () {
+      syncChatToForm();
+    });
+  }
+
+  quickChips.forEach(chip => {
+    chip.addEventListener("click", function () {
+      const q = this.getAttribute("data-query");
+      if (q) sendMessage(q);
+    });
+  });
+
+  function openModal(preferredSolution, preferredTab) {
+    if (!modal) return;
+    if (preferredSolution && solutionSelect) {
+      solutionSelect.value = preferredSolution;
+    }
+    modal.style.display = "flex";
+    modal.classList.add("is-active");
+    document.body.style.overflow = "hidden";
+
+    if (preferredTab === "chat") {
+      switchTab("chat");
+    } else {
+      switchTab("form");
+    }
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.style.display = "none";
+    modal.classList.remove("is-active");
+    document.body.style.overflow = "";
+    if (window.location.hash === "#lien-he" || window.location.hash === "#trao-doi" || window.location.hash === "#tu-van-ai") {
+      history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    }
+  }
+
+  openBtns.forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const sol = this.getAttribute("data-solution");
+      const tab = this.getAttribute("data-tab");
+      openModal(sol, tab);
+    });
+  });
+
+  closeBtns.forEach(btn => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeModal();
+    });
+  });
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeModal);
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && modal && modal.style.display === "flex") {
+      closeModal();
+    }
+  });
+
+  // Automatically open modal if server-side form errors exist
+  {% if form.errors %}
+  openModal(null, "form");
+  {% endif %}
+
+  // Automatically open modal if URL hash matches
+  if (window.location.hash === "#lien-he" || window.location.hash === "#trao-doi") {
+    openModal(null, "form");
+  } else if (window.location.hash === "#tu-van-ai") {
+    openModal(null, "chat");
+  }
+
+  // ─── COUNTER ANIMATION FOR METRICS ───
+  function animateCounters() {
+    const counters = document.querySelectorAll(".metric-counter");
+    counters.forEach(counter => {
+      const target = parseFloat(counter.getAttribute("data-target"));
+      const suffix = counter.getAttribute("data-suffix") || "";
+      const isDecimal = target % 1 !== 0;
+      let start = 0;
+      const duration = 1600;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing out cubic
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentVal = start + (target - start) * easeOut;
+
+        counter.textContent = (isDecimal ? currentVal.toFixed(1) : Math.round(currentVal)) + suffix;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      requestAnimationFrame(update);
+    });
+  }
+  // Run on load
+  setTimeout(animateCounters, 300);
+
+  // ─── SCROLL REVEAL OBSERVER ───
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll(".gradient-border-card, .scroll-reveal").forEach((el, index) => {
+      el.classList.add("scroll-reveal");
+      el.setAttribute("data-delay", (index % 4) + 1);
+      observer.observe(el);
+    });
+  }
+});
+
+</script>
 {% endblock %}

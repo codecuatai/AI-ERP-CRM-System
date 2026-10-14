@@ -1,0 +1,201 @@
+services:
+  # ── PostgreSQL Cơ sở dữ liệu chính của CRM ──────────────────
+  crm-db:
+    image: postgres:16-alpine
+    container_name: crm-db
+    environment:
+      POSTGRES_DB: ${CRM_DB_NAME:-crm}
+      POSTGRES_USER: crm_admin
+      POSTGRES_PASSWORD: ${CRM_DB_ADMIN_PASSWORD:-admin_password}
+      CRM_DB_USER: ${CRM_DB_USER:-crm_app}
+      CRM_DB_PASSWORD: ${CRM_DB_PASSWORD:-crm_password}
+      SUPERSET_READONLY_PASSWORD: ${SUPERSET_READONLY_PASSWORD:-superset_readonly_password}
+    ports:
+      - "127.0.0.1:${CRM_DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - crm-db-data:/var/lib/postgresql/data
+      - ./superset/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ── Django / Wagtail CRM Web Application ────────────────────
+  crm-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crm-web
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.dev}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}
+      DJANGO_DATABASE_URL: postgresql://${CRM_DB_USER:-crm_app}:${CRM_DB_PASSWORD:-crm_password}@crm-db:5432/${CRM_DB_NAME:-crm}
+      CRM_DB_NAME: ${CRM_DB_NAME:-crm}
+      CRM_DB_USER: ${CRM_DB_USER:-crm_app}
+      CRM_DB_PASSWORD: ${CRM_DB_PASSWORD:-crm_password}
+      CRM_DB_HOST: crm-db
+      CRM_DB_PORT: 5432
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://127.0.0.1:8000}
+      PUBLIC_BRAND_NAME: ${PUBLIC_BRAND_NAME:-DigiFlow}
+      PUBLIC_CONTACT_EMAIL: ${PUBLIC_CONTACT_EMAIL:-demo-contact@digiflow.test}
+      PUBLIC_PRIVACY_EMAIL: ${PUBLIC_PRIVACY_EMAIL:-privacy@digiflow.test}
+      PUBLIC_DATA_CONTROLLER_NAME: "${PUBLIC_DATA_CONTROLLER_NAME:-DigiFlow (đơn vị vận hành bản demo)}"
+      PUBLIC_DATA_RETENTION_NOTICE: "${PUBLIC_DATA_RETENTION_NOTICE:-Bản demo local: dữ liệu được lưu trong SQLite/PostgreSQL đến khi người vận hành xóa.}"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-true}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-false}
+      EMAIL_TIMEOUT: ${EMAIL_TIMEOUT:-10}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-DigiFlow <no-reply@example.test>}
+      LEAD_FOLLOW_UP_LINK_TTL_DAYS: ${LEAD_FOLLOW_UP_LINK_TTL_DAYS:-7}
+      DJANGO_SEED_DATA: ${DJANGO_SEED_DATA:-false}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@digiflow.test}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+    volumes:
+      - .:/app
+      - /app/.venv
+    ports:
+      - "127.0.0.1:${CRM_WEB_HOST_PORT:-8000}:8000"
+    depends_on:
+      crm-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── Tailwind CSS Watcher (cho quá trình phát triển UI) ───────
+  crm-tailwind:
+    image: node:20-alpine
+    container_name: crm-tailwind
+    working_dir: /app/tailwind
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npm run css:watch"
+    profiles:
+      - frontend
+      - all
+
+  # ── PostgreSQL Metadata cho Apache Superset ─────────────────
+  superset-meta-db:
+    image: postgres:16-alpine
+    container_name: superset-meta-db
+    environment:
+      POSTGRES_DB: superset_meta
+      POSTGRES_USER: superset_meta
+      POSTGRES_PASSWORD: ${SUPERSET_META_PASSWORD:-superset_meta_password}
+    volumes:
+      - superset-meta-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    profiles:
+      - analytics
+      - all
+
+  # ── Apache Superset Init (khởi tạo database & admin) ─────────
+  superset-init:
+    image: crm-superset:6.0.0
+    container_name: superset-init
+    build:
+      context: ./superset
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-superset_secret_key_at_least_32_chars_1234567890}
+      SUPERSET_META_PASSWORD: ${SUPERSET_META_PASSWORD:-superset_meta_password}
+      SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+    depends_on:
+      superset-meta-db:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        superset db upgrade &&
+        if ! superset fab list-users | grep -F -- "$${SUPERSET_ADMIN_USERNAME}"; then
+        superset fab create-admin --username "$${SUPERSET_ADMIN_USERNAME}"
+        --firstname Demo --lastname Admin --email admin@digiflow.test
+        --password "$${SUPERSET_ADMIN_PASSWORD}"; fi &&
+        superset init
+    restart: "no"
+    profiles:
+      - analytics
+      - all
+
+  # ── Apache Superset Server ──────────────────────────────────
+  superset:
+    image: crm-superset:6.0.0
+    container_name: superset
+    build:
+      context: ./superset
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-superset_secret_key_at_least_32_chars_1234567890}
+      SUPERSET_META_PASSWORD: ${SUPERSET_META_PASSWORD:-superset_meta_password}
+    ports:
+      - "127.0.0.1:${SUPERSET_HOST_PORT:-8088}:8088"
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+      - superset-home:/app/superset_home
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+      crm-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    profiles:
+      - analytics
+      - all
+
+  # ── Apache Superset Auto Bootstrap (Datasets & Dashboard) ───
+  superset-bootstrap:
+    image: crm-superset:6.0.0
+    container_name: superset-bootstrap
+    environment:
+      SUPERSET_URL: http://superset:8088
+      SUPERSET_CRM_HOST: crm-db
+      CRM_DB_NAME: ${CRM_DB_NAME:-crm}
+      SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+      SUPERSET_READONLY_PASSWORD: ${SUPERSET_READONLY_PASSWORD:-superset_readonly_password}
+    volumes:
+      - ./superset/bootstrap_superset.py:/app/bootstrap_superset.py:ro
+    depends_on:
+      superset:
+        condition: service_healthy
+    command: ["python", "/app/bootstrap_superset.py"]
+    restart: "no"
+    profiles:
+      - analytics
+      - all
+
+volumes:
+  crm-db-data:
+  superset-meta-data:
+  superset-home:
