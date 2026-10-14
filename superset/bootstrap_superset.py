@@ -104,14 +104,22 @@ def sum_metric(column: str) -> dict:
     }
 
 
-def count_metric() -> dict:
+def count_metric(column: str | None = None) -> dict:
     """Return a Superset adhoc COUNT metric."""
+    if column:
+        return {
+            "aggregate": "COUNT",
+            "column": {"column_name": column},
+            "expressionType": "SIMPLE",
+            "hasCustomMetric": False,
+            "label": f"COUNT({column})",
+            "optionName": f"metric_count_{column}",
+        }
     return {
-        "aggregate": "COUNT",
-        "expressionType": "SIMPLE",
-        "hasCustomMetric": False,
+        "expressionType": "SQL",
+        "sqlExpression": "COUNT(*)",
         "label": "COUNT(*)",
-        "optionName": "metric_count",
+        "optionName": "metric_count_star",
     }
 
 

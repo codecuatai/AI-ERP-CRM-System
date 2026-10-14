@@ -2,11 +2,230 @@
 {% load crm_tags %}
 {% block title %}Việc chăm sóc{% endblock %}
 {% block content %}
-<section class="page-heading"><div><div class="eyebrow">HÀNH ĐỘNG TIẾP THEO</div><h1>Việc chăm sóc khách hàng</h1><p>Biến kế hoạch và gợi ý AI thành công việc có người phụ trách, hạn xử lý và trạng thái rõ ràng.</p></div><a class="button-primary" href="{% url 'crm:care_task_create' %}">＋ Tạo việc mới</a></section>
+
+<!-- Header trang -->
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">HÀNH ĐỘNG & NHIỆM VỤ TIẾP THEO</div>
+    <h1>Việc chăm sóc khách hàng</h1>
+    <p>Biến các đề xuất AI và cam kết với khách hàng thành hành động cụ thể, có hạn chót và người chịu trách nhiệm.</p>
+  </div>
+  <a class="button-primary" href="{% url 'crm:care_task_create' %}">
+    ＋ Tạo việc mới
+  </a>
+</section>
+
+<!-- Hướng dẫn cho người mới (Onboarding Guide) -->
+<section class="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-4 shadow-sm">
+  <details class="group cursor-pointer">
+    <summary class="flex items-center justify-between font-semibold text-blue-950 text-sm list-none select-none">
+      <span class="flex items-center gap-2">
+        <span class="grid h-6 w-6 place-items-center rounded-full bg-blue-600 text-white text-xs">📋</span>
+        <span>Hướng dẫn quản lý & xử lý việc chăm sóc cho người mới</span>
+      </span>
+      <span class="text-xs font-normal text-blue-600 group-open:rotate-180 transition-transform">▼</span>
+    </summary>
+    <div class="mt-3 grid gap-3 pt-3 border-t border-blue-100/80 sm:grid-cols-3 text-xs text-slate-700">
+      <div class="rounded-lg bg-white p-3 border border-red-100 shadow-2xs">
+        <strong class="block font-bold text-red-700 mb-1">1. Xử lý việc quá hạn trước</strong>
+        <span>Các việc viền đỏ đã trễ hẹn so với cam kết khách hàng. Hãy gọi điện hoặc gửi email cập nhật tình hình ngay lập tức.</span>
+      </div>
+      <div class="rounded-lg bg-white p-3 border border-blue-100 shadow-2xs">
+        <strong class="block font-bold text-blue-900 mb-1">2. Hoàn thành việc trong ngày</strong>
+        <span>Lọc danh sách <em>"Hôm nay"</em> để biết chính xác những việc cần làm trong ca làm việc này.</span>
+      </div>
+      <div class="rounded-lg bg-white p-3 border border-emerald-100 shadow-2xs">
+        <strong class="block font-bold text-emerald-800 mb-1">3. Cập nhật trạng thái sau khi xong</strong>
+        <span>Sau khi trao đổi xong với khách, bấm <em>"Chỉnh sửa"</em> để chuyển trạng thái sang <strong>Đã hoàn thành</strong> và ghi chú kết quả.</span>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- 4 Thẻ KPI trạng thái việc chăm sóc -->
+<section class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+    <small class="text-xs font-bold uppercase tracking-wider text-slate-500">Tổng công việc</small>
+    <div class="mt-1 text-2xl font-black text-slate-800">{{ task_counts.all }}</div>
+    <span class="text-[11px] text-slate-400">Tất cả nhiệm vụ</span>
+  </div>
+  <div class="rounded-xl border border-red-200 bg-red-50/50 p-4 shadow-xs">
+    <div class="flex items-center justify-between">
+      <small class="text-xs font-bold uppercase tracking-wider text-red-700">Việc quá hạn</small>
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+      </span>
+    </div>
+    <div class="mt-1 text-2xl font-black text-red-700">{{ task_counts.overdue }}</div>
+    <span class="text-[11px] text-red-600 font-medium">Cần hoàn tất khẩn cấp</span>
+  </div>
+  <div class="rounded-xl border border-blue-200 bg-blue-50/40 p-4 shadow-xs">
+    <small class="text-xs font-bold uppercase tracking-wider text-blue-700">Hôm nay đến hạn</small>
+    <div class="mt-1 text-2xl font-black text-blue-700">{{ task_counts.today }}</div>
+    <span class="text-[11px] text-blue-600 font-medium">Lịch làm việc hôm nay</span>
+  </div>
+  <div class="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-xs">
+    <small class="text-xs font-bold uppercase tracking-wider text-emerald-700">Đã hoàn tất</small>
+    <div class="mt-1 text-2xl font-black text-emerald-700">{{ task_counts.done }}</div>
+    <span class="text-[11px] text-emerald-600 font-medium">Nhiệm vụ đã đóng</span>
+  </div>
+</section>
+
+<!-- Card danh sách chính -->
 <section class="content-card">
-  <div class="content-card-heading"><div><h2>Danh sách việc</h2><p>{{ page.paginator.count }} việc · việc quá hạn được đánh dấu rõ bên dưới.</p></div><span class="count-pill">Trang {{ page.number }} / {{ page.paginator.num_pages }}</span></div>
-  <form class="filter-bar" method="get" action="{% url 'crm:care_tasks' %}"><label class="search-box"><span aria-hidden="true">⌕</span><span class="sr-only">Tìm việc hoặc khách hàng</span><input type="search" name="q" value="{{ query }}" placeholder="Tìm nội dung việc hoặc khách hàng…"></label><label class="sr-only" for="task-status-filter">Lọc trạng thái</label><select class="segment-select" id="task-status-filter" name="status"><option value="">Mọi trạng thái</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button-primary" type="submit">Lọc danh sách</button>{% if query or selected_status %}<a class="button-secondary" href="{% url 'crm:care_tasks' %}">Xóa lọc</a>{% endif %}</form>
-  <div class="care-task-list">{% for task in tasks %}<article class="care-task-row {% if task.status != 'DONE' and task.due_at < today %}task-overdue{% endif %}"><div class="task-date"><strong>{{ task.due_at|date:"d" }}</strong><span>{{ task.due_at|date:"m/Y" }}</span></div><div class="task-main"><div class="task-title-line flex items-center gap-2"><a href="{% url 'crm:care_task_edit' task.pk %}">{{ task.title }}</a>{{ task.get_priority_display|task_priority_badge }}</div><p><a href="{% url 'crm:customer_detail' task.customer_id %}">{{ task.customer.full_name }}</a>{% if task.customer.company %} · {{ task.customer.company }}{% endif %}</p>{% if task.description %}<small>{{ task.description|truncatechars:160 }}</small>{% endif %}</div><div class="task-meta">{{ task.get_status_display|task_status_badge }}<small class="mt-1 block">{{ task.get_kind_display }} · {{ task.assignee.get_username|default:"Chưa phân công" }}</small></div><a class="row-action" href="{% url 'crm:care_task_edit' task.pk %}">Chỉnh sửa →</a></article>{% empty %}<div class="empty-state"><span class="empty-icon">✓</span><strong>Chưa có việc chăm sóc phù hợp</strong><p>Tạo việc đầu tiên từ đây hoặc mở hồ sơ khách hàng để bắt đầu.</p><a href="{% url 'crm:care_task_create' %}">＋ Tạo việc chăm sóc</a></div>{% endfor %}</div>
-  {% if page.has_other_pages %}<nav class="pagination" aria-label="Phân trang việc chăm sóc">{% if page.has_previous %}<a class="button-secondary" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page.previous_page_number }}">← Trước</a>{% else %}<span class="button-secondary is-disabled">← Trước</span>{% endif %}<span>Trang <strong>{{ page.number }}</strong> / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="button-secondary" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;page={{ page.next_page_number }}">Sau →</a>{% else %}<span class="button-secondary is-disabled">Sau →</span>{% endif %}</nav>{% endif %}
+  <div class="content-card-heading">
+    <div>
+      <h2>Danh sách việc chăm sóc</h2>
+      <p>{{ page.paginator.count }} việc hiển thị · việc quá hạn được đánh dấu viền đỏ bên dưới.</p>
+    </div>
+    <span class="count-pill">Trang {{ page.number }} / {{ page.paginator.num_pages }}</span>
+  </div>
+
+  <!-- Bộ lọc 1-chạm (Quick Filter Pills) -->
+  <div class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3 mb-4">
+    <a href="{% url 'crm:care_tasks' %}{% if query %}?q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if not selected_status and not selected_filter %}bg-blue-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Tất cả</span>
+      <span class="rounded-full {% if not selected_status and not selected_filter %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.all|default:0 }}</span>
+    </a>
+    <a href="{% url 'crm:care_tasks' %}?filter=overdue{% if query %}&amp;q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if selected_filter == 'overdue' %}bg-red-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Quá hạn</span>
+      <span class="rounded-full {% if selected_filter == 'overdue' %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.overdue|default:0 }}</span>
+    </a>
+    <a href="{% url 'crm:care_tasks' %}?filter=today{% if query %}&amp;q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if selected_filter == 'today' %}bg-blue-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Hôm nay</span>
+      <span class="rounded-full {% if selected_filter == 'today' %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.today|default:0 }}</span>
+    </a>
+    <a href="{% url 'crm:care_tasks' %}?status=TODO{% if query %}&amp;q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if selected_status == 'TODO' %}bg-amber-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Cần làm</span>
+      <span class="rounded-full {% if selected_status == 'TODO' %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.todo|default:0 }}</span>
+    </a>
+    <a href="{% url 'crm:care_tasks' %}?status=IN_PROGRESS{% if query %}&amp;q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if selected_status == 'IN_PROGRESS' %}bg-indigo-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Đang xử lý</span>
+      <span class="rounded-full {% if selected_status == 'IN_PROGRESS' %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.in_progress|default:0 }}</span>
+    </a>
+    <a href="{% url 'crm:care_tasks' %}?status=DONE{% if query %}&amp;q={{ query|urlencode }}{% endif %}"
+       class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all {% if selected_status == 'DONE' %}bg-emerald-600 text-white shadow-xs{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+      <span>Hoàn tất</span>
+      <span class="rounded-full {% if selected_status == 'DONE' %}bg-white/20 text-white{% else %}bg-slate-200 text-slate-700{% endif %} px-1.5 py-0.2 text-[10px] font-bold">{{ task_counts.done|default:0 }}</span>
+    </a>
+  </div>
+
+  <!-- Thanh tìm kiếm -->
+  <form class="filter-bar" method="get" action="{% url 'crm:care_tasks' %}">
+    <label class="search-box">
+      <span aria-hidden="true">⌕</span>
+      <span class="sr-only">Tìm việc hoặc khách hàng</span>
+      <input type="search" name="q" value="{{ query }}" placeholder="Tìm theo tên việc, khách hàng, công ty hoặc số điện thoại…">
+    </label>
+    {% if selected_status %}
+      <input type="hidden" name="status" value="{{ selected_status }}">
+    {% endif %}
+    {% if selected_filter %}
+      <input type="hidden" name="filter" value="{{ selected_filter }}">
+    {% endif %}
+    <button class="button-primary" type="submit">Tìm kiếm</button>
+    {% if query or selected_status or selected_filter %}
+      <a class="button-secondary" href="{% url 'crm:care_tasks' %}">Xóa lọc</a>
+    {% endif %}
+  </form>
+
+  <!-- Danh sách dòng công việc -->
+  <div class="care-task-list">
+    {% for task in tasks %}
+      <article class="care-task-row {% if task.status != 'DONE' and task.due_at < today %}task-overdue border-red-300 bg-red-50/20{% endif %}">
+        <!-- Khối ngày hẹn -->
+        <div class="task-date {% if task.status != 'DONE' and task.due_at < today %}text-red-700 border-red-200 bg-red-50{% endif %}">
+          <strong class="{% if task.status != 'DONE' and task.due_at < today %}text-red-700{% endif %}">{{ task.due_at|date:"d" }}</strong>
+          <span>{{ task.due_at|date:"m/Y" }}</span>
+          {% if task.status != 'DONE' and task.due_at < today %}
+            <span class="text-[9px] font-bold uppercase text-red-600 block mt-0.5">Quá hạn</span>
+          {% elif task.due_at == today and task.status != 'DONE' %}
+            <span class="text-[9px] font-bold uppercase text-blue-600 block mt-0.5">Hôm nay</span>
+          {% endif %}
+        </div>
+
+        <!-- Khối nội dung chính -->
+        <div class="task-main">
+          <div class="task-title-line flex items-center gap-2 flex-wrap">
+            <a class="font-bold text-slate-900 hover:text-blue-600 text-sm sm:text-base" href="{% url 'crm:care_task_edit' task.pk %}">
+              {{ task.title }}
+            </a>
+            {{ task.get_priority_display|task_priority_badge }}
+          </div>
+          <div class="mt-1 flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+            <span>Khách hàng:</span>
+            <a class="font-semibold text-blue-700 hover:underline" href="{% url 'crm:customer_detail' task.customer_id %}">
+              {{ task.customer.full_name }}
+            </a>
+            {% if task.customer.company %}
+              <span class="text-slate-400">·</span>
+              <span class="text-slate-600">{{ task.customer.company }}</span>
+            {% endif %}
+            {% if task.customer.phone %}
+              <span class="text-slate-400">·</span>
+              <a href="tel:{{ task.customer.phone }}" class="text-emerald-600 hover:underline inline-flex items-center gap-0.5 font-medium">
+                <span>📞</span> {{ task.customer.phone }}
+              </a>
+            {% endif %}
+          </div>
+          {% if task.description %}
+            <p class="mt-1.5 text-xs text-slate-600 leading-relaxed bg-slate-50 p-2 rounded border border-slate-100">
+              {{ task.description|truncatechars:180 }}
+            </p>
+          {% endif %}
+        </div>
+
+        <!-- Khối meta trạng thái + người phụ trách -->
+        <div class="task-meta">
+          {{ task.get_status_display|task_status_badge }}
+          <small class="mt-1 block text-slate-500 text-xs">
+            {{ task.get_kind_display }} · Phụ trách: <strong class="text-slate-700">{{ task.assignee.get_username|default:"Chưa phân công" }}</strong>
+          </small>
+        </div>
+
+        <!-- Thao tác -->
+        <div class="flex items-center gap-2 shrink-0">
+          {% if task.customer.phone %}
+            <a class="button-secondary text-xs py-1 px-2.5 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" href="tel:{{ task.customer.phone }}" title="Gọi cho khách">
+              📞 Gọi
+            </a>
+          {% endif %}
+          <a class="row-action text-xs font-semibold text-blue-600 hover:text-blue-800" href="{% url 'crm:care_task_edit' task.pk %}">
+            Cập nhật →
+          </a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="empty-state">
+        <span class="empty-icon">✓</span>
+        <strong>Không có việc chăm sóc nào phù hợp</strong>
+        <p>Hiện không có công việc nào theo điều kiện lọc đã chọn.</p>
+        <a class="button-primary inline-flex mt-2" href="{% url 'crm:care_task_create' %}">＋ Tạo việc chăm sóc mới</a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Phân trang -->
+  {% if page.has_other_pages %}
+    <nav class="pagination" aria-label="Phân trang việc chăm sóc">
+      {% if page.has_previous %}
+        <a class="button-secondary" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;filter={{ selected_filter|urlencode }}&amp;page={{ page.previous_page_number }}">← Trước</a>
+      {% else %}
+        <span class="button-secondary is-disabled">← Trước</span>
+      {% endif %}
+      <span>Trang <strong>{{ page.number }}</strong> / {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}
+        <a class="button-secondary" href="?q={{ query|urlencode }}&amp;status={{ selected_status|urlencode }}&amp;filter={{ selected_filter|urlencode }}&amp;page={{ page.next_page_number }}">Sau →</a>
+      {% else %}
+        <span class="button-secondary is-disabled">Sau →</span>
+      {% endif %}
+    </nav>
+  {% endif %}
 </section>
 {% endblock %}

@@ -205,12 +205,21 @@ def dashboard(request):
 def customer_list(request):
     query = request.GET.get("q", "").strip()
     selected_segment = request.GET.get("segment", "").strip()
-    customers = Customer.objects.filter(is_active=True)
+    all_active_customers = Customer.objects.filter(is_active=True)
+
+    # Precompute metrics and counts for quick filter pills
+    total_active_count = all_active_customers.count()
+    segment_counts = {"all": total_active_count}
+    for val, _ in Customer.Segment.choices:
+        segment_counts[val] = all_active_customers.filter(ai_segment=val).count()
+
+    customers = all_active_customers
     if query:
         customers = customers.filter(
             Q(full_name__icontains=query)
             | Q(email__icontains=query)
             | Q(company__icontains=query)
+            | Q(phone__icontains=query)
         )
     if selected_segment:
         customers = customers.filter(ai_segment=selected_segment)
@@ -222,6 +231,12 @@ def customer_list(request):
         "query": query,
         "selected_segment": selected_segment,
         "segment_choices": Customer.Segment.choices,
+        "segment_counts": segment_counts,
+        "total_active_count": total_active_count,
+        "vip_count": segment_counts.get(Customer.Segment.VIP, 0),
+        "potential_count": segment_counts.get(Customer.Segment.POTENTIAL, 0),
+        "churn_risk_count": segment_counts.get(Customer.Segment.CHURN_RISK, 0),
+        "unclassified_count": segment_counts.get(Customer.Segment.UNCLASSIFIED, 0),
     })
 
 
@@ -231,21 +246,35 @@ def priority_customer_list(request):
     """Transparent rules-based queue; ranking never changes customer data."""
     today = timezone.localdate()
     stale_before = timezone.now() - timedelta(days=30)
-    selected_filter = request.GET.get("filter", "")
+    selected_filter = request.GET.get("filter", "").strip()
     customers = Customer.objects.filter(is_active=True).annotate(
         last_interaction=Max("interactions__occurred_at"),
     ).prefetch_related("care_tasks")
-    queue = []
+
+    filter_counts = {
+        "all": 0,
+        "churn": 0,
+        "vip": 0,
+        "stale": 0,
+        "overdue": 0,
+        "urgent": 0,
+    }
+
+    all_items = []
     for customer in customers:
         open_tasks = [task for task in customer.care_tasks.all() if task.status != CareTask.Status.DONE]
         overdue = any(task.due_at < today for task in open_tasks)
         stale = customer.last_interaction is None or customer.last_interaction < stale_before
         score = customer.ai_score
         reasons = []
-        if customer.ai_segment == Customer.Segment.CHURN_RISK:
+
+        is_churn = customer.ai_segment == Customer.Segment.CHURN_RISK
+        is_vip = customer.ai_segment == Customer.Segment.VIP
+
+        if is_churn:
             score += 40
             reasons.append("Có nguy cơ rời bỏ")
-        elif customer.ai_segment == Customer.Segment.VIP:
+        elif is_vip:
             score += 30
             reasons.append("Khách hàng VIP")
         if overdue:
@@ -256,19 +285,60 @@ def priority_customer_list(request):
             reasons.append("Chưa có tương tác trong 30 ngày")
         if customer.ai_score >= 70:
             reasons.append(f"Điểm tiềm năng {customer.ai_score}/100")
-        if selected_filter == "churn" and customer.ai_segment != Customer.Segment.CHURN_RISK:
+
+        is_urgent = score >= 80
+
+        # Update counts
+        filter_counts["all"] += 1
+        if is_churn:
+            filter_counts["churn"] += 1
+        if is_vip:
+            filter_counts["vip"] += 1
+        if stale:
+            filter_counts["stale"] += 1
+        if overdue:
+            filter_counts["overdue"] += 1
+        if is_urgent:
+            filter_counts["urgent"] += 1
+
+        all_items.append({
+            "customer": customer,
+            "priority_score": score,
+            "reasons": reasons or ["Theo dõi định kỳ"],
+            "is_churn": is_churn,
+            "is_vip": is_vip,
+            "stale": stale,
+            "overdue": overdue,
+            "is_urgent": is_urgent,
+        })
+
+    # Filter queue based on selected_filter
+    queue = []
+    for item in all_items:
+        if selected_filter == "churn" and not item["is_churn"]:
             continue
-        if selected_filter == "vip" and customer.ai_segment != Customer.Segment.VIP:
+        if selected_filter == "vip" and not item["is_vip"]:
             continue
-        if selected_filter == "stale" and not stale:
+        if selected_filter == "stale" and not item["stale"]:
             continue
-        if selected_filter == "overdue" and not overdue:
+        if selected_filter == "overdue" and not item["overdue"]:
             continue
-        queue.append({"customer": customer, "priority_score": score, "reasons": reasons or ["Theo dõi định kỳ"]})
+        if selected_filter == "urgent" and not item["is_urgent"]:
+            continue
+        queue.append(item)
+
     queue.sort(key=lambda item: (-item["priority_score"], item["customer"].full_name.casefold()))
     page = Paginator(queue, 20).get_page(request.GET.get("page"))
     return render(request, "crm/priority_customer_list.html", {
-        "page": page, "queue": page.object_list, "selected_filter": selected_filter,
+        "page": page,
+        "queue": page.object_list,
+        "selected_filter": selected_filter,
+        "filter_counts": filter_counts,
+        "total_queue_count": filter_counts["all"],
+        "urgent_count": filter_counts["urgent"],
+        "overdue_count": filter_counts["overdue"],
+        "churn_count": filter_counts["churn"],
+        "vip_count": filter_counts["vip"],
     })
 
 
@@ -401,12 +471,21 @@ def sync_ai_analytics_pipeline(request):
 def lead_request_list(request):
     query = request.GET.get("q", "").strip()
     selected_status = request.GET.get("status", "").strip()
+    all_requests = LeadRequest.objects.all()
+
+    # Precompute metrics and status counts for quick filter pills
+    total_leads_count = all_requests.count()
+    status_counts = {"all": total_leads_count}
+    for val, _ in LeadRequest.Status.choices:
+        status_counts[val] = all_requests.filter(status=val).count()
+
     requests = LeadRequest.objects.select_related("customer").prefetch_related("follow_ups__response")
     if query:
         requests = requests.filter(
             Q(customer__full_name__icontains=query)
             | Q(customer__email__icontains=query)
             | Q(customer__company__icontains=query)
+            | Q(customer__phone__icontains=query)
             | Q(request_text__icontains=query)
         )
     if selected_status:
@@ -419,14 +498,33 @@ def lead_request_list(request):
         "query": query,
         "selected_status": selected_status,
         "status_choices": LeadRequest.Status.choices,
+        "status_counts": status_counts,
+        "total_leads_count": total_leads_count,
+        "new_leads_count": status_counts.get(LeadRequest.Status.NEW, 0),
+        "contacted_count": status_counts.get(LeadRequest.Status.CONTACTED, 0),
+        "completed_count": status_counts.get(LeadRequest.Status.COMPLETED, 0),
     })
 
 
 @login_required
 @permission_required("crm.access_crm", raise_exception=True)
 def care_task_list(request):
+    today = timezone.localdate()
     query = request.GET.get("q", "").strip()
     selected_status = request.GET.get("status", "").strip()
+    selected_filter = request.GET.get("filter", "").strip()
+
+    all_tasks = CareTask.objects.all()
+    open_tasks = all_tasks.exclude(status=CareTask.Status.DONE)
+    task_counts = {
+        "all": all_tasks.count(),
+        "todo": all_tasks.filter(status=CareTask.Status.TODO).count(),
+        "in_progress": all_tasks.filter(status=CareTask.Status.IN_PROGRESS).count(),
+        "done": all_tasks.filter(status=CareTask.Status.DONE).count(),
+        "overdue": open_tasks.filter(due_at__lt=today).count(),
+        "today": open_tasks.filter(due_at=today).count(),
+    }
+
     tasks = CareTask.objects.select_related("customer", "assignee").annotate(
         priority_order=Case(
             When(priority=CareTask.Priority.HIGH, then=0),
@@ -441,21 +539,31 @@ def care_task_list(request):
             output_field=IntegerField(),
         ),
     ).order_by("status_order", "due_at", "priority_order", "-created_at")
+
     if query:
         tasks = tasks.filter(
             Q(title__icontains=query) | Q(description__icontains=query)
             | Q(customer__full_name__icontains=query) | Q(customer__company__icontains=query)
+            | Q(customer__phone__icontains=query)
         )
     if selected_status:
         tasks = tasks.filter(status=selected_status)
+
+    if selected_filter == "overdue":
+        tasks = tasks.filter(due_at__lt=today).exclude(status=CareTask.Status.DONE)
+    elif selected_filter == "today":
+        tasks = tasks.filter(due_at=today).exclude(status=CareTask.Status.DONE)
+
     page = Paginator(tasks, 20).get_page(request.GET.get("page"))
     return render(request, "crm/care_task_list.html", {
         "page": page,
         "tasks": page.object_list,
         "query": query,
         "selected_status": selected_status,
+        "selected_filter": selected_filter,
         "status_choices": CareTask.Status.choices,
-        "today": timezone.localdate(),
+        "task_counts": task_counts,
+        "today": today,
     })
 
 
