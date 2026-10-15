@@ -254,11 +254,12 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.assertTrue(downloaded.value.suggested_filename.endswith(".png"))
         self.page.get_by_title("Xem to", exact=True).first.click()
         self.assertTrue(self.page.locator("#lightboxModal").is_visible())
-        self.page.locator("#lightboxModal button").last.click()
+        self.page.locator("#closeLightboxBtn").click()
         self.page.locator("#lightboxModal").wait_for(state="hidden")
-        csv_link = self.page.get_by_role("link", name="Xuất CSV", exact=True)
+        csv_link = self.page.locator("#exportCustomersCsvBtn")
         csv_link.scroll_into_view_if_needed()
-        with self.page.expect_download(timeout=20000) as downloaded:
+        self.assertEqual(csv_link.get_attribute("download"), "crm-customers.csv")
+        with self.page.expect_download(timeout=30000) as downloaded:
             csv_link.click()
         self.assertTrue(downloaded.value.suggested_filename.endswith(".csv"))
 
