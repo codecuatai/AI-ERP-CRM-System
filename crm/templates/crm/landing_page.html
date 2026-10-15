@@ -1043,7 +1043,13 @@ document.addEventListener("DOMContentLoaded", function () {
       if (tabPaneForm) tabPaneForm.classList.add("hidden");
       if (modalTitle) modalTitle.textContent = "Trợ lý AI Tư vấn";
       if (modalSubtitle) modalSubtitle.textContent = "Giải đáp chi phí, tính năng & lộ trình 24/7";
-      if (chatInput) setTimeout(() => chatInput.focus(), 120);
+      if (chatInput) {
+        setTimeout(() => {
+          if (!modal.contains(document.activeElement) || document.activeElement === modal) {
+            chatInput.focus();
+          }
+        }, 120);
+      }
 
       // Personalize greeting if user entered information in form
       const fullName = (document.getElementById("id_full_name")?.value || "").trim();
@@ -1066,7 +1072,13 @@ document.addEventListener("DOMContentLoaded", function () {
       // Tự động mang toàn bộ hội thoại AI sang Form
       syncChatToForm();
       const firstInput = modal.querySelector("#id_full_name");
-      if (firstInput) setTimeout(() => firstInput.focus(), 120);
+      if (firstInput) {
+        setTimeout(() => {
+          if (!modal.contains(document.activeElement) || document.activeElement === modal) {
+            firstInput.focus();
+          }
+        }, 120);
+      }
     }
   }
 
