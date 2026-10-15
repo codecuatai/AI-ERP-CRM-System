@@ -82,6 +82,9 @@ services:
     working_dir: /app/tailwind
     volumes:
       - .:/app
+      # Tailwind v4 uses native bindings: do not share Windows node_modules
+      # with the Linux container through the workspace bind mount.
+      - /app/tailwind/node_modules
     command: sh -c "npm install && npm run css:watch"
     profiles:
       - frontend

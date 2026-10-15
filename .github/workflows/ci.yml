@@ -93,6 +93,9 @@ jobs:
         working-directory: tailwind
         run: npm run css:build
 
+      - name: Verify Docker frontend with isolated native dependencies
+        run: docker compose run --rm --no-deps crm-tailwind sh -c "npm ci && npm run css:build && npm audit --audit-level=moderate"
+
   analytics-postgresql:
     name: Analytics · PostgreSQL and reader permissions
     runs-on: ubuntu-latest

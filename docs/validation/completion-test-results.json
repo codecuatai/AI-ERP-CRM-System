@@ -52,5 +52,11 @@
     "ai-quality-followup.json",
     "ai-quality-followup-gemini.json"
   ],
-  "isolation": "Browser and SMTP mutation tests use Django test databases; SMTP binds to loopback. Live verification creates/reuses only demo BI metadata and refreshes derived analytics; no external email was sent."
+  "isolation": "Browser and SMTP mutation tests use Django test databases; SMTP binds to loopback. Live verification creates/reuses only demo BI metadata and refreshes derived analytics; no external email was sent.",
+  "docker_frontend": {
+    "status": "PASS",
+    "command": "docker compose run --rm --no-deps crm-tailwind sh -c \"npm ci && npm run css:build && npm audit --audit-level=moderate\"",
+    "known_npm_advisories": 0,
+    "node_modules": "isolated container volume for Linux native bindings"
+  }
 }

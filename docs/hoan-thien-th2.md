@@ -26,6 +26,7 @@ Kết quả kiểm thử cuối cùng nằm tại [completion-test-results.json]
 - PostgreSQL và SQLite kèm Chromium: bộ 131 test chạy thành công, lần lượt bỏ qua 5 test browser và 1 test chỉ dành cho PostgreSQL.
 - Firefox: 5 luồng browser đạt; WebKit: 5 luồng đạt sau sửa cách chờ. Playwright WebKit không thay thế Safari trên thiết bị thật.
 - SMTP: gửi multipart/link phản hồi qua socket cục bộ đạt; máy chủ trả 550 thì không có tương tác đã gửi, không giữ token còn hiệu lực. Không kiểm thử khả năng phát thư đến hộp thư nhà cung cấp thật.
+- Docker frontend Linux: cài sạch, build CSS và audit đều đạt; volume dependency riêng tránh lẫn native module với Windows. Không thay volume database.
 - Superset: xem [truy vấn và render](validation/superset-live.json), [tạo qua MCP](validation/mcp-authoring-live.json) và [thử đủ năm loại biểu đồ](validation/mcp-authoring-gallery.json). Các dashboard MCP được lưu nháp để xem lại trước khi công bố.
 
 Lượt cuối kiểm tra 17 truy vấn thành công và 4 dashboard không có lỗi hiển thị: hai dashboard chuẩn và hai dashboard nháp MCP. Có thêm 43 test hồi quy cuối cùng đạt, bỏ qua một test chỉ dành cho PostgreSQL.
@@ -73,7 +74,7 @@ Chưa thể tự xác minh: hiệu quả trên khách thật, trải nghiệm c�
 - Không tạo thêm hồ sơ ngoài 8 tình huống đã có; chạy lại phân tích được cho phép lưu thêm lịch sử. Không xóa tương tác cũ.
 - AI và phân tích: `crm/analytics/{ai_engine,evaluation,pipeline}.py`, `crm/services/{ai_chat_service,ai_service,consultation}.py`.
 - MCP/BI: `superset/authoring.py`, `superset/{mcp_server,bootstrap_superset}.py`, `scripts/verify_mcp_authoring.py`, `scripts/verify_live_integrations.py`.
-- Giao diện/build: `crm/templates/crm/report.html`, CSS build, `tailwind/package*.json`, config, nguồn CSS và `legacy-colors.json`.
+- Giao diện/build: `crm/templates/crm/report.html`, CSS build, `tailwind/package*.json`, config, nguồn CSS và `legacy-colors.json`; Docker frontend tách volume `node_modules` để không dùng nhầm native bindings Windows trong Linux.
 - Kiểm thử/CI: `crm/test_th2_completion.py`, `crm/test_smtp_delivery.py`, `crm/test_browser_e2e.py`, `.github/workflows/ci.yml`.
 - Tài liệu: README, AGENTS (cập nhật phiên bản build thực tế), roadmap, báo cáo kỹ thuật, kịch bản demo và JSON/ảnh minh chứng.
 
