@@ -138,7 +138,7 @@ class LeadFollowUpFlowTests(TestCase):
         page = self.client.get(url)
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, follow_up.question_text)
-        self.assertEqual(page["Referrer-Policy"], "no-referrer")
+        self.assertEqual(page["Referrer-Policy"], "strict-origin")
         self.assertEqual(page["Cache-Control"], "max-age=0, no-cache, no-store, must-revalidate, private")
 
         response = self.client.post(url, self.valid_response_payload(ai_processing_consent="on"))

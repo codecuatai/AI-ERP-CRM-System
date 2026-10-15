@@ -1,10 +1,10 @@
 {% extends "crm/base.html" %}
-{% load humanize crm_tags %}
+{% load humanize crm_tags static %}
 {% block title %}Báo cáo CRM & Trực quan hóa Dữ liệu Superset{% endblock %}
 
 {% block extra_head %}
 <!-- Apache ECharts (Engine chính của Apache Superset) -->
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="{% static 'crm/vendor/echarts.min.js' %}"></script>
 <style>
   .chart-canvas {
     width: 100%;
@@ -43,13 +43,13 @@
         Trực quan hóa Dữ liệu Apache Superset & AI Studio
       </span>
       <span class="text-xs text-slate-400">·</span>
-      <span class="text-xs text-slate-500">Cập nhật lúc: {% now "H:i d/m/Y" %}</span>
+      <span class="text-xs text-slate-500">Mở báo cáo lúc: {% now "H:i d/m/Y" %}</span>
     </div>
     <h1 id="report-title" class="text-2xl font-black text-slate-900 tracking-tight mt-1.5 sm:text-3xl">
       Báo cáo CRM & Trực quan hóa Doanh nghiệp
     </h1>
     <p class="text-slate-600 text-sm mt-1 max-w-2xl leading-relaxed">
-      Trích xuất số liệu và biểu đồ chuyên sâu trực tiếp từ Data Mart Superset (schema <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono text-xs">analytics</code>); khách hàng mới tính từ {{ period_start|date:"d/m/Y" }}.
+      Biểu đồ được dựng từ dữ liệu CRM hoặc Data Mart; khách hàng mới tính từ {{ period_start|date:"d/m/Y" }}.
     </p>
   </div>
   <div class="flex flex-wrap items-center gap-2.5">
@@ -58,18 +58,23 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       <span>Trích xuất ảnh biểu đồ</span>
     </button>
-    <a href="{% url 'crm:sync_ai_analytics' %}"
+    {% if can_sync_analytics %}<form method="post" action="{% url 'crm:sync_ai_analytics' %}">{% csrf_token %}
+    <button type="submit"
        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-      <span>Làm mới Data Mart</span>
-    </a>
-    <a class="button-secondary text-xs" href="{% url 'crm:export_customers_csv' %}">
+      <span>Làm mới dữ liệu phân tích</span>
+    </button></form>{% endif %}
+    <a id="exportCustomersCsvBtn" class="button-secondary text-xs" href="{% url 'crm:export_customers_csv' %}" download="crm-customers.csv">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Xuất CSV
     </a>
   </div>
 </section>
 
+<div class="message mb-5" role="status">
+  Kết quả AI là gợi ý để nhân viên rà soát. Điểm lead và giá trị hợp đồng ước tính dùng quy tắc demo, chưa được hiệu chuẩn bằng hợp đồng thực tế.
+  {% if not analytics.forecast %}Chưa đủ 3 tháng doanh thu để dự báo.{% endif %}
+</div>
 <!-- STRATEGIC KPI SCORECARD -->
 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6" aria-label="Chỉ số tổng hợp chiến lược">
   <!-- 1. Tổng khách hàng -->
@@ -110,7 +115,7 @@
     </div>
     <div class="mt-2">
       <div class="text-2xl font-black text-indigo-600 tracking-tight">{{ total_expected_revenue|format_currency }}</div>
-      <p class="text-[11px] text-slate-500 mt-0.5">Xác suất thắng P(Win) * Giá trị</p>
+      <p class="text-[11px] text-slate-500 mt-0.5">Điểm quy tắc × Giá trị demo</p>
     </div>
   </article>
 
@@ -149,7 +154,7 @@
     <button type="button" onclick="switchReportTab('charts')" id="tab-btn-charts"
             class="report-tab-btn active inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-      <span>Biểu đồ Trích xuất Superset (12 Biểu đồ)</span>
+      <span>Biểu đồ AI từ dữ liệu CRM</span>
     </button>
     <button type="button" onclick="switchReportTab('tables')" id="tab-btn-tables"
             class="report-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
@@ -164,7 +169,7 @@
   </div>
   <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
     <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-    <span>Data Mart: <strong class="text-slate-800">analytics</strong> (Kết nối trực tiếp)</span>
+    <span>{% if analytics.has_ai_datamart %}Nguồn: Data Mart PostgreSQL{% else %}Nguồn: dữ liệu CRM, tính bằng quy tắc cục bộ{% endif %}</span>
   </div>
 </div>
 
@@ -264,17 +269,17 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Dự báo Doanh thu Chuỗi thời gian (Prophet)</h3>
+              <h3 class="text-base font-bold text-slate-900">Dự báo doanh thu có đối chiếu baseline</h3>
               <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Superset Chart 10</span>
             </div>
-            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới kèm dải tin cậy 95% (Lower/Upper Bound)</p>
+            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới; ít hơn 18 tháng lịch sử dùng mức tháng cuối. Dải sai số tham khảo chưa được hiệu chuẩn độ bao phủ.</p>
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartForecast', 'superset-revenue-forecast.png')"
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo Doanh thu Chuỗi thời gian (Prophet)')"
+            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo doanh thu có đối chiếu baseline')"
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
             </button>
@@ -283,8 +288,8 @@
         <div id="chartForecast" class="chart-canvas mt-3"></div>
       </div>
       <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Độ tin cậy: <strong class="text-emerald-600">95.4%</strong></span>
-        <span>Xu hướng: <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">Tăng trưởng ổn định</span></span>
+        <span>Khoảng dự báo ước lượng; chưa kiểm định độ bao phủ</span>
+        <span>Xu hướng: {{ analytics.forecast.0.trend|default:"Chưa đủ dữ liệu" }}</span>
       </div>
     </article>
 
@@ -313,8 +318,8 @@
         <div id="chartSentimentChurn" class="chart-canvas mt-3"></div>
       </div>
       <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Tỷ lệ tích cực: <strong class="text-emerald-600">82.5%</strong></span>
-        <span>Phát hiện sớm rời bỏ: <span class="text-rose-600 font-semibold">2 tài khoản cần lưu ý</span></span>
+        <span>Nhãn cảm xúc tính từ các nội dung được phép dùng</span>
+        <span>Rủi ro theo tương tác: {% for risk in analytics.churn_risk %}{{ risk.level }}: {{ risk.count }}{% if not forloop.last %} · {% endif %}{% empty %}Chưa có dữ liệu{% endfor %}</span>
       </div>
     </article>
 
@@ -324,7 +329,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Phân cụm Khách hàng K-Means RFM</h3>
+              <h3 class="text-base font-bold text-slate-900">Phân cụm Khách hàng RFM theo tâm tham chiếu</h3>
               <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-200">Superset Chart 9</span>
             </div>
             <p class="text-xs text-slate-500 mt-0.5">Phân khúc 4 cụm dựa trên Recency, Frequency và Monetary</p>
@@ -334,7 +339,7 @@
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartRfm', 'Phân cụm Khách hàng K-Means RFM')"
+            <button type="button" title="Xem to" onclick="openLightbox('chartRfm', 'Phân cụm Khách hàng RFM theo tâm tham chiếu')"
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
             </button>
@@ -343,7 +348,7 @@
         <div id="chartRfm" class="chart-canvas mt-3"></div>
       </div>
       <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Silhouette Score: <strong class="text-purple-600">0.582</strong> (Tách cụm chuẩn)</span>
+        <span>Phân nhóm theo tâm tham chiếu cố định; chưa huấn luyện K-Means</span>
         <span>K = 4 Cụm hành vi</span>
       </div>
     </article>
@@ -373,7 +378,7 @@
         <div id="chartXai" class="chart-canvas mt-3"></div>
       </div>
       <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Phương pháp: <strong class="text-amber-600">Shapley Attribution</strong></span>
+        <span>Phương pháp: <strong class="text-amber-600">Đóng góp thành phần công thức</strong></span>
         <span>Minh bạch hóa thuật toán AI</span>
       </div>
     </article>
@@ -454,12 +459,12 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <a href="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener"
+      <a href="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener"
          class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow">
         <span>Mở AI Intelligence Tab</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       </a>
-      <a href="http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/" target="_blank" rel="noopener"
+      <a href="{{ superset_url }}/superset/dashboard/crm-analytics-dashboard/" target="_blank" rel="noopener"
          class="inline-flex items-center gap-2 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition">
         <span>Mở Analytics Tab</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -468,7 +473,7 @@
   </div>
 
   <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" style="height: 750px;">
-    <iframe src="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/?standalone=true"
+    <iframe id="supersetLiveFrame" src="about:blank" data-src="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/?standalone=true" loading="lazy"
             class="w-full h-full border-0" title="Superset AI Intelligence Live Dashboard"></iframe>
   </div>
 </div>
@@ -489,7 +494,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Tải ảnh PNG</span>
         </button>
-        <button type="button" onclick="closeLightbox()"
+        <button type="button" id="closeLightboxBtn" onclick="closeLightbox()" aria-label="Đóng"
                 class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-50">✕</button>
       </div>
     </div>
@@ -502,14 +507,15 @@
 <!-- ============================================================== -->
 <!-- JAVASCRIPT: KHỞI TẠO BIỂU ĐỒ ECHARTS & TRÍCH XUẤT ẢNH -->
 <!-- ============================================================== -->
+{{ chart_data|json_script:"crm-chart-data" }}
 <script>
   // Dữ liệu phân tích từ Backend
-  const chartData = {{ chart_json|safe }};
+  const chartData = JSON.parse(document.getElementById("crm-chart-data").textContent);
   const chartInstances = {};
 
   function initCharts() {
     if (typeof echarts === 'undefined') {
-      console.warn('ECharts chưa tải được, kiểm tra kết nối mạng');
+      console.warn('Không tải được thư viện biểu đồ cục bộ');
       return;
     }
 
@@ -517,10 +523,7 @@
     const elLead = document.getElementById('chartLeadTier');
     if (elLead) {
       const cLead = echarts.init(elLead);
-      const tiers = chartData.lead_tiers && chartData.lead_tiers.length ? chartData.lead_tiers : [
-        {tier: 'HOT', count: 16, revenue: 815940000},
-        {tier: 'WARM', count: 9, revenue: 241860000}
-      ];
+      const tiers = chartData.lead_tiers || [];
       cLead.setOption({
         tooltip: {
           trigger: 'item',
@@ -535,7 +538,7 @@
           avoidLabelOverlap: false,
           itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
           label: { show: true, formatter: '{b}: {c} ({d}%)' },
-          data: tiers.map(t => ({ name: t.tier, value: t.count }))
+          data: tiers.map(t => ({ name: t.tier, value: t.count, itemStyle: {color: {HOT:'#ef4444', WARM:'#f59e0b', COLD:'#94a3b8'}[t.tier]} }))
         }]
       });
       chartInstances['chartLeadTier'] = cLead;
@@ -545,13 +548,7 @@
     const elSol = document.getElementById('chartSolutions');
     if (elSol) {
       const cSol = echarts.init(elSol);
-      const sols = chartData.solutions && chartData.solutions.length ? chartData.solutions : [
-        {solution: 'ERP', deal_value: 350000000, expected_won: 245000000},
-        {solution: 'POS', deal_value: 280000000, expected_won: 196000000},
-        {solution: 'CLOUD', deal_value: 250000000, expected_won: 175000000},
-        {solution: 'CRM', deal_value: 200000000, expected_won: 140000000},
-        {solution: 'SECURITY', deal_value: 180000000, expected_won: 126000000}
-      ];
+      const sols = chartData.solutions || [];
       cSol.setOption({
         tooltip: {
           trigger: 'axis',
@@ -566,7 +563,7 @@
         },
         legend: { top: '0%' },
         grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-        xAxis: { type: 'category', data: sols.map(s => s.solution) },
+        xAxis: { type: 'category', data: sols.map(s => ({ERP:'Kho/POS', INFRASTRUCTURE:'Hạ tầng', INTEGRATION:'Tích hợp', AI:'AI', OTHER:'Khác'}[s.solution] || s.solution)), axisLabel: {interval: 0, rotate: 15} },
         yAxis: {
           type: 'value',
           axisLabel: { formatter: v => (v / 1e6) + ' tr' }
@@ -574,7 +571,7 @@
         color: ['#94a3b8', '#4f46e5'],
         series: [
           { name: 'Giá trị ước tính', type: 'bar', data: sols.map(s => s.deal_value), barMaxWidth: 24 },
-          { name: 'Kỳ vọng thực tế (Expected Won)', type: 'bar', data: sols.map(s => s.expected_won), barMaxWidth: 24 }
+          { name: 'Ước tính theo quy tắc', type: 'bar', data: sols.map(s => s.expected_won), barMaxWidth: 24 }
         ]
       });
       chartInstances['chartSolutions'] = cSol;
@@ -584,12 +581,7 @@
     const elForecast = document.getElementById('chartForecast');
     if (elForecast) {
       const cForecast = echarts.init(elForecast);
-      const fc = chartData.forecast && chartData.forecast.length ? chartData.forecast : [
-        {date: '11/2026', predicted: 450000000, lower: 380000000, upper: 520000000},
-        {date: '12/2026', predicted: 520000000, lower: 440000000, upper: 600000000},
-        {date: '01/2027', predicted: 480000000, lower: 400000000, upper: 560000000},
-        {date: '02/2027', predicted: 580000000, lower: 490000000, upper: 670000000}
-      ];
+      const fc = chartData.forecast || [];
       cForecast.setOption({
         tooltip: {
           trigger: 'axis',
@@ -615,14 +607,14 @@
             lineStyle: { width: 3 }
           },
           {
-            name: 'Cận trên (95%)',
+            name: 'Cận trên tham khảo',
             type: 'line',
             smooth: true,
             data: fc.map(f => f.upper),
             lineStyle: { type: 'dashed', width: 1.5 }
           },
           {
-            name: 'Cận dưới (95%)',
+            name: 'Cận dưới tham khảo',
             type: 'line',
             smooth: true,
             data: fc.map(f => f.lower),
@@ -637,11 +629,7 @@
     const elSent = document.getElementById('chartSentimentChurn');
     if (elSent) {
       const cSent = echarts.init(elSent);
-      const sent = chartData.sentiment && chartData.sentiment.length ? chartData.sentiment : [
-        {label: 'POSITIVE', count: 48},
-        {label: 'NEUTRAL', count: 9},
-        {label: 'NEGATIVE', count: 2}
-      ];
+      const sent = chartData.sentiment || [];
       cSent.setOption({
         tooltip: { trigger: 'item', formatter: '{b}: {c} tương tác ({d}%)' },
         legend: { bottom: '0%' },
@@ -653,6 +641,7 @@
           data: sent.map(s => ({
             name: s.label === 'POSITIVE' ? 'Tích cực' : (s.label === 'NEGATIVE' ? 'Tiêu cực (Cảnh báo)' : 'Trung tính'),
             value: s.count
+            , itemStyle: {color: {POSITIVE:'#10b981', NEUTRAL:'#64748b', NEGATIVE:'#f43f5e'}[s.label]}
           }))
         }]
       });
@@ -663,12 +652,7 @@
     const elRfm = document.getElementById('chartRfm');
     if (elRfm) {
       const cRfm = echarts.init(elRfm);
-      const rfm = chartData.rfm_clusters && chartData.rfm_clusters.length ? chartData.rfm_clusters : [
-        {cluster: 'Champions / VIP', count: 8},
-        {cluster: 'Loyal Customers', count: 12},
-        {cluster: 'At Risk', count: 4},
-        {cluster: 'Hibernating', count: 7}
-      ];
+      const rfm = chartData.rfm_clusters || [];
       cRfm.setOption({
         tooltip: { trigger: 'item', formatter: '{b}: {c} khách hàng ({d}%)' },
         legend: { bottom: '0%' },
@@ -687,17 +671,11 @@
     const elXai = document.getElementById('chartXai');
     if (elXai) {
       const cXai = echarts.init(elXai);
-      const xai = chartData.xai && chartData.xai.length ? chartData.xai : [
-        {feature: 'Ngân sách phù hợp', weight: 0.35},
-        {feature: 'Quy mô công ty', weight: 0.25},
-        {feature: 'Mức độ cấp bách', weight: 0.20},
-        {feature: 'Tần suất phản hồi', weight: 0.12},
-        {feature: 'Số lượt tương tác', weight: 0.08}
-      ];
+      const xai = chartData.xai || [];
       cXai.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}' },
         grid: { left: '3%', right: '6%', bottom: '3%', containLabel: true },
-        xAxis: { type: 'value', max: 0.4 },
+        xAxis: { type: 'value' },
         yAxis: { type: 'category', data: xai.map(x => x.feature).reverse() },
         color: ['#d97706'],
         series: [{
@@ -711,6 +689,10 @@
       chartInstances['chartXai'] = cXai;
     }
 
+    Object.values(chartInstances).forEach(chart => {
+      const hasData = (chart.getOption().series || []).some(series => (series.data || []).length > 0);
+      if (!hasData) chart.setOption({title: {text: 'Chưa có dữ liệu được phép phân tích', left: 'center', top: 'center', textStyle: {fontSize: 12, color: '#64748b'}}});
+    });
     // Auto resize
     window.addEventListener('resize', () => {
       Object.values(chartInstances).forEach(c => c && c.resize && c.resize());
@@ -719,6 +701,11 @@
 
   // Chuyển tab báo cáo
   function switchReportTab(tabName) {
+    if (arguments[0] === 'superset-live') {
+      const frame = document.getElementById('supersetLiveFrame');
+      if (frame && frame.getAttribute('src') === 'about:blank') frame.src = frame.dataset.src;
+    }
+
     document.querySelectorAll('.report-tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('tab-content-charts').classList.add('hidden');
     document.getElementById('tab-content-tables').classList.add('hidden');
@@ -756,7 +743,7 @@
     const list = [
       { id: 'chartLeadTier', name: '01-superset-lead-winrate-tier.png' },
       { id: 'chartSolutions', name: '02-superset-expected-won-solutions.png' },
-      { id: 'chartForecast', name: '03-superset-prophet-revenue-forecast.png' },
+      { id: 'chartForecast', name: '03-superset-revenue-forecast.png' },
       { id: 'chartSentimentChurn', name: '04-superset-sentiment-churn-risk.png' },
       { id: 'chartRfm', name: '05-superset-kmeans-rfm-clusters.png' },
       { id: 'chartXai', name: '06-superset-explainable-ai-features.png' }
@@ -792,7 +779,9 @@
   }
 
   function closeLightbox(e) {
+    if (e && e.currentTarget && e.target && e.currentTarget.id === 'lightboxModal' && e.target !== e.currentTarget) return;
     const modal = document.getElementById('lightboxModal');
+    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('open');
     if (lightboxChart) {
@@ -801,6 +790,7 @@
     }
   }
 
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeLightbox(); });
   // Khởi động khi DOM sẵn sàng
   document.addEventListener('DOMContentLoaded', initCharts);
 </script>

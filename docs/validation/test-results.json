@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-15",
+  "branch": "codex/e2e-ai-quality-fixes",
+  "checks": {
+    "sqlite_chromium": {
+      "command": "USE_SQLITE=1 RUN_BROWSER_E2E=1 python manage.py test --verbosity=1 --noinput",
+      "tests": 114,
+      "seconds": 101.064,
+      "skipped": 1,
+      "status": "PASS"
+    },
+    "postgresql": {
+      "command": "python manage.py test --verbosity=1 --noinput",
+      "tests": 114,
+      "seconds": 52.28,
+      "skipped": 5,
+      "status": "PASS"
+    },
+    "django_check": "PASS",
+    "final_targeted_regressions": {
+      "command": "USE_SQLITE=1 python manage.py test crm.test_quality_regressions crm.test_views --verbosity=1 --noinput",
+      "tests": 45,
+      "seconds": 22.639,
+      "skipped": 1,
+      "status": "PASS"
+    },
+    "migration_check": "No changes detected",
+    "final_chat_tests": {"tests": 4, "seconds": 0.132, "skipped": 0, "status": "PASS"},
+    "frontend_build": "PASS",
+    "superset": {
+      "datasets": 10,
+      "charts": 12,
+      "dashboards": 2,
+      "verification": "superset-live.json"
+    },
+    "npm_audit": {
+      "critical": 0,
+      "high": 5,
+      "moderate": 2,
+      "scope": "Tailwind 3.4.19 development toolchain; remaining advisories require follow-up"
+    }
+  },
+  "isolation": "Browser mutations used Django test databases; development database received only the 8 authored B2B profiles and explicitly requested AI analyses/derived analytics refresh. No external email was sent."
+}

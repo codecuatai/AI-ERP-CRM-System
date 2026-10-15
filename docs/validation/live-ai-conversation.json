@@ -1,0 +1,22 @@
+{
+  "provenance": "Hội thoại minh họa và hồ sơ scenario.crm-sales; không có dữ liệu khách hàng thật. Không gửi email.",
+  "chat": [
+    {
+      "message": "Doanh nghiệp minh họa có 3 kho và 2 quầy POS, muốn kiểm kê bằng mã vạch.",
+      "reply": "Chào bạn, DigiFlow có giải pháp đề xuất cho quy trình quản lý kho và POS bằng mã vạch.\n\nĐể thiết kế phương án phù hợp nhất cho 3 kho và 2 quầy POS của doanh nghiệp, bạn cho DigiFlow biết thêm:\n1. Doanh nghiệp hiện đang dùng phần mềm bán hàng hoặc quản lý kho nào chưa?\n2. Bạn muốn quét mã vạch bằng thiết bị di động (PDA, điện thoại) hay máy quét cố định tại quầy?\n\nDo chưa có khảo sát thực tế, nhân viên của chúng tôi cần xác nhận lại hiện trạng kỹ thuật. Bạn vui lòng để lại yêu cầu chi tiết trong form liên hệ để được hỗ trợ thêm.",
+      "suggested_solution": "ERP",
+      "provider": "gemini"
+    },
+    {
+      "message": "Chi phí bao nhiêu và thời gian triển khai bao lâu?",
+      "reply": "Chi phí quản lý kho và bán hàng/POS cần được khảo sát theo số kho hoặc điểm bán, số mã hàng, quy trình kiểm kê và thiết bị đang dùng. Hiện chưa có bảng giá được xác nhận cho yêu cầu này, nên em chưa thể đưa ra số tiền cam kết. Anh/chị có thể chia sẻ quy mô và ngân sách dự kiến để nhân viên lập dự toán có phạm vi rõ ràng?",
+      "suggested_solution": "ERP",
+      "provider": "rules"
+    }
+  ],
+  "email_draft": {
+    "draft": "Kính gửi Quý công ty,\n\nCảm ơn Quý công ty đã quan tâm và đồng ý phân tích nhu cầu về nhóm giải pháp CRM & chăm sóc khách hàng.\n\nQua thông tin đã trao đổi, chúng tôi ghi nhận hiện trạng vận hành của đội ngũ sales (12 nhân sự) đang sử dụng 4 bảng tính, dẫn đến tình trạng trùng lặp thông tin khách hàng và bỏ sót lịch gọi lại. \n\nĐể giải quyết các vấn đề trên, chúng tôi đề xuất sắp xếp một buổi trao đổi hoặc demo trực tuyến nhằm giới thiệu giải pháp CRM, tập trung vào các tính năng quản lý lịch sử tư vấn và phân công công việc. Về phía ngân sách dự kiến 30 triệu đồng và việc trình phê duyệt từ Ban Giám đốc, chúng tôi đề xuất thực hiện một buổi khảo sát bước đầu để xác nhận cụ thể khả năng đáp ứng trước khi tiến hành các bước tiếp theo.\n\nKính mong Quý công ty cho biết thời gian thuận tiện để chúng ta có thể sắp xếp buổi trao đổi này.\n\nTrân trọng,",
+    "provider": "gemini"
+  },
+  "note": "Kiểm tra tích hợp thực tế và rà soát thủ công nội dung; không phải thước đo độ chính xác tổng quát."
+}

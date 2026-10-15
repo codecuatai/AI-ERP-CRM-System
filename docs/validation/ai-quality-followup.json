@@ -1,0 +1,272 @@
+{
+  "evaluated_at": "2026-10-15T15:36:35.990492+00:00",
+  "dataset_version": "2026-10-15",
+  "provenance": "Tình huống do nhóm biên soạn để kiểm thử CRM B2B. Mọi doanh nghiệp, trao đổi, ngân sách và địa chỉ .test đều là minh họa; không phải dữ liệu khách hàng thật hay tập kiểm định độc lập.",
+  "limitations": "Tập tình huống nhỏ do nhóm biên soạn, có dùng để sửa rules; không suy rộng độ chính xác ra khách hàng thật. Điểm lead chưa hiệu chuẩn xác suất. Chưa có nhãn WON/LOST để đo ROC-AUC.",
+  "sentiment": {
+    "sample_size": 20,
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "cases": [
+      {
+        "text": "Khách rất hài lòng, giải pháp phù hợp và hỗ trợ chuyên nghiệp.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Chúng tôi đồng ý ký hợp đồng sau buổi demo.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Ứng dụng ổn định và thao tác nhanh.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Cảm ơn, dự án thành công và đúng hạn.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Đã khắc phục lỗi, khách hài lòng.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Không còn lỗi trong lần kiểm tra này.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Tôi không hài lòng với dịch vụ.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Hệ thống không tốt.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Phần mềm chưa ổn định và khó dùng.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Máy chủ chậm và thường xuyên treo.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Rất thất vọng, muốn hủy vì mất dữ liệu.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Tích hợp phức tạp, chi phí đắt và chờ lâu.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Không phù hợp với quy trình hiện tại.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Khách yêu cầu buổi khảo sát vào thứ hai.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Xin gửi tài liệu API để đội IT đánh giá.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Ngân sách đang trình phê duyệt nội bộ.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Doanh nghiệp có 3 kho và 20 nhân viên.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Đã tiếp nhận yêu cầu, chờ xác nhận lịch.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Tốt quá, lại mất dữ liệu rồi.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Hài lòng gì mà ngày nào cũng lỗi.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      }
+    ]
+  },
+  "solution_intent": {
+    "sample_size": 8,
+    "correct": 8,
+    "cases": [
+      {
+        "case": "crm-sales",
+        "expected": "CRM",
+        "actual": "CRM"
+      },
+      {
+        "case": "warehouse-pos",
+        "expected": "ERP",
+        "actual": "ERP"
+      },
+      {
+        "case": "backup-incident",
+        "expected": "INFRASTRUCTURE",
+        "actual": "INFRASTRUCTURE"
+      },
+      {
+        "case": "integration-api",
+        "expected": "INTEGRATION",
+        "actual": "INTEGRATION"
+      },
+      {
+        "case": "deferred-budget",
+        "expected": "CRM",
+        "actual": "CRM"
+      },
+      {
+        "case": "ai-assistant",
+        "expected": "AI",
+        "actual": "AI"
+      },
+      {
+        "case": "insufficient",
+        "expected": "OTHER",
+        "actual": "OTHER"
+      },
+      {
+        "case": "no-consent",
+        "expected": "INFRASTRUCTURE",
+        "actual": "INFRASTRUCTURE"
+      }
+    ]
+  },
+  "customer_segments": {
+    "sample_size": 7,
+    "correct": 7,
+    "requested_provider": "rules",
+    "cases": [
+      {
+        "case": "crm-sales",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 75,
+        "provider": "rules",
+        "summary": "Khách có ngữ cảnh tìm hiểu CRM và chăm sóc khách hàng. Đây là tín hiệu cần khảo sát; điểm quy tắc không phải xác suất mua và chưa xác nhận ngân sách hay quyền quyết định. Ngữ cảnh gần nhất: Đội sales 12 người đang dùng 4 bảng tính, bị trùng khách và quên lịch gọi lại. Cần demo CRM quản lý lịch sử tư vấn và giao việc; ngân sách dự kiến 30 triệu, phải trình giám đốc duyệt trước.",
+        "recommendation": "Checklist 1: Khảo sát nhu cầu CRM và chăm sóc khách hàng\nHành động cụ thể: Làm rõ số nhân viên kinh doanh, nguồn lead, dữ liệu hiện có và cách theo dõi lịch chăm sóc; ghi nhận mục tiêu, ngân sách và người phê duyệt nếu khách cung cấp.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Chuẩn bị demo theo phạm vi đã xác nhận\nHành động cụ thể: Dùng dữ liệu minh họa cho quy trình khách nêu; đối chiếu tiêu chí chấp nhận trước khi báo giá.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau cuộc khảo sát."
+      },
+      {
+        "case": "warehouse-pos",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 75,
+        "provider": "rules",
+        "summary": "Khách có ngữ cảnh tìm hiểu quản lý kho và bán hàng/POS. Đây là tín hiệu cần khảo sát; điểm quy tắc không phải xác suất mua và chưa xác nhận ngân sách hay quyền quyết định. Ngữ cảnh gần nhất: Doanh nghiệp có 3 kho và 2 quầy POS, khoảng 2.000 mã hàng. Tồn kho trên bảng tính lệch với quầy. Cần tư vấn kiểm kê bằng mã vạch, demo đối chiếu tồn và xuất nhập; chưa cam kết đồng bộ khi chưa kiểm tra API thiết bị.",
+        "recommendation": "Checklist 1: Khảo sát nhu cầu quản lý kho và bán hàng/POS\nHành động cụ thể: Làm rõ số kho hoặc điểm bán, số mã hàng, quy trình kiểm kê và thiết bị đang dùng; ghi nhận mục tiêu, ngân sách và người phê duyệt nếu khách cung cấp.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Chuẩn bị demo theo phạm vi đã xác nhận\nHành động cụ thể: Dùng dữ liệu minh họa cho quy trình khách nêu; đối chiếu tiêu chí chấp nhận trước khi báo giá.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau cuộc khảo sát."
+      },
+      {
+        "case": "backup-incident",
+        "expected": "CHURN_RISK",
+        "actual": "CHURN_RISK",
+        "score": 35,
+        "provider": "rules",
+        "summary": "Nội dung được phép phân tích có dấu hiệu không hài lòng hoặc ngừng sử dụng. Cần xác minh nguyên nhân và ưu tiên xử lý trước khi đề xuất bán thêm. Ngữ cảnh gần nhất: Máy chủ bị lỗi, bản sao lưu gần nhất không khôi phục được. Chúng tôi không hài lòng và muốn hủy hợp đồng nếu không có phương án xử lý. Cần xác minh mất dữ liệu, ưu tiên khôi phục trước khi tư vấn mua thêm.",
+        "recommendation": "Checklist 1: Xác minh vấn đề và mức độ ảnh hưởng\nHành động cụ thể: Liên hệ người phụ trách, ghi rõ sự cố, dữ liệu bị ảnh hưởng và mong muốn xử lý.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Thống nhất phương án hỗ trợ\nHành động cụ thể: Chuyển thông tin đã xác minh cho nhân viên phụ trách; thống nhất bước xử lý và lịch cập nhật, không tự cam kết SLA.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau khi xác minh."
+      },
+      {
+        "case": "integration-api",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 75,
+        "provider": "rules",
+        "summary": "Khách có ngữ cảnh tìm hiểu tích hợp hệ thống. Đây là tín hiệu cần khảo sát; điểm quy tắc không phải xác suất mua và chưa xác nhận ngân sách hay quyền quyết định. Ngữ cảnh gần nhất: Cần tư vấn tích hợp API giữa CRM và phần mềm POS hiện có để đồng bộ mã khách, tránh tạo trùng. Đã có tài liệu API sandbox, muốn demo một luồng tạo khách trước; chưa đồng ý viết lại phần mềm đang chạy.",
+        "recommendation": "Checklist 1: Khảo sát nhu cầu tích hợp hệ thống\nHành động cụ thể: Làm rõ các phần mềm cần kết nối, tài liệu API, chiều đồng bộ và cách xử lý dữ liệu trùng; ghi nhận mục tiêu, ngân sách và người phê duyệt nếu khách cung cấp.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Chuẩn bị demo theo phạm vi đã xác nhận\nHành động cụ thể: Dùng dữ liệu minh họa cho quy trình khách nêu; đối chiếu tiêu chí chấp nhận trước khi báo giá.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau cuộc khảo sát."
+      },
+      {
+        "case": "deferred-budget",
+        "expected": "HIBERNATING",
+        "actual": "HIBERNATING",
+        "score": 30,
+        "provider": "rules",
+        "summary": "Khách nêu việc tạm dừng hoặc chưa sẵn sàng về nhu cầu/ngân sách. Không suy diễn thành cơ hội chốt ngay; cần xin phép hẹn lại theo thời điểm khách mong muốn. Ngữ cảnh gần nhất: Chúng tôi đã xem demo CRM nhưng chưa có ngân sách, xin tạm dừng trao đổi và hẹn lại quý sau. Không gửi báo giá thúc chốt trong tháng này.",
+        "recommendation": "Checklist 1: Xác nhận thời điểm liên hệ lại\nHành động cụ thể: Hỏi thời điểm và điều kiện khách sẵn sàng đánh giá lại; chỉ tạo lịch khi nhân viên xác nhận.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Theo lịch khách đồng ý."
+      },
+      {
+        "case": "ai-assistant",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 75,
+        "provider": "rules",
+        "summary": "Khách có ngữ cảnh tìm hiểu AI và tự động hóa. Đây là tín hiệu cần khảo sát; điểm quy tắc không phải xác suất mua và chưa xác nhận ngân sách hay quyền quyết định. Ngữ cảnh gần nhất: Muốn tìm hiểu AI tóm tắt yêu cầu và gợi ý email nháp cho nhóm chăm sóc. Có 200 tình huống đã ẩn danh để làm thí điểm. Cần nhân viên duyệt nội dung, không cho AI tự gửi email hoặc tự hứa giá.",
+        "recommendation": "Checklist 1: Khảo sát nhu cầu AI và tự động hóa\nHành động cụ thể: Làm rõ tác vụ cần hỗ trợ, nguồn dữ liệu được phép dùng, tiêu chí đánh giá và bước nhân viên phê duyệt; ghi nhận mục tiêu, ngân sách và người phê duyệt nếu khách cung cấp.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Chuẩn bị demo theo phạm vi đã xác nhận\nHành động cụ thể: Dùng dữ liệu minh họa cho quy trình khách nêu; đối chiếu tiêu chí chấp nhận trước khi báo giá.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau cuộc khảo sát."
+      },
+      {
+        "case": "insufficient",
+        "expected": "UNCLASSIFIED",
+        "actual": "UNCLASSIFIED",
+        "score": 25,
+        "provider": "rules",
+        "summary": "Chưa có đủ tín hiệu nhu cầu hoặc dữ liệu được phép sử dụng để phân khúc đáng tin cậy. Cần hỏi thêm thay vì suy đoán khả năng mua. Ngữ cảnh gần nhất: Xin chào, tôi muốn trao đổi với một nhân viên. Hiện chưa cung cấp thêm thông tin về doanh nghiệp.",
+        "recommendation": "Checklist 1: Bổ sung ngữ cảnh tư vấn\nHành động cụ thể: Hỏi quy trình hiện tại, điểm vướng và kết quả mong muốn; ghi nhận consent riêng cho phân tích AI.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Khi khách sẵn sàng trao đổi."
+      }
+    ]
+  },
+  "revenue_backtest": {
+    "sample_size": 4,
+    "unit": "VND",
+    "mae": 3500000.0,
+    "naive_mae": 3500000.0,
+    "linear_mae": 4431953.463203464,
+    "selected_model": "NAIVE",
+    "cases": [
+      {
+        "month": "2026-07-01",
+        "actual": 18500000.0,
+        "prediction": 22000000.0,
+        "model": "NAIVE",
+        "linear_prediction": 13946428.57142857,
+        "naive_previous_month": 22000000.0
+      },
+      {
+        "month": "2026-08-01",
+        "actual": 15000000.0,
+        "prediction": 18500000.0,
+        "model": "NAIVE",
+        "linear_prediction": 16250000.0,
+        "naive_previous_month": 18500000.0
+      },
+      {
+        "month": "2026-09-01",
+        "actual": 11500000.0,
+        "prediction": 15000000.0,
+        "model": "NAIVE",
+        "linear_prediction": 16333333.333333332,
+        "naive_previous_month": 15000000.0
+      },
+      {
+        "month": "2026-10-01",
+        "actual": 8000000.0,
+        "prediction": 11500000.0,
+        "model": "NAIVE",
+        "linear_prediction": 15090909.090909092,
+        "naive_previous_month": 11500000.0
+      }
+    ],
+    "note": "Rolling origin tối đa 4 tháng, chọn mô hình chỉ từ tiền tố quá khứ. Chính sách thận trọng: ít hơn 18 tháng dùng baseline; mô hình khác cần ít nhất 5 fold nội bộ, cải thiện MAE 10% và tốt hơn ở 2 fold gần nhất. Đây là ngưỡng vận hành, không bảo đảm vượt baseline trong tương lai. Dữ liệu có thể là demo."
+  }
+}

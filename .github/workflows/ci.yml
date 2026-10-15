@@ -36,7 +36,7 @@ jobs:
 
       - name: Install browser E2E dependency
         if: matrix.python-version == '3.12'
-        run: pip install -r requirements-e2e.txt && playwright install --with-deps chromium
+        run: pip install -r requirements-e2e.txt && playwright install --with-deps chromium firefox webkit
 
       - name: Audit Python dependencies
         if: matrix.python-version == '3.12'
@@ -59,7 +59,10 @@ jobs:
 
       - name: Run browser end-to-end tests
         if: matrix.python-version == '3.12'
-        run: python manage.py test crm.test_browser_e2e --verbosity=2
+        run: |
+          for browser in chromium firefox webkit; do
+            CRM_E2E_BROWSER="$browser" python manage.py test crm.test_browser_e2e --verbosity=2 || exit 1
+          done
         env:
           RUN_BROWSER_E2E: '1'
 
@@ -84,8 +87,42 @@ jobs:
 
       - name: Audit frontend dependencies
         working-directory: tailwind
-        run: npm audit --audit-level=critical
+        run: npm audit --audit-level=moderate
 
       - name: Build CSS
         working-directory: tailwind
         run: npm run css:build
+
+      - name: Verify Docker frontend with isolated native dependencies
+        run: docker compose run --rm --no-deps crm-tailwind sh -c "npm ci && npm run css:build && npm audit --audit-level=moderate"
+
+  analytics-postgresql:
+    name: Analytics · PostgreSQL and reader permissions
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: crm
+          POSTGRES_USER: crm_app
+          POSTGRES_PASSWORD: isolated-ci-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U crm_app -d crm"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_DATABASE_URL: postgresql://crm_app:isolated-ci-password@127.0.0.1:5432/crm
+      SUPERSET_READONLY_PASSWORD: isolated-reader-password
+      PGPASSWORD: isolated-ci-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Create isolated analytics reader
+        run: psql -h 127.0.0.1 -U crm_app -d crm -c "CREATE ROLE superset_ro LOGIN PASSWORD 'isolated-reader-password'"
+      - name: Test analytics and consent with PostgreSQL
+        run: python manage.py test crm.test_ai_analytics crm.test_quality_regressions --verbosity=2

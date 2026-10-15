@@ -78,7 +78,7 @@ class Command(BaseCommand):
                 f"{ai_summary['sentiments_analyzed']} sentiments, {ai_summary['customers_segmented']} RFM segments)."
             ))
         except Exception as ai_exc:
-            self.stdout.write(self.style.WARNING(f"Cảnh báo khi chạy AI pipeline: {ai_exc}"))
+            raise CommandError(f"Không thể tạo dữ liệu AI analytics: {ai_exc}") from ai_exc
 
         self.stdout.write(self.style.SUCCESS(
             "Created 4 views and 6 AI tables in schema analytics and granted Superset read-only access."

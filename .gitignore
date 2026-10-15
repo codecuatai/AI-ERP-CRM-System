@@ -12,6 +12,7 @@ db.sqlite3
 media/
 staticfiles/
 *.log
+artifacts/
 
 # Env — TUYỆT ĐỐI không commit key thật
 .env

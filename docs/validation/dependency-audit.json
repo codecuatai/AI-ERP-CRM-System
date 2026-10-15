@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-10-15T15:42:18.455800+00:00",
+  "npm": {
+    "command": "npm audit --json",
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "packages_audited": 59
+  },
+  "python": {
+    "command": "python -m pip_audit -r requirements-e2e.txt --format json",
+    "packages_audited": 62,
+    "known_vulnerabilities": 0
+  },
+  "frontend": {
+    "tailwindcss": "4.3.3",
+    "@tailwindcss/cli": "4.3.3",
+    "@parcel/watcher_override": "2.6.0",
+    "npm_ci": "PASS",
+    "css_build": "PASS",
+    "css_watch_startup": "PASS"
+  },
+  "scope": "Known advisories from the registries at check time; not a penetration test or proof of zero vulnerabilities.",
+  "docker_frontend": {
+    "status": "PASS",
+    "command": "docker compose run --rm --no-deps crm-tailwind sh -c \"npm ci && npm run css:build && npm audit --audit-level=moderate\"",
+    "known_npm_advisories": 0,
+    "node_modules": "isolated container volume for Linux native bindings"
+  }
+}

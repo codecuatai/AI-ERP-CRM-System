@@ -1,0 +1,62 @@
+{
+  "checked_at": "2026-10-15T15:42:18.455800+00:00",
+  "branch": "codex/complete-th2-gaps",
+  "checks": {
+    "sqlite_chromium": {
+      "tests": 131,
+      "seconds": 108.902,
+      "skipped": 1,
+      "status": "PASS"
+    },
+    "postgresql": {
+      "tests": 131,
+      "seconds": 66.877,
+      "skipped": 5,
+      "status": "PASS"
+    },
+    "firefox": {
+      "tests": 5,
+      "seconds": 74.876,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "webkit": {
+      "tests": 5,
+      "seconds": 108.442,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "final_targeted": {
+      "tests": 17,
+      "seconds": 7.056,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "final_regressions": {
+      "tests": 43,
+      "seconds": 8.241,
+      "skipped": 1,
+      "status": "PASS"
+    }
+  },
+  "django_check": "PASS",
+  "migration_check": "No changes detected",
+  "frontend_build": "PASS",
+  "dependency_audit": "dependency-audit.json",
+  "superset": "superset-live.json",
+  "mcp_authoring": [
+    "mcp-authoring-live.json",
+    "mcp-authoring-gallery.json"
+  ],
+  "ai_evaluation": [
+    "ai-quality-followup.json",
+    "ai-quality-followup-gemini.json"
+  ],
+  "isolation": "Browser and SMTP mutation tests use Django test databases; SMTP binds to loopback. Live verification creates/reuses only demo BI metadata and refreshes derived analytics; no external email was sent.",
+  "docker_frontend": {
+    "status": "PASS",
+    "command": "docker compose run --rm --no-deps crm-tailwind sh -c \"npm ci && npm run css:build && npm audit --audit-level=moderate\"",
+    "known_npm_advisories": 0,
+    "node_modules": "isolated container volume for Linux native bindings"
+  }
+}

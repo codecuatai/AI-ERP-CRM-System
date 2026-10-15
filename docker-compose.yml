@@ -82,6 +82,9 @@ services:
     working_dir: /app/tailwind
     volumes:
       - .:/app
+      # Tailwind v4 uses native bindings: do not share Windows node_modules
+      # with the Linux container through the workspace bind mount.
+      - /app/tailwind/node_modules
     command: sh -c "npm install && npm run css:watch"
     profiles:
       - frontend
@@ -187,6 +190,8 @@ services:
     volumes:
       - ./superset/bootstrap_superset.py:/app/bootstrap_superset.py:ro
     depends_on:
+      crm-web:
+        condition: service_healthy
       superset:
         condition: service_healthy
     command: ["python", "/app/bootstrap_superset.py"]

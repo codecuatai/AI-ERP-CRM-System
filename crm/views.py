@@ -26,6 +26,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from .forms import CareTaskForm, EmailDraftForm, LeadFollowUpComposeForm, LeadFollowUpResponseForm, PublicLeadRequestForm
 from .models import AIAnalysis, CareTask, Customer, Interaction, LeadFollowUp, LeadFollowUpResponse, LeadRequest
 from .services.ai_chat_service import answer_customer_question
+from .services.consultation import clean_chat_history
 from .services.ai_service import analyze_customer as run_customer_analysis
 from .services.email_draft_service import create_email_draft
 
@@ -121,16 +122,37 @@ def _get_report_analytics_context(today):
                     """)
                     data["anomalies"] = [{"entity_type": r[0], "severity": r[1], "description": r[2]} for r in cursor.fetchall()]
     except Exception as exc:
+        data["has_ai_datamart"] = False
         logger.debug("Analytics datamart query failed/skipped: %s", exc)
 
     if not data["has_ai_datamart"]:
-        hot_leads = LeadRequest.objects.filter(customer__ai_score__gte=70, status=LeadRequest.Status.NEW).count()
-        data["hot_leads_count"] = hot_leads
-        data["total_expected_revenue"] = hot_leads * 25000000
-        data["lead_tiers"] = [
-            {"tier": "HOT", "count": hot_leads, "revenue": data["total_expected_revenue"]},
-            {"tier": "WARM", "count": max(0, LeadRequest.objects.count() - hot_leads), "revenue": 0},
-        ]
+        from collections import Counter
+        from crm.analytics.pipeline import AnalyticsPipeline
+        pipe = AnalyticsPipeline()
+        leads = pipe.process_lead_predictions()
+        tiers, solutions = {}, {}
+        for lead in leads:
+            tier = tiers.setdefault(lead["tier"], {"tier": lead["tier"], "count": 0, "revenue": 0})
+            tier["count"] += 1
+            tier["revenue"] += lead["expected_won_value"]
+            sol = solutions.setdefault(lead["solution_interest"], {"solution": lead["solution_interest"], "count": 0, "deal_value": 0, "expected_won": 0})
+            sol["count"] += 1
+            sol["deal_value"] += lead["estimated_deal_value"]
+            sol["expected_won"] += lead["expected_won_value"]
+        data["lead_tiers"] = list(tiers.values())
+        data["solutions"] = list(solutions.values())
+        data["hot_leads_count"] = tiers.get("HOT", {}).get("count", 0)
+        data["total_expected_revenue"] = sum(x["revenue"] for x in tiers.values())
+        data["forecast"] = [{"date": str(x["forecast_date"]), "predicted": x["predicted_revenue"],
+                             "lower": x["lower_bound_95"], "upper": x["upper_bound_95"], "trend": x["trend_direction"]}
+                            for x in pipe.process_revenue_forecast()]
+        sentiments = pipe.process_sentiments()
+        data["sentiment"] = [{"label": key, "count": count} for key, count in Counter(x["sentiment_label"] for x in sentiments).items()]
+        data["churn_risk"] = [{"level": key, "count": count} for key, count in Counter(x["churn_risk_level"] for x in sentiments).items()]
+        data["rfm_clusters"] = [{"cluster": key, "count": count} for key, count in Counter(x["cluster_name"] for x in pipe.process_rfm_segmentation()).items()]
+        data["xai"] = [{"feature": x["feature_name"], "weight": x["importance_weight"]} for x in pipe.process_explainability()]
+        data["anomalies"] = pipe.process_anomalies()[:5]
+    data["data_source"] = "postgresql_datamart" if data["has_ai_datamart"] else "crm_live_rules"
 
     data["chart_json"] = json.dumps(data)
     return data
@@ -444,6 +466,8 @@ def crm_report(request):
         # Enhanced Data Mart & Superset Analytics
         "analytics": analytics_data,
         "chart_json": analytics_data.get("chart_json", "{}"),
+        "chart_data": {key: value for key, value in analytics_data.items() if key != "chart_json"},
+        "can_sync_analytics": request.user.has_perm("crm.analyze_customer"),
         "total_expected_revenue": analytics_data.get("total_expected_revenue", 0),
         "hot_leads_count": analytics_data.get("hot_leads_count", 0),
     }
@@ -451,14 +475,16 @@ def crm_report(request):
 
 
 @login_required
-@permission_required("crm.access_crm", raise_exception=True)
+@permission_required(("crm.access_crm", "crm.analyze_customer"), raise_exception=True)
+@require_POST
 def sync_ai_analytics_pipeline(request):
     """Trigger background AI analytics recalculation and return to report."""
     try:
         from crm.analytics.pipeline import AnalyticsPipeline
         pipe = AnalyticsPipeline()
-        pipe.run_pipeline()
-        messages.success(request, "Đã làm mới dữ liệu Data Mart và cập nhật biểu đồ AI Superset thành công!")
+        summary = pipe.run_all()
+        messages.success(request, f"Đã cập nhật phân tích: {summary['leads_analyzed']} yêu cầu, "
+                         f"{summary['sentiments_analyzed']} trao đổi và {summary['forecast_months']} tháng dự báo.")
     except Exception as exc:
         logger.exception("Error syncing AI analytics pipeline: %s", exc)
         messages.warning(request, f"Không thể đồng bộ pipeline: {exc}")
@@ -640,6 +666,8 @@ def customer_detail(request, pk):
     )
     context = {
         "customer": customer,
+        "today": timezone.localdate(),
+        "can_analyze_permission": request.user.has_perm("crm.analyze_customer"),
         "interactions": customer.interactions.all(),
         "care_tasks": customer.care_tasks.select_related("assignee").annotate(
             status_order=Case(
@@ -772,20 +800,21 @@ def save_public_lead_request(data):
             kind=Interaction.Kind.OTHER,
             subject="Yêu cầu tư vấn từ website",
             content=data["request_text"],
+            ai_processing_consent=data["ai_processing_consent"],
         )
 
         chat_history_raw = str(data.get("chat_history", "")).strip()
         if chat_history_raw:
             try:
                 import json as _json
-                history_list = _json.loads(chat_history_raw)
+                history_list = clean_chat_history(_json.loads(chat_history_raw))
                 lines = []
                 for item in history_list:
                     role_name = "Khách hàng" if item.get("role") == "user" else "DigiFlow AI"
                     lines.append(f"{role_name}: {item.get('content', '')}")
                 formatted_chat = "\n".join(lines)
             except Exception:
-                formatted_chat = chat_history_raw
+                formatted_chat = ""
 
             if formatted_chat.strip():
                 Interaction.objects.create(
@@ -793,6 +822,7 @@ def save_public_lead_request(data):
                     kind=Interaction.Kind.OTHER,
                     subject="Lịch sử trao đổi cùng Trợ lý AI",
                     content=formatted_chat[:4000],
+                    ai_processing_consent=data["ai_processing_consent"],
                 )
 
 
@@ -808,10 +838,10 @@ def ai_chat_consultant(request):
     except Exception:
         return JsonResponse({"error": "Dữ liệu JSON không hợp lệ"}, status=400)
 
-    message = str(payload.get("message", "")).strip()
-    history = payload.get("history", [])
-    if not isinstance(history, list):
-        history = []
+    if not isinstance(payload, dict) or not isinstance(payload.get("message"), str):
+        return JsonResponse({"error": "Tin nhắn phải là chuỗi trong một đối tượng JSON."}, status=400)
+    message = payload["message"].strip()
+    history = clean_chat_history(payload.get("history", []))
 
     if not message:
         return JsonResponse({"error": "Nội dung tin nhắn không được để trống"}, status=400)
@@ -936,7 +966,9 @@ def _find_follow_up_by_token(token):
 
 def _render_follow_up_public_page(request, context, status=200):
     response = render(request, "crm/lead_follow_up_public.html", context, status=status)
-    response["Referrer-Policy"] = "no-referrer"
+    # Keep the origin available for browser form POST / CSRF checks while
+    # withholding the token-bearing path from Referer headers.
+    response["Referrer-Policy"] = "strict-origin"
     response["X-Robots-Tag"] = "noindex, nofollow"
     return response
 
@@ -1001,6 +1033,7 @@ def lead_follow_up_reply(request, token):
                 customer=locked_follow_up.lead_request.customer,
                 kind=Interaction.Kind.OTHER,
                 subject="Khách hàng phản hồi form bổ sung",
+                ai_processing_consent=response.ai_processing_consent,
                 content=(
                     f"Khó khăn hiện tại: {response.current_challenge}\n"
                     f"Kết quả mong muốn: {response.desired_outcome or 'Chưa cung cấp'}\n"

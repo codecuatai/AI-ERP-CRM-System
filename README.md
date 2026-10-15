@@ -54,6 +54,37 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - [Hướng dẫn cho AI agent](AGENTS.md)
 - [Checklist trước khi nộp](#checklist-trước-khi-nộp)
 
+## Kiểm thử mở rộng và đánh giá AI (15/10/2026)
+
+Đợt khắc phục bổ sung đã có MCP tạo biểu đồ/dashboard, dự báo mặc định baseline khi thiếu bằng chứng, Tailwind 4.3.3 và kiểm thử Chromium/Firefox/WebKit cùng SMTP cục bộ. Trạng thái hiện tại và bằng chứng: [hoàn thiện TH2](docs/hoan-thien-th2.md). Báo cáo E2E ban đầu vẫn được giữ để đối chiếu trước/sau.
+
+Đã bổ sung kiểm thử browser cho chat nhiều lượt, form lỗi/không consent, tìm kiếm, tạo/sửa/hoàn tất việc, email nháp có người xác nhận, follow-up gửi/trả lời một lần/thu hồi/hết hạn, xuất CSV/PNG, báo cáo desktop/mobile và tạo/sửa khách hàng trong Wagtail. Browser luôn chạy trên database test do `StaticLiveServerTestCase` quản lý.
+
+```powershell
+# Dữ liệu minh họa mới, không ghi đè hồ sơ hiện có; không gửi email
+python manage.py seed_consultation_scenarios --analyze
+# Đánh giá rules bằng các tình huống có nhãn; không gọi Gemini
+python manage.py evaluate_ai_quality --output docs/validation/ai-quality-rules.json
+# Đối chiếu kết quả AI đã lưu của 7 tình huống có consent
+python manage.py evaluate_ai_quality --provider stored --output docs/validation/ai-quality-gemini.json
+# Chỉ chạy lại các tình huống cần xem xét
+python manage.py seed_consultation_scenarios --analyze --reanalyze --case crm-sales
+
+$env:USE_SQLITE = "1"
+$env:RUN_BROWSER_E2E = "1"
+python manage.py test --verbosity=2
+Remove-Item Env:RUN_BROWSER_E2E
+Remove-Item Env:USE_SQLITE
+```
+
+Tám hồ sơ mới mang email `scenario.*@consultation.test` và tên công ty bắt đầu bằng “Minh họa”. Bảy hồ sơ có consent được phân tích; hồ sơ từ chối AI vẫn được tiếp nhận và không được chạy phân tích. `--rules-only` dùng quy tắc cục bộ; `--reanalyze` chủ động tạo một lần phân tích mới trong lịch sử. Lịch sử chat/phản hồi lưu consent riêng; chat cũ chưa xác định consent không được tự đưa vào phân tích hồ sơ công khai.
+
+**Đánh giá trung thực:** bộ minh họa nhỏ có dùng để sửa prompt/rules, không phải benchmark độc lập. Không suy rộng kết quả khớp nhãn thành độ chính xác 100% trên dữ liệu thật. Điểm lead là quy tắc sigmoid chưa hiệu chuẩn xác suất; RFM dùng tâm tham chiếu cố định; giải thích đặc trưng không phải SHAP. Dự báo cần ít nhất 3 tháng, dùng baseline tháng cuối khi dưới 18 tháng; chỉ chọn tuyến tính/trung bình 3 tháng khi đủ dữ liệu và vượt kiểm định quá khứ. Dải sai số là tham khảo, chưa hiệu chuẩn độ bao phủ. Lệnh `--evaluate` tính số liệu thực, không in Accuracy/ROC-AUC/MAE ghi cứng.
+
+Xem [báo cáo kiểm thử và đánh giá AI](docs/kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo TH2 đã đối chiếu mã nguồn](docs/bao-cao-ky-thuat-th2.md) và [kết quả kiểm tra Superset trực tiếp](docs/validation/superset-live.json).
+
+Trong CRM, nút **Làm mới dữ liệu phân tích** chạy pipeline sau khi nhân viên xác nhận bằng POST và có quyền phân tích AI. Sau khi cập nhật CRM hoặc phân tích từng khách, dùng nút này trước khi làm mới biểu đồ Superset. Tab báo cáo CRM dùng ECharts cục bộ; tab Superset trực tiếp yêu cầu đăng nhập Superset. `SUPERSET_PUBLIC_URL` có thể đổi địa chỉ liên kết/iframe cho người dùng. Không có SSO tự động.
+
 ## Tính năng chính
 
 - **Quản lý khách hàng:** họ tên, email, số điện thoại, công ty, nguồn khách hàng, ghi chú, tổng chi tiêu và trạng thái hoạt động.
@@ -176,13 +207,16 @@ Sau khi hoàn tất khởi động:
 #### Các lệnh AI Analytics & Superset MCP:
 
 ```bash
-# 1. Chạy toàn bộ 6 mô hình AI phân tích và nạp vào Data Mart (schema analytics):
+# 1. Chạy 6 quy trình phân tích và nạp vào Data Mart (schema analytics):
 python manage.py run_ai_analytics --evaluate
 
-# 2. Đồng bộ cấu hình Apache Superset (10 Datasets, 12 Charts, 2 Dashboards):
+# 2. Tạo view và cập nhật bảng phân tích:
 python manage.py setup_superset_analytics
 
-# 3. Kiểm thử Apache Superset MCP Server (Model Context Protocol cho AI Agent):
+# 3. Tạo/cập nhật 10 dataset, 12 chart, 2 dashboard:
+python superset/bootstrap_superset.py
+
+# 4. Kiểm thử Apache Superset MCP Server:
 python manage.py run_superset_mcp --test
 ```
 
@@ -404,79 +438,37 @@ Lệnh seed cũng tạo 12 giao dịch doanh thu giả lập theo các tháng g�
 
 ## Kết nối Apache Superset
 
-Superset chạy riêng trong Docker Compose, đọc PostgreSQL qua tài khoản `superset_ro`. Cấu hình này dành cho demo local với dữ liệu giả lập; không mở cổng dashboard/database ra mạng công khai và không dùng database thật trong lần chạy seed.
+PostgreSQL chạy CRM trong schema `public`; bốn view tổng hợp và sáu bảng phân tích nằm trong schema `analytics`. Superset đọc bằng role `superset_ro`; database metadata của Superset nằm riêng. SQLite vẫn dùng được CRM và biểu đồ cục bộ, nhưng không thay thế PostgreSQL cho Superset.
 
-### Khởi chạy trên Windows
+```powershell
+docker compose --profile analytics up -d
+python manage.py setup_superset_analytics
+python superset/bootstrap_superset.py
+python manage.py verify_superset_analytics
+python manage.py run_superset_mcp --test
+```
 
-Yêu cầu Docker Desktop chạy Linux containers/WSL2 và Python dependencies của dự án.
+Bootstrap dùng REST API để đăng ký **10 dataset, 12 chart, 2 dashboard**. Chạy lại sẽ cập nhật cấu hình chuẩn; tên chart cũ được nhận diện để đổi tên mà không tạo bản trùng. Bốn chart AI dùng chung được gắn đủ cả hai dashboard. Đây là thao tác có thể cập nhật bố cục đã chỉnh thủ công, nên chỉ chủ động chạy khi muốn khôi phục cấu hình chuẩn.
 
-1. Tạo `.env` từ `.env.example`, sau đó thay tất cả giá trị `replace-with-*` bằng giá trị riêng cho local. Tạo key bằng `openssl rand -hex 32`; các mật khẩu database nên dùng ký tự chữ/số để URI đơn giản. Không dùng thông tin demo trong production (driver psycopg đã có sẵn trong `requirements.txt`).
-2. Cấu hình Django dùng PostgreSQL trong `.env`:
+MCP chạy bằng `python manage.py run_superset_mcp`, hỗ trợ `initialize`, notification khởi tạo, `ping`, `tools/list`, `tools/call` qua stdio. Có bảy tool: danh sách dashboard, danh sách dataset/cột, insights AI, SQL chỉ đọc bằng `superset_ro`, chạy pipeline, tạo biểu đồ và tạo dashboard. Ba thao tác thay đổi yêu cầu `confirm=true` sau khi người dùng xác nhận. MCP gọi API Superset có CSRF để tạo chart/dashboard từ dataset CRM analytics đã đăng ký; không nhận biểu thức SQL tùy ý cho metric. Khi Superset offline, server báo lỗi. Chưa có HTTP MCP.
 
-   ```dotenv
-   DJANGO_DATABASE_URL=postgresql://crm_app:YOUR_CRM_PASSWORD@127.0.0.1:5433/crm
-   ```
+`superset_create_chart` hỗ trợ `pie`, `bar`, `line`, `table`, `number`, các phép count/sum/avg/min/max và kiểm tra cột tồn tại/cột số. Gọi lại cấu hình giống nhau dùng lại chart; khác cấu hình mặc định báo lỗi. `replace_existing=true` chỉ sửa chart do MCP quản lý trên cùng dataset, vẫn cần xác nhận. `superset_create_dashboard` nhận tên, slug bắt đầu `crm-mcp-`, danh sách chart ID; mặc định nháp, giữ các liên kết dashboard hiện có. Không tự ghi đè dashboard đã đổi cấu hình.
 
-   Đặt `CRM_DB_NAME=crm`, `CRM_DB_USER=crm_app` và `CRM_DB_PASSWORD=YOUR_CRM_PASSWORD` tương ứng. Đặt thêm mật khẩu riêng `CRM_DB_ADMIN_PASSWORD` cho tài khoản khởi tạo PostgreSQL; Django không dùng tài khoản admin này. Nếu cổng `5433` hoặc `8088` đang dùng, đổi `CRM_DB_HOST_PORT` hoặc `SUPERSET_HOST_PORT` và cập nhật URL tương ứng.
+```powershell
+# Tạo hai chart và một dashboard nháp bằng MCP stdio, kiểm tra gọi lại không trùng
+python scripts/verify_mcp_authoring.py
+# Thử đủ năm loại biểu đồ trên dashboard thư viện nháp
+python scripts/verify_mcp_authoring.py --all-kinds
+```
 
-3. Khởi động PostgreSQL CRM và Superset:
+```powershell
+# Kiểm tra read-only cả chart API, MCP stdio, quyền database và giao diện Superset
+python scripts/verify_live_integrations.py --browser
+# Chỉ gọi Gemini với hội thoại và hồ sơ minh họa, tạo email nháp, không gửi thư
+python scripts/verify_live_ai.py
+```
 
-   ```powershell
-   docker compose --profile analytics up -d
-   ```
-
-4. Trong môi trường Python đã cài dependencies, chạy migration, dữ liệu mẫu và tạo view analytics:
-
-   ```powershell
-   python manage.py migrate
-   python manage.py seed_crm_data
-   python manage.py setup_superset_analytics
-   python manage.py runserver
-   ```
-
-   Django trên máy host kết nối PostgreSQL ở `127.0.0.1:5433`; Superset trong Docker kết nối database bằng hostname `crm-db`.
-
-5. Sau khi migration và view analytics đã sẵn sàng, chạy bootstrap để tự đăng nhập bằng tài khoản admin, đăng ký database/dataset và tạo dashboard cùng bốn biểu đồ:
-
-   ```powershell
-   docker compose run --rm superset-bootstrap
-   ```
-
-   Nếu cần chạy lại sau khi chỉnh dữ liệu hoặc xóa metadata, chạy lại lệnh trên hoặc chạy từ PowerShell:
-
-   ```powershell
-   $env:SUPERSET_URL = "http://127.0.0.1:8088"
-   python superset/bootstrap_superset.py
-   ```
-
-   Mở [Superset](http://127.0.0.1:8088), đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` trong `.env`. Kết nối được tạo tự động với URI:
-
-   ```text
-   postgresql://superset_ro:<SUPERSET_READONLY_PASSWORD>@crm-db:5432/crm
-   ```
-
-   Kết nối này dùng tài khoản chỉ đọc; bốn dataset trong schema `analytics` được bootstrap tự động.
-
-6. Dashboard đã tạo có slug `crm-analytics-dashboard` và bốn biểu đồ:
-
-   - Khách hàng theo tháng/phân khúc: dataset `customer_monthly`, metric `SUM(customer_count)`.
-   - Lead theo tháng/trạng thái/giải pháp: dataset `lead_pipeline`, metric `SUM(lead_count)`.
-   - Việc chăm sóc/quá hạn: dataset `care_task_summary`, metric `SUM(task_count)` hoặc `SUM(overdue_count)`.
-   - Doanh thu đã chốt theo tháng: dataset `revenue_transactions`, temporal column `closed_at`, metric `SUM(won_revenue)`; giao dịch `VOID` có doanh thu bằng 0.
-
-   Có thể mở trực tiếp [dashboard CRM](http://127.0.0.1:8088/superset/dashboard/crm-analytics-dashboard/) sau khi đăng nhập. Nếu muốn chỉnh màu, bộ lọc hoặc bố cục, dùng **Edit dashboard** trong Superset; chạy lại bootstrap sẽ cập nhật lại bốn biểu đồ và bố cục chuẩn.
-
-7. Đối chiếu dữ liệu hiển thị trước khi demo/nộp bài. Lệnh này so sánh tổng khách hàng, lead, việc chăm sóc và doanh thu WON giữa bảng CRM và bốn view analytics:
-
-   ```powershell
-   python manage.py verify_superset_analytics
-   ```
-
-   Lệnh phải in bốn dòng `PASS` và `Analytics views match CRM source data.`. Cần đảm bảo PostgreSQL đang chạy và `DJANGO_DATABASE_URL` đã được cấu hình trong container hoặc `.env`.
-
-Các view trong schema `analytics` chỉ chứa chỉ số cần thiết, không có tên, email, số điện thoại, ghi chú hay nội dung tương tác. Superset metadata nằm trong PostgreSQL volume riêng. Lệnh `setup_superset_analytics` chỉ hỗ trợ PostgreSQL và cấp quyền đọc schema view cho role `superset_ro`.
-
-Để dừng dịch vụ, chạy `docker compose down`. Lệnh `down -v` xóa cả database demo và dashboard Superset; chỉ dùng nếu muốn xóa các volume này.
+Các script trên đọc `.env`; không in khóa API hoặc mật khẩu. Tài khoản, cổng, domain và dữ liệu là cấu hình demo local. Không dùng `docker compose down -v` nếu muốn giữ database và dashboard hiện có.
 
 ## Cách phân tích AI hoạt động
 
@@ -550,7 +542,7 @@ Các thư mục `.venv/` và `tailwind/node_modules/` được tạo tự độn
 
 ## Frontend và build giao diện
 
-Frontend dùng **Django Templates + Tailwind CSS 3**. Các trang HTML thuộc app Django nằm trong `crm/templates/crm/`; CSS/JavaScript mà Django phục vụ nằm trong `crm/static/crm/`. Thư mục `tailwind/` chứa CSS nguồn (`src/input.css`) và công cụ build, không phải một frontend React tách biệt. Người chỉ chạy ứng dụng không cần cài Node.js; CSS đã build sẵn. Khi muốn sửa giao diện, cài Node.js, mở terminal tại `tailwind/`, rồi chạy `npm install` và `npm run css:watch`. Lệnh `npm run css:build` tạo lại file CSS sau khi chỉnh sửa.
+Frontend dùng **Django Templates + Tailwind CSS 4.3.3**, Node.js 20+. Đã nâng từ 3.4.19 để loại chuỗi phụ thuộc có lỗ hổng; `legacy-colors.json` giữ bảng màu cũ. Các trang HTML nằm trong `crm/templates/crm/`; CSS/JavaScript phục vụ ở `crm/static/crm/`. Thư mục `tailwind/` chứa CSS nguồn và công cụ build, không phải frontend React riêng. CSS đã build sẵn nên người chỉ chạy ứng dụng không cần Node.js. Khi sửa giao diện, chạy `npm ci` và `npm run css:watch`; `npm run css:build` tạo CSS để bàn giao. Override `@parcel/watcher=2.6.0` loại phụ thuộc `micromatch/braces` còn tồn tại trong CLI 4.3.3; không bỏ qua audit.
 
 Các file giao diện chính:
 
@@ -606,7 +598,7 @@ CI kiểm tra backend, giao diện và lỗ hổng dependency:
 
 - **Backend:** cài Python 3.11 và 3.12, kiểm tra migration đã được commit, migrate database, chạy `manage.py check` và toàn bộ test Django.
 - **Frontend:** cài Node.js 20, chạy `npm ci` và build Tailwind CSS.
-- **Dependency security:** `pip-audit` kiểm tra thư viện Python (trên Python 3.12) và `npm audit --audit-level=high` kiểm tra package frontend.
+- **Dependency security:** `pip-audit` kiểm tra thư viện Python (trên Python 3.12) và `npm audit --audit-level=moderate` kiểm tra package frontend.
 
 Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. Trên GitHub nên bật bảo vệ nhánh `main`, bắt buộc Pull Request và yêu cầu cả hai job CI hoàn thành thành công trước khi merge.
 
@@ -636,6 +628,8 @@ $env:RUN_BROWSER_E2E = "1"
 python manage.py test crm.test_browser_e2e --verbosity=2
 Remove-Item Env:RUN_BROWSER_E2E
 ```
+
+Để chạy cùng 5 luồng trên các engine khác, cài `playwright install firefox webkit`, đặt `RUN_BROWSER_E2E=1` và `CRM_E2E_BROWSER=firefox` hoặc `webkit`, rồi chạy lại `python manage.py test crm.test_browser_e2e`. CI chạy đủ ba engine trên Python 3.12. WebKit qua Playwright không thay thế thử nghiệm Safari trên thiết bị thật. Test `crm.test_smtp_delivery` kiểm tra transport SMTP qua loopback, không gửi ra nhà cung cấp email thật.
 
 Test trình duyệt gửi form lead công khai, đăng nhập Wagtail bằng tài khoản chỉ tồn tại trong test database, chạy phân tích rules fallback rồi tạo việc chăm sóc. Không cần Gemini API key, không gửi email thật và không ghi dữ liệu vào database local. CI cài Chromium và chạy test này tự động trên Python 3.12.
 

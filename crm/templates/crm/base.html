@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0f172a">
   <title>{% block title %}Tổng quan{% endblock %} · CRM chuyển đổi số</title>
-  <link href="{% static 'crm/css/app.css' %}?v=20260928" rel="stylesheet">
+  <link href="{% static 'crm/css/app.css' %}?v=20261015" rel="stylesheet">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -74,7 +74,7 @@
         </a>
         <a class="nav-link text-indigo-300 hover:text-white group"
            target="_blank" rel="noopener"
-           href="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/"
+           href="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/"
            title="Mở Bảng điều khiển Trực quan hóa Dữ liệu Thông minh Apache Superset">
           <span class="nav-icon text-indigo-400 group-hover:scale-110 transition-transform" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
@@ -123,7 +123,7 @@
         <a class="nav-link {% if request.resolver_match.url_name == 'priority_customers' %}active{% endif %}" href="{% url 'crm:priority_customers' %}">Ưu tiên chăm sóc</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'care_tasks' or request.resolver_match.url_name == 'care_task_create' or request.resolver_match.url_name == 'care_task_edit' or request.resolver_match.url_name == 'customer_care_task_create' %}active{% endif %}" href="{% url 'crm:care_tasks' %}">Việc chăm sóc</a>
         <a class="nav-link {% if request.resolver_match.url_name == 'report' %}active{% endif %}" href="{% url 'crm:report' %}">Báo cáo</a>
-        <a class="nav-link text-indigo-400 font-semibold flex items-center justify-between" target="_blank" rel="noopener" href="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/">
+        <a class="nav-link text-indigo-400 font-semibold flex items-center justify-between" target="_blank" rel="noopener" href="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/">
           <span>Superset BI AI</span>
           <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">TH2 ↗</span>
         </a>
@@ -159,7 +159,7 @@
 
         <div class="ml-auto flex items-center gap-2">
           <a class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition shadow-sm"
-             href="http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener" title="Mở Superset BI Analytics">
+             href="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener" title="Mở Superset BI Analytics">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             Superset BI
           </a>

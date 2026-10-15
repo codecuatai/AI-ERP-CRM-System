@@ -45,14 +45,14 @@ if [ "$is_runserver" -eq 1 ]; then
     echo "==> Đang thiết lập nhóm quyền CRM..."
     python manage.py setup_crm_groups || true
 
-    echo "==> Đang thiết lập analytics views cho Apache Superset..."
-    python manage.py setup_superset_analytics || true
-
     # Khởi tạo dữ liệu mẫu nếu có cờ DJANGO_SEED_DATA
     if [ "${DJANGO_SEED_DATA}" = "true" ] || [ "${DJANGO_SEED_DATA}" = "1" ]; then
         echo "==> Đang khởi tạo dữ liệu mẫu CRM..."
         python manage.py seed_crm_data || true
     fi
+
+    echo "==> Đang thiết lập analytics views cho Apache Superset..."
+    python manage.py setup_superset_analytics || true
 
     # Tự động tạo superuser nếu có biến môi trường
     if [ -n "${DJANGO_SUPERUSER_USERNAME}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD}" ]; then
