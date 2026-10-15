@@ -1,10 +1,11 @@
 """Contextual B2B advice with bounded Gemini requests and a local fallback."""
 
 import logging
+import re
 
 from django.conf import settings
 
-from .consultation import clean_chat_history, contextual_solution, contains_phrase
+from .consultation import clean_chat_history, contextual_solution, contains_phrase, normalize_text
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,17 @@ def _detect_solution_intent(text):
     return detect_solution_intent(text)
 
 
+def _asks_pricing(message):
+    # "đánh giá AI" and "giá trị dữ liệu" do not ask for a price.
+    text = re.sub(r"(?<!\w)(?:đánh\s+giá|giá\s+trị)(?!\w)", "", normalize_text(message))
+    return any(contains_phrase(text, phrase) for phrase in
+               ("giá", "chi phí", "bao nhiêu tiền", "ngân sách", "kinh phí"))
+
+
 def _rule_based_chat_reply(message, history=None):
     solution = contextual_solution(message, history)
     label, questions = SOLUTIONS[solution]
-    if any(contains_phrase(message, word) for word in ("giá", "chi phí", "bao nhiêu", "ngân sách", "kinh phí")):
+    if _asks_pricing(message):
         reply = (
             f"Chi phí {label} cần được khảo sát theo {questions}. "
             "Hiện chưa có bảng giá được xác nhận cho yêu cầu này, nên em chưa thể đưa ra số tiền cam kết. "
@@ -112,6 +120,11 @@ def _call_gemini_chat(message, history=None):
 def answer_customer_question(message, history=None):
     clean_message = (message or "").strip()
     history = clean_chat_history(history)
+    # No approved catalogue or availability tool exists. A deterministic reply
+    # prevents a probabilistic model from inventing commercial commitments.
+    if _asks_pricing(clean_message) or any(contains_phrase(clean_message, phrase) for phrase in
+           ("bao lâu", "mấy tuần", "thời gian triển khai", "tiến độ", "sla", "cam kết")):
+        return _rule_based_chat_reply(clean_message, history)
     if clean_message and getattr(settings, "GEMINI_API_KEY", "").strip():
         try:
             return {

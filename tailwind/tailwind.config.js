@@ -41,6 +41,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        ...require("./legacy-colors.json"),
         canvas: "#f8fafc",
         ink: "#0f172a",
         muted: "#64748b",

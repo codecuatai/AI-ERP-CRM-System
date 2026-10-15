@@ -1,5 +1,7 @@
 # Kiểm thử E2E và đánh giá AI — 15/10/2026
 
+> Đây là báo cáo đợt kiểm tra đầu. Các phần thiếu MCP authoring, dependency, baseline và browser đã được xử lý tiếp; xem [trạng thái mới nhất](hoan-thien-th2.md). Giữ số đo ban đầu bên dưới để đối chiếu trước/sau.
+
 ## Phạm vi và môi trường
 
 Đợt kiểm tra thực hiện trên nhánh `codex/e2e-ai-quality-fixes`, với CRM Django/Wagtail, SQLite test cô lập, PostgreSQL 16 và Superset 6.0.0 đang chạy local. Browser dùng Chromium qua Playwright. Các thao tác browser có ghi dữ liệu chạy trong `StaticLiveServerTestCase`; database development chỉ được thêm 8 hồ sơ minh họa và chạy lại các bảng phân tích dẫn xuất theo yêu cầu. Không gửi email ra ngoài.

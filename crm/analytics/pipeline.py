@@ -20,6 +20,7 @@ from crm.analytics.ai_engine import (
     SentimentChurnEngine,
 )
 from crm.models import CareTask, Customer, Interaction, LeadRequest, SalesRecord
+from crm.services.consultation import customer_chat_text
 
 
 class AnalyticsPipeline:
@@ -71,6 +72,11 @@ class AnalyticsPipeline:
     # ─────────────────────────────────────────────────────────────────────────
     # 1. Lead Predictions Processing
     # ─────────────────────────────────────────────────────────────────────────
+    @staticmethod
+    def measured_response_hours(lead):
+        first_sent = lead.follow_ups.filter(sent_at__gte=lead.created_at).order_by("sent_at").values_list("sent_at", flat=True).first()
+        return (first_sent - lead.created_at).total_seconds() / 3600 if first_sent else None
+
     def process_lead_predictions(self) -> List[Dict[str, Any]]:
         results = []
         leads = LeadRequest.objects.select_related("customer").filter(
@@ -93,6 +99,7 @@ class AnalyticsPipeline:
                 has_company=has_company,
                 request_text_length=req_len,
                 customer_segment=lead.customer.ai_segment,
+                response_time_hours=self.measured_response_hours(lead),
             )
 
             results.append({
@@ -116,7 +123,10 @@ class AnalyticsPipeline:
         interactions = self.permitted_interactions().select_related("customer")
 
         for inter in interactions:
-            text = f"{inter.subject} {inter.content}"
+            content = customer_chat_text(inter.content) if inter.subject == "Lịch sử trao đổi cùng Trợ lý AI" else inter.content
+            if not content.strip():
+                continue
+            text = f"{inter.subject} {content}"
             latest = interactions.filter(customer_id=inter.customer_id).order_by("-occurred_at").first()
             days_ago = max((timezone.now() - latest.occurred_at).days, 0) if latest else 0
             unresolved = CareTask.objects.filter(
@@ -296,6 +306,7 @@ class AnalyticsPipeline:
                 self.permitted_interactions().filter(customer=lead.customer).count(),
                 bool(lead.customer.phone), bool(lead.customer.company),
                 len(lead.request_text), lead.solution_interest,
+                response_time_hours=self.measured_response_hours(lead),
             )
             for name, value in values.items():
                 totals[name] = totals.get(name, 0) + abs(value)

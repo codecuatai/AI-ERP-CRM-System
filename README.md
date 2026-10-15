@@ -56,6 +56,8 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 
 ## Kiểm thử mở rộng và đánh giá AI (15/10/2026)
 
+Đợt khắc phục bổ sung đã có MCP tạo biểu đồ/dashboard, dự báo mặc định baseline khi thiếu bằng chứng, Tailwind 4.3.3 và kiểm thử Chromium/Firefox/WebKit cùng SMTP cục bộ. Trạng thái hiện tại và bằng chứng: [hoàn thiện TH2](docs/hoan-thien-th2.md). Báo cáo E2E ban đầu vẫn được giữ để đối chiếu trước/sau.
+
 Đã bổ sung kiểm thử browser cho chat nhiều lượt, form lỗi/không consent, tìm kiếm, tạo/sửa/hoàn tất việc, email nháp có người xác nhận, follow-up gửi/trả lời một lần/thu hồi/hết hạn, xuất CSV/PNG, báo cáo desktop/mobile và tạo/sửa khách hàng trong Wagtail. Browser luôn chạy trên database test do `StaticLiveServerTestCase` quản lý.
 
 ```powershell
@@ -77,7 +79,7 @@ Remove-Item Env:USE_SQLITE
 
 Tám hồ sơ mới mang email `scenario.*@consultation.test` và tên công ty bắt đầu bằng “Minh họa”. Bảy hồ sơ có consent được phân tích; hồ sơ từ chối AI vẫn được tiếp nhận và không được chạy phân tích. `--rules-only` dùng quy tắc cục bộ; `--reanalyze` chủ động tạo một lần phân tích mới trong lịch sử. Lịch sử chat/phản hồi lưu consent riêng; chat cũ chưa xác định consent không được tự đưa vào phân tích hồ sơ công khai.
 
-**Đánh giá trung thực:** bộ minh họa nhỏ có dùng để sửa prompt/rules, không phải benchmark độc lập. Không suy rộng kết quả 7/7 nhãn phù hợp thành độ chính xác 100% trên dữ liệu thật. Điểm lead là quy tắc sigmoid chưa hiệu chuẩn xác suất; RFM dùng tâm tham chiếu cố định; dự báo là hồi quy tuyến tính; giải thích đặc trưng không phải SHAP. Lệnh `--evaluate` tính kết quả thực từ các ca kiểm thử và backtest, không in Accuracy/ROC-AUC/MAE ghi cứng. Dự báo cần ít nhất 3 tháng doanh thu; không có dữ liệu thì hiển thị trạng thái thiếu dữ liệu.
+**Đánh giá trung thực:** bộ minh họa nhỏ có dùng để sửa prompt/rules, không phải benchmark độc lập. Không suy rộng kết quả khớp nhãn thành độ chính xác 100% trên dữ liệu thật. Điểm lead là quy tắc sigmoid chưa hiệu chuẩn xác suất; RFM dùng tâm tham chiếu cố định; giải thích đặc trưng không phải SHAP. Dự báo cần ít nhất 3 tháng, dùng baseline tháng cuối khi dưới 18 tháng; chỉ chọn tuyến tính/trung bình 3 tháng khi đủ dữ liệu và vượt kiểm định quá khứ. Dải sai số là tham khảo, chưa hiệu chuẩn độ bao phủ. Lệnh `--evaluate` tính số liệu thực, không in Accuracy/ROC-AUC/MAE ghi cứng.
 
 Xem [báo cáo kiểm thử và đánh giá AI](docs/kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo TH2 đã đối chiếu mã nguồn](docs/bao-cao-ky-thuat-th2.md) và [kết quả kiểm tra Superset trực tiếp](docs/validation/superset-live.json).
 
@@ -448,7 +450,16 @@ python manage.py run_superset_mcp --test
 
 Bootstrap dùng REST API để đăng ký **10 dataset, 12 chart, 2 dashboard**. Chạy lại sẽ cập nhật cấu hình chuẩn; tên chart cũ được nhận diện để đổi tên mà không tạo bản trùng. Bốn chart AI dùng chung được gắn đủ cả hai dashboard. Đây là thao tác có thể cập nhật bố cục đã chỉnh thủ công, nên chỉ chủ động chạy khi muốn khôi phục cấu hình chuẩn.
 
-MCP chạy bằng `python manage.py run_superset_mcp`, hỗ trợ `initialize`, notification khởi tạo, `ping`, `tools/list`, `tools/call` qua stdio. Có bốn tool: danh sách dashboard, insights AI, SQL chỉ đọc bằng `superset_ro` và chạy pipeline với `confirm=true`. Khi Superset offline, server báo lỗi, không trả dashboard mẫu như đã publish. Không có HTTP MCP hoặc tool MCP tự tạo chart; chart/dashboard được tạo bằng bootstrap REST ở trên.
+MCP chạy bằng `python manage.py run_superset_mcp`, hỗ trợ `initialize`, notification khởi tạo, `ping`, `tools/list`, `tools/call` qua stdio. Có bảy tool: danh sách dashboard, danh sách dataset/cột, insights AI, SQL chỉ đọc bằng `superset_ro`, chạy pipeline, tạo biểu đồ và tạo dashboard. Ba thao tác thay đổi yêu cầu `confirm=true` sau khi người dùng xác nhận. MCP gọi API Superset có CSRF để tạo chart/dashboard từ dataset CRM analytics đã đăng ký; không nhận biểu thức SQL tùy ý cho metric. Khi Superset offline, server báo lỗi. Chưa có HTTP MCP.
+
+`superset_create_chart` hỗ trợ `pie`, `bar`, `line`, `table`, `number`, các phép count/sum/avg/min/max và kiểm tra cột tồn tại/cột số. Gọi lại cấu hình giống nhau dùng lại chart; khác cấu hình mặc định báo lỗi. `replace_existing=true` chỉ sửa chart do MCP quản lý trên cùng dataset, vẫn cần xác nhận. `superset_create_dashboard` nhận tên, slug bắt đầu `crm-mcp-`, danh sách chart ID; mặc định nháp, giữ các liên kết dashboard hiện có. Không tự ghi đè dashboard đã đổi cấu hình.
+
+```powershell
+# Tạo hai chart và một dashboard nháp bằng MCP stdio, kiểm tra gọi lại không trùng
+python scripts/verify_mcp_authoring.py
+# Thử đủ năm loại biểu đồ trên dashboard thư viện nháp
+python scripts/verify_mcp_authoring.py --all-kinds
+```
 
 ```powershell
 # Kiểm tra read-only cả chart API, MCP stdio, quyền database và giao diện Superset
@@ -531,7 +542,7 @@ Các thư mục `.venv/` và `tailwind/node_modules/` được tạo tự độn
 
 ## Frontend và build giao diện
 
-Frontend dùng **Django Templates + Tailwind CSS 3**. Các trang HTML thuộc app Django nằm trong `crm/templates/crm/`; CSS/JavaScript mà Django phục vụ nằm trong `crm/static/crm/`. Thư mục `tailwind/` chứa CSS nguồn (`src/input.css`) và công cụ build, không phải một frontend React tách biệt. Người chỉ chạy ứng dụng không cần cài Node.js; CSS đã build sẵn. Khi muốn sửa giao diện, cài Node.js, mở terminal tại `tailwind/`, rồi chạy `npm install` và `npm run css:watch`. Lệnh `npm run css:build` tạo lại file CSS sau khi chỉnh sửa.
+Frontend dùng **Django Templates + Tailwind CSS 4.3.3**, Node.js 20+. Đã nâng từ 3.4.19 để loại chuỗi phụ thuộc có lỗ hổng; `legacy-colors.json` giữ bảng màu cũ. Các trang HTML nằm trong `crm/templates/crm/`; CSS/JavaScript phục vụ ở `crm/static/crm/`. Thư mục `tailwind/` chứa CSS nguồn và công cụ build, không phải frontend React riêng. CSS đã build sẵn nên người chỉ chạy ứng dụng không cần Node.js. Khi sửa giao diện, chạy `npm ci` và `npm run css:watch`; `npm run css:build` tạo CSS để bàn giao. Override `@parcel/watcher=2.6.0` loại phụ thuộc `micromatch/braces` còn tồn tại trong CLI 4.3.3; không bỏ qua audit.
 
 Các file giao diện chính:
 
@@ -587,7 +598,7 @@ CI kiểm tra backend, giao diện và lỗ hổng dependency:
 
 - **Backend:** cài Python 3.11 và 3.12, kiểm tra migration đã được commit, migrate database, chạy `manage.py check` và toàn bộ test Django.
 - **Frontend:** cài Node.js 20, chạy `npm ci` và build Tailwind CSS.
-- **Dependency security:** `pip-audit` kiểm tra thư viện Python (trên Python 3.12) và `npm audit --audit-level=high` kiểm tra package frontend.
+- **Dependency security:** `pip-audit` kiểm tra thư viện Python (trên Python 3.12) và `npm audit --audit-level=moderate` kiểm tra package frontend.
 
 Không cần `GEMINI_API_KEY` trong CI; test fallback không gọi API thật. Trên GitHub nên bật bảo vệ nhánh `main`, bắt buộc Pull Request và yêu cầu cả hai job CI hoàn thành thành công trước khi merge.
 
@@ -617,6 +628,8 @@ $env:RUN_BROWSER_E2E = "1"
 python manage.py test crm.test_browser_e2e --verbosity=2
 Remove-Item Env:RUN_BROWSER_E2E
 ```
+
+Để chạy cùng 5 luồng trên các engine khác, cài `playwright install firefox webkit`, đặt `RUN_BROWSER_E2E=1` và `CRM_E2E_BROWSER=firefox` hoặc `webkit`, rồi chạy lại `python manage.py test crm.test_browser_e2e`. CI chạy đủ ba engine trên Python 3.12. WebKit qua Playwright không thay thế thử nghiệm Safari trên thiết bị thật. Test `crm.test_smtp_delivery` kiểm tra transport SMTP qua loopback, không gửi ra nhà cung cấp email thật.
 
 Test trình duyệt gửi form lead công khai, đăng nhập Wagtail bằng tài khoản chỉ tồn tại trong test database, chạy phân tích rules fallback rồi tạo việc chăm sóc. Không cần Gemini API key, không gửi email thật và không ghi dữ liệu vào database local. CI cài Chromium và chạy test này tự động trên Python 3.12.
 

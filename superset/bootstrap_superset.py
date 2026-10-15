@@ -87,7 +87,7 @@ DATASETS = [
     ("ai_lead_predictions", "Dự báo tiềm năng & xác suất chốt Lead (AI Win-Rate)"),
     ("ai_sentiment_churn", "Phân tích cảm xúc tương tác & cảnh báo Churn (NLP)"),
     ("ai_customer_rfm_segments", "Phân nhóm RFM theo tâm tham chiếu cố định"),
-    ("ai_revenue_forecast", "Dự báo xu hướng tuyến tính, tối thiểu 3 tháng lịch sử"),
+    ("ai_revenue_forecast", "Dự báo có baseline; chỉ chọn xu hướng/trung bình khi đủ lịch sử và vượt kiểm định quá khứ"),
     ("ai_explainability_summary", "Giải thích trọng số đóng góp đặc trưng (XAI)"),
     ("ai_anomaly_alerts", "Cảnh báo bất thường vận hành & giao dịch"),
 ]
@@ -104,8 +104,8 @@ def sum_metric(column: str) -> dict:
             "customer_count": "Số khách hàng", "lead_count": "Số yêu cầu", "task_count": "Số việc",
             "overdue_count": "Việc quá hạn", "won_revenue": "Doanh thu đã chốt",
             "estimated_deal_value": "Giá trị hợp đồng demo", "expected_won_value": "Giá trị ước tính theo quy tắc",
-            "predicted_revenue": "Doanh thu dự báo", "upper_bound_95": "Cận trên ước lượng 95%",
-            "lower_bound_95": "Cận dưới ước lượng 95%", "importance_weight": "Tỷ trọng công thức",
+            "predicted_revenue": "Doanh thu dự báo", "upper_bound_95": "Cận trên tham khảo",
+            "lower_bound_95": "Cận dưới tham khảo", "importance_weight": "Tỷ trọng công thức",
         }.get(column, column),
         "optionName": f"metric_sum_{column}",
     }
@@ -249,11 +249,11 @@ CHARTS = [
         },
     },
     {
-        "name": "AI — Dự báo Doanh thu (Hồi quy tuyến tính)",
-        "legacy_names": ["AI — Dự báo Doanh thu Chuỗi thời gian (Prophet Forecast)"],
+        "name": "AI — Dự báo Doanh thu (Kiểm định và Baseline)",
+        "legacy_names": ["AI — Dự báo Doanh thu Chuỗi thời gian (Prophet Forecast)", "AI — Dự báo Doanh thu (Hồi quy tuyến tính)"],
         "dataset": "ai_revenue_forecast",
         "viz_type": "echarts_timeseries_line",
-        "description": "Hồi quy xu hướng tuyến tính và khoảng dự báo ước lượng 95%; chưa có bảo đảm độ chính xác ngoài mẫu.",
+        "description": "Ít hơn 18 tháng dùng doanh thu tháng cuối. Khi đủ dữ liệu, chỉ chọn tuyến tính hoặc trung bình 3 tháng nếu MAE kiểm định quá khứ tốt hơn baseline ít nhất 10% và tốt hơn ở hai fold gần nhất. Dải sai số tham khảo chưa hiệu chuẩn độ bao phủ.",
         "params": {
             "adhoc_filters": [], "color_scheme": "supersetColors", "x_axis": "forecast_date",
             "metrics": [sum_metric("predicted_revenue"), sum_metric("upper_bound_95"), sum_metric("lower_bound_95")],
@@ -422,8 +422,6 @@ def main() -> int:
         },
         key="slug",
     )
-    for cid in chart_ids[:8]:
-        api._request(f"/api/v1/chart/{cid}", "PUT", {"dashboards": [dashboard_1["id"]]})
     print(f"DASHBOARD 1 id={dashboard_1['id']} slug=crm-analytics-dashboard")
 
     # 5. Create Dashboard 2: AI Intelligence & Predictive Analytics (TH2 Specialization)
@@ -441,10 +439,14 @@ def main() -> int:
         key="slug",
     )
     for cid in chart_ids:
-        memberships = ([dashboard_1["id"]] if cid in chart_ids[:8] else [])
+        detail = api._request(f"/api/v1/chart/{cid}")["result"]
+        memberships = {item["id"] if isinstance(item, dict) else item for item in detail.get("dashboards", [])}
+        memberships -= {dashboard_1["id"], dashboard_2["id"]}
+        if cid in chart_ids[:8]:
+            memberships.add(dashboard_1["id"])
         if cid in ai_chart_ids:
-            memberships.append(dashboard_2["id"])
-        api._request(f"/api/v1/chart/{cid}", "PUT", {"dashboards": memberships})
+            memberships.add(dashboard_2["id"])
+        api._request(f"/api/v1/chart/{cid}", "PUT", {"dashboards": sorted(memberships)})
     print(f"DASHBOARD 2 id={dashboard_2['id']} slug=crm-ai-intelligence-dashboard")
 
     print("\n[SUCCESS] Bootstrap Superset hoàn tất!")

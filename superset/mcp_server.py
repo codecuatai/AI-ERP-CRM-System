@@ -66,6 +66,10 @@ class SupersetMCPServer:
         except Exception as exc:
             raise RuntimeError("Không kết nối được Superset; chưa xác minh dashboard.") from exc
 
+    def authoring(self):
+        from .authoring import SupersetAuthoring
+        return SupersetAuthoring(self.superset_url, self.username, self.password)
+
     def query_ai_insights(self, domain: str = "all") -> Dict[str, Any]:
         """Query synthesized AI insights directly from the analytical data mart."""
         try:
@@ -166,6 +170,8 @@ class SupersetMCPServer:
         import sqlparse
         from django.conf import settings
         from django.db import connection
+        if not isinstance(sql_query, str) or not 1 <= len(sql_query.strip()) <= 20000:
+            return {"status": "ERROR", "message": "Truy vấn SQL phải là chuỗi từ 1 đến 20.000 ký tự."}
         statements = sqlparse.parse(sql_query)
         if len(statements) != 1 or statements[0].get_type() != "SELECT":
             return {"status": "ERROR", "message": "Chỉ cho phép một truy vấn SELECT chỉ đọc."}
@@ -210,7 +216,7 @@ def handle_mcp_rpc(request_json: str) -> str:
         if method == "initialize":
             return json.dumps({"jsonrpc": "2.0", "id": req_id, "result": {
                 "protocolVersion": "2025-06-18", "capabilities": {"tools": {}},
-                "serverInfo": {"name": "crm-superset", "version": "1.1.0"}}})
+                "serverInfo": {"name": "crm-superset", "version": "1.2.0"}}})
         if method.startswith("notifications/"):
             return ""
         if method == "ping":
@@ -221,6 +227,24 @@ def handle_mcp_rpc(request_json: str) -> str:
                 "id": req_id,
                 "result": {
                     "tools": [
+                        {"name": "superset_list_datasets", "description": "Liệt kê dataset CRM analytics và ID để tạo biểu đồ.",
+                         "inputSchema": {"type": "object", "properties": {}}, "annotations": {"readOnlyHint": True}},
+                        {"name": "superset_create_chart", "description": "Tạo biểu đồ từ dataset CRM analytics sau khi người dùng xác nhận; không ghi đè biểu đồ cũ.",
+                         "inputSchema": {"type": "object", "required": ["confirm", "title", "dataset_id", "kind"],
+                            "additionalProperties": False, "properties": {
+                                "confirm": {"type": "boolean", "const": True}, "title": {"type": "string", "minLength": 1, "maxLength": 150},
+                                "dataset_id": {"type": "integer", "minimum": 1}, "kind": {"type": "string", "enum": ["bar", "line", "pie", "table", "number"]},
+                                "group_by": {"type": "string"}, "metric": {"type": "string", "enum": ["count", "sum", "avg", "min", "max"]},
+                                "metric_column": {"type": "string"}, "replace_existing": {"type": "boolean", "default": False}}},
+                         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True}},
+                        {"name": "superset_create_dashboard", "description": "Tạo dashboard crm-mcp-* từ biểu đồ CRM sau khi xác nhận; mặc định lưu nháp và giữ liên kết dashboard cũ.",
+                         "inputSchema": {"type": "object", "required": ["confirm", "title", "slug", "chart_ids"],
+                            "additionalProperties": False, "properties": {
+                                "confirm": {"type": "boolean", "const": True}, "title": {"type": "string", "minLength": 1, "maxLength": 150},
+                                "slug": {"type": "string", "pattern": "^crm-mcp-[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 100},
+                                "chart_ids": {"type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": True, "items": {"type": "integer", "minimum": 1}},
+                                "published": {"type": "boolean", "default": False}}},
+                         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True}},
                         {"name": "superset_trigger_pipeline", "description": "Làm mới dữ liệu dẫn xuất sau khi nhân viên xác nhận.",
                          "inputSchema": {"type": "object", "required": ["confirm"], "properties": {"confirm": {"type": "boolean", "const": True}}},
                          "annotations": {"readOnlyHint": False}},
@@ -256,7 +280,21 @@ def handle_mcp_rpc(request_json: str) -> str:
             if not isinstance(args, dict):
                 return json.dumps({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32602, "message": "Invalid arguments"}})
 
-            if tool_name == "superset_trigger_pipeline":
+            if tool_name in {"superset_list_datasets", "superset_create_chart", "superset_create_dashboard"}:
+                if tool_name != "superset_list_datasets" and args.get("confirm") is not True:
+                    res = {"status": "ERROR", "message": "Cần người dùng xác nhận confirm=true trước khi tạo nội dung Superset."}
+                else:
+                    try:
+                        author = server.authoring()
+                        if tool_name == "superset_list_datasets":
+                            res = author.list_datasets(include_columns=True)
+                        elif tool_name == "superset_create_chart":
+                            res = author.create_chart(**{k: v for k, v in args.items() if k != "confirm"})
+                        else:
+                            res = author.create_dashboard(**{k: v for k, v in args.items() if k != "confirm"})
+                    except (ValueError, TypeError, RuntimeError) as exc:
+                        res = {"status": "ERROR", "message": str(exc)}
+            elif tool_name == "superset_trigger_pipeline":
                 if args.get("confirm") is not True:
                     res = {"status": "ERROR", "message": "Cần nhân viên xác nhận confirm=true trước khi làm mới dữ liệu."}
                 else:

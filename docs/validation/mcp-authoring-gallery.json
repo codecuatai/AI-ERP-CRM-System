@@ -1,0 +1,75 @@
+{
+  "transport": "MCP stdio with initialize and explicit confirm=true",
+  "charts": [
+    {
+      "status": "SUCCESS",
+      "id": 13,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 14,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 15,
+      "created": true,
+      "url": "http://127.0.0.1:18088/explore/?slice_id=15"
+    },
+    {
+      "status": "SUCCESS",
+      "id": 16,
+      "created": true,
+      "url": "http://127.0.0.1:18088/explore/?slice_id=16"
+    },
+    {
+      "status": "SUCCESS",
+      "id": 17,
+      "created": true,
+      "url": "http://127.0.0.1:18088/explore/?slice_id=17"
+    }
+  ],
+  "repeated_charts": [
+    {
+      "status": "SUCCESS",
+      "id": 13,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 14,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 15,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 16,
+      "created": false
+    },
+    {
+      "status": "SUCCESS",
+      "id": 17,
+      "created": false
+    }
+  ],
+  "dashboard": {
+    "status": "SUCCESS",
+    "id": 4,
+    "created": true,
+    "published": false,
+    "url": "http://127.0.0.1:18088/superset/dashboard/crm-mcp-visualization-gallery/"
+  },
+  "repeated_dashboard": {
+    "status": "SUCCESS",
+    "id": 4,
+    "created": false,
+    "published": false,
+    "url": "http://127.0.0.1:18088/superset/dashboard/crm-mcp-visualization-gallery/"
+  },
+  "data_source": "CRM analytics with authored demo records; no real customer data imported"
+}

@@ -29,9 +29,9 @@ Chọn một mục checklist → tạo việc chăm sóc → kiểm tra hạn v�
 ## 2:20–3:20 — Superset và MCP
 
 - Trong báo cáo CRM, bấm “Làm mới dữ liệu phân tích”; chỉ người có quyền phân tích được thực hiện.
-- Mở hai dashboard Superset, xem nhóm lead, sentiment/churn, RFM tham chiếu, dự báo hồi quy và đóng góp công thức.
+- Mở hai dashboard Superset, xem nhóm lead, sentiment/churn, RFM tham chiếu, dự báo có baseline và đóng góp công thức.
 - Chạy `python manage.py run_superset_mcp --test` và trình bày kết quả thực.
-- Giải thích chart được dựng bằng bootstrap REST, MCP hỗ trợ danh sách dashboard, insights, SQL chỉ đọc và refresh có xác nhận. Chưa có HTTP MCP hay MCP tự tạo chart.
+- Chạy `python scripts/verify_mcp_authoring.py`, mở dashboard nháp `crm-mcp-consultations`; giải thích chart/dashboard vừa được tạo qua MCP stdio có xác nhận. Gọi lại không tạo bản trùng. Bootstrap REST giữ cấu hình chuẩn, SQL MCP dùng role chỉ đọc; chưa có HTTP MCP.
 
 ## 3:20–4:20 — Đánh giá AI trung thực
 
@@ -39,7 +39,7 @@ Mở các JSON và [báo cáo kiểm thử](kiem-thu-e2e-va-danh-gia-ai.md):
 
 - Gemini khớp 7/7 nhãn kỳ vọng trên bộ minh họa có consent, sau khi đã sửa prompt bằng chính các ca này. Không suy rộng thành độ chính xác 100% ngoài thực tế.
 - Sentiment đúng 19/20, còn sai một câu mỉa mai.
-- Dự báo doanh thu demo có MAE khoảng 4,43 triệu VNĐ; baseline tháng trước tốt hơn với 3,5 triệu VNĐ. Chưa dùng dự báo này cho quyết định kinh doanh.
+- Dự báo demo đã dùng baseline: MAE 3,5 triệu VNĐ thay vì hồi quy cũ 4,43 triệu. Đây là bộ demo đã dùng trong phát triển, chưa chứng minh độ chính xác trên khách hàng thật.
 - Không gọi RFM là K-Means đã huấn luyện, hồi quy là Prophet hoặc đóng góp công thức là SHAP.
 
 ## 4:20–5:00 — Kiểm thử phần mềm và giới hạn

@@ -1,12 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@config "../tailwind.config.js";
+@source "../../crm/templates";
+@source "../../crm/forms.py";
+@source inline("bg-{purple,emerald,rose,amber,blue,slate,orange}-50 text-{purple,emerald,rose,amber,blue,slate,orange}-700 border-{purple,emerald,rose,amber,blue,slate,orange}-200");
+
+/* Preserve the v3 visual scale while using the maintained v4 compiler. */
+@theme {
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --radius-sm: 0.125rem;
+  --blur-sm: 4px;
+}
 
 @layer base {
   body { @apply bg-slate-100 font-sans text-slate-900 antialiased; }
   button, input, select, textarea { font: inherit; }
   a { @apply no-underline; }
   * { box-sizing: border-box; }
+  *, ::before, ::after { border-color: #e5e7eb; }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
 }
 
 @layer components {

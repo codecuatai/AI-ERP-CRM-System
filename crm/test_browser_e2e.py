@@ -18,6 +18,13 @@ from django.test import override_settings
 from .models import AIAnalysis, CareTask, Customer, Interaction, LeadRequest, LeadFollowUpResponse, LeadFollowUp
 
 
+def launch_browser(playwright):
+    engine = os.environ.get("CRM_E2E_BROWSER", "chromium")
+    if engine not in {"chromium", "firefox", "webkit"}:
+        raise ValueError("CRM_E2E_BROWSER must be chromium, firefox or webkit")
+    return getattr(playwright, engine).launch()
+
+
 @unittest.skipUnless(
     os.environ.get("RUN_BROWSER_E2E") == "1",
     "Set RUN_BROWSER_E2E=1 and install Chromium to run browser E2E tests.",
@@ -43,7 +50,7 @@ class CRMBrowserEndToEndTests(StaticLiveServerTestCase):
 
         browser_errors = []
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch()
+            browser = launch_browser(playwright)
             page = browser.new_page()
             page.on("pageerror", lambda error: browser_errors.append(str(error)))
             try:
@@ -129,11 +136,11 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         call_command("seed_consultation_scenarios", "--analyze", "--rules-only", stdout=StringIO())
         self.customer = Customer.objects.get(email="scenario.crm-sales@consultation.test")
         self.lead = self.customer.lead_requests.get()
-        self.output = Path("artifacts/e2e")
+        self.output = Path("artifacts/e2e") / os.environ.get("CRM_E2E_BROWSER", "chromium")
         self.output.mkdir(parents=True, exist_ok=True)
         self.db_pool = ThreadPoolExecutor(max_workers=1)
         self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch()
+        self.browser = launch_browser(self.playwright)
         self.context = self.browser.new_context(viewport={"width": 1440, "height": 1000}, accept_downloads=True)
         self.context.tracing.start(screenshots=True, snapshots=True)
         self.page = self.context.new_page()
@@ -214,6 +221,7 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.go("crm:customer_email_draft", self.customer.pk)
         before = self.database(lambda: self.customer.interactions.count())
         self.page.get_by_role("button", name="Tạo bản nháp").click()
+        self.page.wait_for_function("document.querySelector('#id_draft')?.value.length > 40")
         self.assertGreater(len(self.page.locator("#id_draft").input_value()), 40)
         self.assertEqual(self.database(lambda: self.customer.interactions.count()), before)
         self.assertEqual(len(mail.outbox), 0)

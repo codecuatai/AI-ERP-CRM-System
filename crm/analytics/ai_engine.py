@@ -4,7 +4,7 @@ Provides 6 specialized AI models designed for B2B Digital Transformation CRM:
 1. LeadWinRateModel: Lead Scoring & Win-rate probability classifier.
 2. SentimentChurnEngine: Vietnamese B2B NLP sentiment & churn risk detection.
 3. RFMSegmentationModel: RFM profile assignment to fixed reference centroids.
-4. RevenueForecastingEngine: Time-series revenue forecasting with 95% confidence intervals.
+4. RevenueForecastingEngine: Validated baseline selection with exploratory error bands.
 5. ExplainableAIEngine: Formula contributions and a heuristic decision explanation.
 6. AnomalyDetectionEngine: Operational and transaction anomaly detection.
 """
@@ -55,6 +55,7 @@ class ForecastPoint:
     lower_bound_95: float
     upper_bound_95: float
     trend_direction: str
+    model_name: str = "NAIVE"
 
 
 @dataclass
@@ -71,7 +72,7 @@ class AnomalyAlert:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class LeadWinRateModel:
-    """Predicts conversion probability (P(Win)) for B2B leads using multi-attribute scoring."""
+    """Untrained sigmoid prioritization score; not a calibrated conversion probability."""
 
     SOLUTION_BASE_RATES: Dict[str, float] = {
         "CRM": 0.58,
@@ -88,13 +89,14 @@ class LeadWinRateModel:
         return 1.0 / (1.0 + math.exp(-max(min(z, 15.0), -15.0)))
 
     def feature_contributions(self, priority_score, interaction_count, has_phone, has_company,
-                              request_text_length, solution_interest, response_time_hours=2.0):
+                              request_text_length, solution_interest, response_time_hours=None):
+        speed = (1.0 if response_time_hours <= 4 else (0.5 if response_time_hours <= 24 else 0.2)) if response_time_hours is not None else 0.0
         return {
             "Điểm nhu cầu": 2.2 * min(max(priority_score, 0), 100) / 100.0,
             "Tần suất tương tác": 1.8 * min(max(interaction_count, 0) / 5.0, 1.0),
             "Thông tin liên hệ đầy đủ": 1.2 * (0.5 * bool(has_phone) + 0.5 * bool(has_company)),
             "Mức chi tiết nhu cầu": 0.8 * min(max(request_text_length, 0) / 150.0, 1.0),
-            "Tốc độ phản hồi (giả định)": 0.9 * (1.0 if response_time_hours <= 4 else (0.5 if response_time_hours <= 24 else 0.2)),
+            "Tốc độ gửi form hỏi thêm đã ghi nhận": 0.9 * speed,
             "Nhóm giải pháp": (self.SOLUTION_BASE_RATES.get(solution_interest, 0.40) - 0.5) * 2,
         }
 
@@ -107,14 +109,14 @@ class LeadWinRateModel:
         has_phone: bool,
         has_company: bool,
         request_text_length: int,
-        response_time_hours: float = 2.0,
+        response_time_hours: Optional[float] = None,
         customer_segment: str = "",
     ) -> LeadPredictionResult:
         norm_priority = min(max(priority_score, 0), 100) / 100.0
 
         # Feature normalization
         contact_quality = (0.5 if has_phone else 0.0) + (0.5 if has_company else 0.0)
-        speed_factor = 1.0 if response_time_hours <= 4.0 else (0.5 if response_time_hours <= 24.0 else 0.2)
+        speed_factor = (1.0 if response_time_hours <= 4.0 else (0.5 if response_time_hours <= 24.0 else 0.2)) if response_time_hours is not None else 0.0
 
         # Linear combination logit
         z = sum(self.feature_contributions(
@@ -152,13 +154,13 @@ class LeadWinRateModel:
         if norm_priority >= 0.7:
             key_drivers.append(f"Điểm ưu tiên nhu cầu cao ({priority_score}/100)")
         if interaction_count >= 2:
-            key_drivers.append(f"Mức độ tương tác tích cực ({interaction_count} lần trao đổi)")
+            key_drivers.append(f"Đã có lịch sử trao đổi ({interaction_count} lần)")
         if contact_quality >= 0.9:
             key_drivers.append("Hồ sơ doanh nghiệp & số liên hệ đầy đủ")
         if speed_factor >= 0.9:
-            key_drivers.append("Thời gian phản hồi đầu tiên nhanh (<4h)")
+            key_drivers.append("Đã ghi nhận gửi form hỏi thêm sớm (<4h)")
         if not key_drivers:
-            key_drivers.append("Cần thêm thông tin khảo sát để tăng xác suất")
+            key_drivers.append("Cần thêm thông tin khảo sát để xác minh nhu cầu")
 
         return LeadPredictionResult(
             lead_id=lead_id,
@@ -214,6 +216,10 @@ class SentimentChurnEngine:
         for match in pattern.finditer(text_lower):
             weight = lexicon[match.group("phrase")]
             if match.group("neg"):
+                weight = -weight
+            # Rhetorical denial: "hài lòng gì mà...", "tốt đâu". Match a
+            # grammatical construction rather than memorizing a full example.
+            if weight > 0 and re.match(r"\s+(?:gì\s+mà|đâu\b)", text_lower[match.end():]):
                 weight = -weight
             if weight > 0:
                 pos_score += weight
@@ -340,7 +346,42 @@ class RFMSegmentationModel:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class RevenueForecastingEngine:
-    """Forecasts future monthly revenue using trend and seasonality regression."""
+    """Choose a simple forecast using past-only rolling validation, defaulting to baseline.
+
+    Legacy *_95 field names remain for dashboard compatibility. Their values are
+    exploratory error bands, not calibrated 95% prediction intervals.
+    """
+
+    MODEL_LABELS = {"NAIVE": "Baseline tháng cuối", "LINEAR": "Xu hướng tuyến tính", "MEAN_3": "Trung bình 3 tháng"}
+
+    @staticmethod
+    def predict_value(values, model, step=1):
+        if model == "NAIVE":
+            return max(values[-1], 0.0)
+        if model == "MEAN_3":
+            return max(sum(values[-3:]) / len(values[-3:]), 0.0)
+        n = len(values)
+        mean_x, mean_y = (n - 1) / 2, sum(values) / n
+        den = sum((i - mean_x) ** 2 for i in range(n)) or 1.0
+        slope = sum((i - mean_x) * (y - mean_y) for i, y in enumerate(values)) / den
+        return max(mean_y + slope * (n - 1 + step - mean_x), 0.0)
+
+    def select_model(self, values):
+        origins = list(range(max(3, len(values) - 6), len(values)))
+        errors = {model: [abs(values[i] - self.predict_value(values[:i], model)) for i in origins]
+                  for model in self.MODEL_LABELS}
+        mae = {model: sum(items) / len(items) if items else None for model, items in errors.items()}
+        selected = "NAIVE"
+        # Conservative operating policy: need 18 observed months, at least five
+        # folds, and improvement both overall and in the latest two folds.
+        # The threshold is a guardrail, not a statistical accuracy guarantee.
+        if len(values) >= 18 and len(origins) >= 5 and mae["NAIVE"] > 0:
+            candidate = min(mae, key=mae.get)
+            if (mae[candidate] < 0.9 * mae["NAIVE"]
+                    and sum(errors[candidate][-2:]) < sum(errors["NAIVE"][-2:])):
+                selected = candidate
+        return {"model": selected, "validation_folds": len(origins), "mae": mae,
+                "errors": errors[selected] or [abs(b - a) for a, b in zip(values, values[1:])]}
 
     def forecast_next_months(
         self,
@@ -350,36 +391,19 @@ class RevenueForecastingEngine:
         if len(historical_monthly_revenues) < 3 or months_ahead <= 0:
             return []
 
-        n = len(historical_monthly_revenues)
-        xs = list(range(n))
-        ys = [val for _, val in historical_monthly_revenues]
-
-        # Simple Linear Regression: y = a + b*x
-        x_bar = sum(xs) / n
-        y_bar = sum(ys) / n
-
-        num = sum((x - x_bar) * (y - y_bar) for x, y in zip(xs, ys))
-        den = sum((x - x_bar) ** 2 for x in xs) or 1.0
-
-        b = num / den
-        a = y_bar - b * x_bar
-
-        # Standard error of residuals
-        residuals = [y - (a + b * x) for x, y in zip(xs, ys)]
-        se = math.sqrt(sum(r ** 2 for r in residuals) / max(n - 2, 1)) if n > 2 else (y_bar * 0.15)
-
+        ys = [float(val) for _, val in historical_monthly_revenues]
+        selection = self.select_model(ys)
+        model = selection["model"]
+        errors = sorted(selection["errors"])
+        error_band = errors[math.ceil(0.95 * len(errors)) - 1] if errors else 0.0
         last_date = historical_monthly_revenues[-1][0]
         results: List[ForecastPoint] = []
-
-        trend_dir = "TĂNG TRƯỞNG" if b > 0 else ("GIẢM" if b < 0 else "ỔN ĐỊNH")
+        next_value = self.predict_value(ys, model)
+        trend_dir = "TĂNG" if next_value > ys[-1] else ("GIẢM" if next_value < ys[-1] else "ỔN ĐỊNH")
 
         for step in range(1, months_ahead + 1):
-            future_x = n - 1 + step
-            predicted = max(a + b * future_x, 0.0)
-
-            # 95% Confidence interval (1.96 * SE * expansion_factor)
-            expansion = math.sqrt(1.0 + (1.0 / n) + ((future_x - x_bar) ** 2 / den))
-            margin = 1.96 * se * expansion
+            predicted = self.predict_value(ys, model, step)
+            margin = error_band * math.sqrt(step)
 
             # Next month date calculation
             month_calc = last_date.month + step
@@ -393,7 +417,8 @@ class RevenueForecastingEngine:
                     predicted_revenue=round(predicted, 2),
                     lower_bound_95=round(max(predicted - margin, 0.0), 2),
                     upper_bound_95=round(predicted + margin, 2),
-                    trend_direction=trend_dir,
+                    trend_direction=f"{self.MODEL_LABELS[model]} · {trend_dir}",
+                    model_name=model,
                 )
             )
 
@@ -467,7 +492,7 @@ class AnomalyDetectionEngine:
                     entity_type="TRANSACTION",
                     entity_id=record_id,
                     severity="MEDIUM",
-                    description=f"Giao dịch trị giá {amount:,.0f} VNĐ có độ lệch chuẩn cao (Z={z_score:.2f}) so với trung bình ngành.",
+                    description=f"Giao dịch trị giá {amount:,.0f} VNĐ lệch nhiều (Z={z_score:.2f}) so với các giao dịch đang có.",
                     metric_value=round(z_score, 2),
                 )
         return None

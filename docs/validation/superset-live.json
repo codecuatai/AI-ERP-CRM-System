@@ -1,7 +1,17 @@
 {
   "datasets": 10,
-  "charts": 12,
+  "charts": 17,
   "dashboards": [
+    {
+      "id": 4,
+      "slug": "crm-mcp-visualization-gallery",
+      "published": false
+    },
+    {
+      "id": 3,
+      "slug": "crm-mcp-consultations",
+      "published": false
+    },
     {
       "id": 2,
       "slug": "crm-ai-intelligence-dashboard",
@@ -46,7 +56,7 @@
       "chart": "AI — Phân bố Tiềm năng Lead (HOT / WARM / COLD)",
       "id": 5,
       "status": "success",
-      "rows": 2,
+      "rows": 3,
       "error": null
     },
     {
@@ -78,7 +88,7 @@
       "error": null
     },
     {
-      "chart": "AI — Dự báo Doanh thu (Hồi quy tuyến tính)",
+      "chart": "AI — Dự báo Doanh thu (Kiểm định và Baseline)",
       "id": 10,
       "status": "success",
       "rows": 4,
@@ -94,6 +104,41 @@
     {
       "chart": "AI — Cảnh báo Bất thường Vận hành (Anomaly Detection)",
       "id": 12,
+      "status": "success",
+      "rows": 1,
+      "error": null
+    },
+    {
+      "chart": "MCP — Tổng doanh thu dự báo bốn tháng",
+      "id": 17,
+      "status": "success",
+      "rows": 1,
+      "error": null
+    },
+    {
+      "chart": "MCP — Bảng nhóm rủi ro tương tác",
+      "id": 16,
+      "status": "success",
+      "rows": 3,
+      "error": null
+    },
+    {
+      "chart": "MCP — Giá trị ước tính theo giải pháp",
+      "id": 15,
+      "status": "success",
+      "rows": 6,
+      "error": null
+    },
+    {
+      "chart": "MCP — Dự báo doanh thu có baseline",
+      "id": 14,
+      "status": "success",
+      "rows": 4,
+      "error": null
+    },
+    {
+      "chart": "MCP — Phân nhóm chăm sóc khách hàng",
+      "id": 13,
       "status": "success",
       "rows": 1,
       "error": null
@@ -125,6 +170,16 @@
     "initialization_ok": true
   },
   "browser": [
+    {
+      "slug": "crm-mcp-visualization-gallery",
+      "chart_holders": 5,
+      "visible_errors": []
+    },
+    {
+      "slug": "crm-mcp-consultations",
+      "chart_holders": 2,
+      "visible_errors": []
+    },
     {
       "slug": "crm-ai-intelligence-dashboard",
       "chart_holders": 8,

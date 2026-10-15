@@ -32,7 +32,15 @@ def main():
     charts = {item["slice_name"]: item for item in api.list("chart")}
     dashboards = api.list("dashboard")
     checks = []
-    for chart in CHARTS:
+    definitions = list(CHARTS)
+    for chart in charts.values():
+        if chart["slice_name"] in {item["name"] for item in CHARTS}:
+            continue
+        detail = api._request(f"/api/v1/chart/{chart['id']}")["result"]
+        source = next((name for name, item in datasets.items() if item["id"] == detail.get("datasource_id")), None)
+        if source:
+            definitions.append({"name": chart["slice_name"], "dataset": source, "params": json.loads(detail["params"])})
+    for chart in definitions:
         params = chart["params"]
         columns = params.get("groupby") or ([params["x_axis"]] if params.get("x_axis") else [])
         metrics = params.get("metrics") or [params["metric"]]
@@ -78,6 +86,9 @@ def main():
             for dashboard in report["dashboards"]:
                 page.goto(url + "/superset/dashboard/" + dashboard["slug"] + "/", wait_until="networkidle")
                 page.locator('.dashboard-component-chart-holder').first.wait_for(timeout=30000)
+                # ECharts draws its entrance animation after networkidle; wait
+                # for it before saving visual evidence or checking late errors.
+                page.wait_for_timeout(1500)
                 page.screenshot(path=str(ROOT / "docs" / "validation" / (dashboard["slug"] + ".png")), full_page=True)
                 errors = page.locator('.ant-alert-error:visible, .alert-danger:visible').all_text_contents()
                 rendered.append({"slug":dashboard["slug"], "chart_holders":page.locator('.dashboard-component-chart-holder').count(), "visible_errors":errors})
@@ -87,7 +98,9 @@ def main():
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    assert len(checks) == 12 and all(c["status"] == "success" and not c["error"] for c in checks), "Superset chart query failed"
+    assert len(checks) >= len(CHARTS) and all(c["status"] == "success" and not c["error"] for c in checks), "Superset chart query failed"
+    if args.browser:
+        assert all(item["chart_holders"] > 0 and not item["visible_errors"] for item in report["browser"]), "Superset dashboard render failed"
     assert role["status"] == "SUCCESS" and role["data"][0]["role"] == "superset_ro", "MCP SQL must use the reader role"
     assert denied["status"] == "ERROR", "MCP must not read raw CRM tables"
     assert report["mcp_stdio"]["response_ids"] == [1, 2, 3] and report["mcp_stdio"]["initialization_ok"], "Invalid MCP stdio"

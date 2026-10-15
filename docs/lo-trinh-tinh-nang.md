@@ -29,13 +29,14 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 - PostgreSQL có schema `analytics`, bốn view nghiệp vụ, sáu bảng phân tích và role `superset_ro` chỉ đọc. SQLite có biểu đồ CRM cục bộ.
 - Bootstrap REST tạo/cập nhật 10 dataset, 12 chart và 2 dashboard; đã kiểm tra truy vấn và hiển thị trực tiếp trên Superset.
-- MCP stdio có lifecycle cơ bản và bốn tool; SQL dùng connection `superset_ro`, không dùng quyền ứng dụng. Chưa có HTTP MCP hoặc tool tạo chart/dashboard.
-- Sáu phương pháp hiện tại: chấm điểm lead bằng công thức sigmoid, sentiment/churn từ lexicon, RFM theo tâm tham chiếu cố định, hồi quy tuyến tính doanh thu, đóng góp thành phần công thức, phát hiện bất thường bằng quy tắc/Z-score. Không mô tả thành Random Forest, K-Means đã huấn luyện, Prophet hoặc SHAP.
+- MCP stdio có bảy tool, gồm khám phá dataset/cột, tạo chart và dashboard có xác nhận; SQL dùng `superset_ro`. Chưa có HTTP MCP. Đã kiểm tra tạo thật, gọi lại không trùng, quyền truy cập và render trên Superset.
+- Sáu phương pháp hiện tại: chấm điểm lead bằng công thức sigmoid, sentiment/churn từ lexicon, RFM theo tâm tham chiếu cố định, dự báo baseline/tuyến tính/trung bình với kiểm định quá khứ, đóng góp công thức, bất thường theo quy tắc/Z-score. Không mô tả thành Random Forest, K-Means đã huấn luyện, Prophet hoặc SHAP.
 - Đã sửa consent từng nội dung chat/phản hồi, dự báo đọc sai doanh thu, lỗi nút đồng bộ, form follow-up bị CSRF và tràn ngang mobile. Có 8 tình huống tư vấn B2B minh họa và bộ kiểm tra hồi quy.
-- Đánh giá hiện tính từ dữ liệu kiểm thử và backtest, không dùng số liệu ghi cứng. Bộ tình huống có dùng để sửa mô hình, chưa chứng minh hiệu quả trên khách hàng thật. Dự báo hiện chưa vượt baseline tháng trước.
+- Đánh giá tính từ dữ liệu kiểm thử và backtest, không dùng số liệu ghi cứng. Bộ tình huống có dùng để sửa mô hình, chưa chứng minh hiệu quả trên khách hàng thật. Dữ liệu demo hiện chọn baseline, MAE 3,5 triệu VNĐ thay vì hồi quy 4,43 triệu; không suy rộng ra tương lai.
+- Tailwind đã nâng lên 4.3.3 và watcher 2.6.0, audit npm/Python không còn cảnh báo đã biết tại thời điểm kiểm tra. Browser E2E có Chromium/Firefox/WebKit; SMTP gửi và bị từ chối được kiểm tra qua loopback. Chi tiết: [hoàn thiện TH2](hoan-thien-th2.md).
 - Kết quả và giới hạn: [báo cáo kiểm thử](kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo kỹ thuật TH2](bao-cao-ky-thuat-th2.md).
 
-**Việc tiếp theo:** tập dữ liệu có nguồn/consent và nhãn độc lập; đánh giá dự báo ngoài mẫu với baseline; kiểm thử khả dụng với nhân viên thực tế; xử lý dependency frontend theo ràng buộc phiên bản.
+**Việc tiếp theo:** tập dữ liệu có nguồn/consent và nhãn độc lập; đánh giá dự báo ngoài mẫu với baseline; kiểm thử khả dụng với nhân viên thực tế; duy trì audit dependency.
 
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 

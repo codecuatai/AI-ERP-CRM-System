@@ -25,6 +25,27 @@ def clean_chat_history(history, limit=12):
     ]
 
 
+def customer_chat_text(content):
+    """Extract customer turns from the existing readable chat transcript format.
+
+    Assistant suggestions must not become evidence of a customer's complaint.
+    Unlabelled internal/legacy notes retain their original text.
+    """
+    text = str(content or "")
+    if not re.search(r"^(?:Khách hàng|DigiFlow AI):", text, re.M):
+        return text
+    parts, customer_turn = [], False
+    for line in text.splitlines():
+        if line.startswith("Khách hàng:"):
+            customer_turn = True
+            parts.append(line.partition(":")[2].strip())
+        elif line.startswith("DigiFlow AI:"):
+            customer_turn = False
+        elif customer_turn:
+            parts.append(line)
+    return "\n".join(parts).strip()
+
+
 def detect_solution_intent(text):
     # Specific integration/infrastructure requests take precedence over incidental
     # mentions of customers, CRM or inventory in a description of a connector.

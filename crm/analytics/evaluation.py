@@ -57,7 +57,9 @@ def evaluate_quality(provider="rules"):
         point = forecast.forecast_next_months(history[:i], months_ahead=1)[0]
         actual = history[i][1]
         backtest.append({"month": str(history[i][0]), "actual": actual,
-                         "prediction": point.predicted_revenue, "naive_previous_month": history[i - 1][1]})
+                         "prediction": point.predicted_revenue, "model": point.model_name,
+                         "linear_prediction": forecast.predict_value([v for _, v in history[:i]], "LINEAR"),
+                         "naive_previous_month": history[i - 1][1]})
     n = len(backtest)
     return {
         "evaluated_at": timezone.now().isoformat(),
@@ -72,5 +74,7 @@ def evaluate_quality(provider="rules"):
         "revenue_backtest": {"sample_size": n, "unit": "VND",
             "mae": sum(abs(x["actual"] - x["prediction"]) for x in backtest) / n if n else None,
             "naive_mae": sum(abs(x["actual"] - x["naive_previous_month"]) for x in backtest) / n if n else None,
-            "cases": backtest, "note": "Rolling origin, tối đa 4 tháng; cần ít nhất 4 tháng lịch sử. Nguồn giao dịch có thể là dữ liệu demo."},
+            "linear_mae": sum(abs(x["actual"] - x["linear_prediction"]) for x in backtest) / n if n else None,
+            "selected_model": forecast.select_model([v for _, v in history])["model"] if len(history) >= 3 else None,
+            "cases": backtest, "note": "Rolling origin tối đa 4 tháng, chọn mô hình chỉ từ tiền tố quá khứ. Chính sách thận trọng: ít hơn 18 tháng dùng baseline; mô hình khác cần ít nhất 5 fold nội bộ, cải thiện MAE 10% và tốt hơn ở 2 fold gần nhất. Đây là ngưỡng vận hành, không bảo đảm vượt baseline trong tương lai. Dữ liệu có thể là demo."},
     }

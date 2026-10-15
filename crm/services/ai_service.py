@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from django.conf import settings
 
 from crm.models import Customer
+from .consultation import customer_chat_text
 
 
 class AIConsentRequired(Exception):
@@ -120,11 +121,14 @@ def analyze_customer(customer, permitted_requests=None, permitted_follow_up_resp
                     SimpleNamespace(
                         kind="Hội thoại Trợ lý AI",
                         subject="Lịch sử trao đổi cùng AI",
-                        content=chat.content[:2000],
+                        content=customer_chat_text(chat.content)[:2000],
                     )
                 )
     else:
         interactions = list(customer.interactions.exclude(ai_processing_consent=False)[:20])
+        interactions = [SimpleNamespace(kind=item.kind, subject=item.subject,
+            content=customer_chat_text(item.content) if item.subject == "Lịch sử trao đổi cùng Trợ lý AI" else item.content)
+            for item in interactions]
     fallback = _rule_based_analysis(
         customer,
         interactions,

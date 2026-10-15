@@ -269,17 +269,17 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Dự báo Doanh thu Chuỗi thời gian (Hồi quy tuyến tính)</h3>
+              <h3 class="text-base font-bold text-slate-900">Dự báo doanh thu có đối chiếu baseline</h3>
               <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Superset Chart 10</span>
             </div>
-            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới kèm dải tin cậy 95% (Lower/Upper Bound)</p>
+            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới; ít hơn 18 tháng lịch sử dùng mức tháng cuối. Dải sai số tham khảo chưa được hiệu chuẩn độ bao phủ.</p>
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartForecast', 'superset-revenue-forecast.png')"
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo Doanh thu Chuỗi thời gian (Hồi quy tuyến tính)')"
+            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo doanh thu có đối chiếu baseline')"
                     class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
             </button>
@@ -607,14 +607,14 @@
             lineStyle: { width: 3 }
           },
           {
-            name: 'Cận trên (95%)',
+            name: 'Cận trên tham khảo',
             type: 'line',
             smooth: true,
             data: fc.map(f => f.upper),
             lineStyle: { type: 'dashed', width: 1.5 }
           },
           {
-            name: 'Cận dưới (95%)',
+            name: 'Cận dưới tham khảo',
             type: 'line',
             smooth: true,
             data: fc.map(f => f.lower),
@@ -743,7 +743,7 @@
     const list = [
       { id: 'chartLeadTier', name: '01-superset-lead-winrate-tier.png' },
       { id: 'chartSolutions', name: '02-superset-expected-won-solutions.png' },
-      { id: 'chartForecast', name: '03-superset-prophet-revenue-forecast.png' },
+      { id: 'chartForecast', name: '03-superset-revenue-forecast.png' },
       { id: 'chartSentimentChurn', name: '04-superset-sentiment-churn-risk.png' },
       { id: 'chartRfm', name: '05-superset-kmeans-rfm-clusters.png' },
       { id: 'chartXai', name: '06-superset-explainable-ai-features.png' }

@@ -21,7 +21,7 @@ Không mở rộng dự án thành ERP đầy đủ. Không tự thêm kế toá
 - Django được cài thông qua Wagtail `>=7.0,<9.0`.
 - Wagtail Snippets để quản trị dữ liệu.
 - SQLite cho môi trường development.
-- Django Templates + Tailwind CSS 3.4.19 cho frontend.
+- Django Templates + Tailwind CSS 4.3.3 cho frontend (đã nâng từ 3.4.19 khi xử lý cảnh báo dependency; giữ bảng màu cũ).
 - Google Gemini qua `google-genai`; rules fallback bắt buộc vẫn phải hoạt động khi thiếu API key.
 
 Các file quan trọng:

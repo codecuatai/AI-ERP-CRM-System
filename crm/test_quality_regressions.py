@@ -194,7 +194,7 @@ class QualityRegressionTests(TestCase):
 
     def test_mcp_sql_rejects_multiple_or_write_statements(self):
         server = SupersetMCPServer()
-        for sql in ("DELETE FROM analytics.ai_lead_predictions", "SELECT 1; SELECT 2", ""):
+        for sql in ("DELETE FROM analytics.ai_lead_predictions", "SELECT 1; SELECT 2", "", None, [], 12, "x" * 20001):
             self.assertEqual(server.execute_sql(sql)["status"], "ERROR")
 
 @skipUnless(connection.vendor == "postgresql", "Requires the PostgreSQL reader role")
