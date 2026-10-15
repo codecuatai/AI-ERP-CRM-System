@@ -17,11 +17,11 @@ class AIChatConsultantTests(TestCase):
 
         # Kiểm tra fallback tư vấn thời gian
         res_time = answer_customer_question("Thời gian triển khai mất bao lâu?")
-        self.assertIn("2 đến 4 tuần", res_time["reply"])
+        self.assertIn("khảo sát", res_time["reply"])
 
         # Kiểm tra fallback tư vấn POS
         res_pos = answer_customer_question("Bên tôi muốn dùng POS bán hàng quét mã vạch")
-        self.assertEqual(res_pos["suggested_solution"], "POS")
+        self.assertEqual(res_pos["suggested_solution"], "ERP")
         self.assertIn("pos", res_pos["reply"].lower())
 
         # Kiểm tra câu hỏi rỗng

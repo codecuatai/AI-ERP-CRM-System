@@ -1,0 +1,22 @@
+{
+  "provenance": "Hội thoại minh họa và hồ sơ scenario.crm-sales; không có dữ liệu khách hàng thật. Không gửi email.",
+  "chat": [
+    {
+      "message": "Doanh nghiệp minh họa có 3 kho và 2 quầy POS, muốn kiểm kê bằng mã vạch.",
+      "reply": "Chào bạn, giải pháp quản lý kho và POS tích hợp mã vạch rất phù hợp để tối ưu quy trình kiểm kê cho mô hình 3 kho và 2 quầy của doanh nghiệp. \n\nHệ thống sẽ giúp đồng bộ tồn kho thời gian thực giữa các kho và điểm bán. Tuy nhiên, để tư vấn chi tiết cấu hình phần cứng (máy quét mã vạch, thiết bị kiểm kê PDA) và phần mềm phù hợp, tôi cần xác nhận thêm một số thông tin:\n\n1. Doanh nghiệp hiện đang sử dụng phần mềm quản lý kho/POS nào (nếu có)?\n2. Quy trình kiểm kê hiện tại của bạn diễn ra như thế nào (kiểm định kỳ hay quét xuất/nhập hàng ngày)?\n3. Bạn có cần đồng bộ dữ liệu này với hệ thống kế toán hoặc CRM sẵn có không?\n\nVì chưa có khảo sát chi tiết tại doanh nghiệp, cần có nhân viên kỹ thuật liên hệ để khảo sát thực tế và xác nhận chính xác các yêu cầu này. Bạn có muốn tôi sắp xếp chuyên viên hỗ trợ không?",
+      "suggested_solution": "ERP",
+      "provider": "gemini"
+    },
+    {
+      "message": "Chi phí bao nhiêu và thời gian triển khai bao lâu?",
+      "reply": "Doanh nghiệp có 3 kho và 2 quầy POS muốn áp dụng kiểm kê bằng mã vạch là mô hình khá phổ biến. Tuy nhiên, tôi không có thông tin cụ thể về giá, tiến độ cũng như các cam kết pháp lý hay SLA. \n\nChi phí và thời gian triển khai sẽ phụ thuộc vào quy mô thực tế, số lượng thiết bị phần cứng (máy quét, máy in mã vạch, thiết bị PDA) và mức độ phức tạp khi tích hợp hệ thống. Do chưa có khảo sát thực tế tại doanh nghiệp, cần có nhân viên chuyên trách liên hệ để khảo sát và xác nhận chính xác các thông tin này trước khi đưa ra báo giá và tiến độ cụ thể.\n\nBạn có muốn tôi sắp xếp chuyên viên liên hệ để khảo sát và tư vấn chi tiết không?",
+      "suggested_solution": "ERP",
+      "provider": "gemini"
+    }
+  ],
+  "email_draft": {
+    "draft": "Kính gửi Quý công ty,\n\nCảm ơn Quý công ty đã quan tâm và đồng ý phân tích nhu cầu về giải pháp CRM & chăm sóc khách hàng. \n\nChúng tôi được biết đội ngũ sales gồm 12 nhân sự hiện đang sử dụng 4 bảng tính, dẫn đến tình trạng trùng lặp thông tin khách hàng và quên lịch gọi lại. Để giải quyết các điểm nghẽn này, chúng tôi xin đề xuất giải pháp CRM hỗ trợ quản lý lịch sử tư vấn và phân công công việc.\n\nVề phía Quý công ty, ngân sách dự kiến là 30 triệu và cần trình Giám đốc phê duyệt trước khi quyết định. Do hiện tại chúng tôi chưa có bảng giá hoặc danh mục gói được xác nhận, chúng tôi đề xuất tiến hành một buổi khảo sát để làm rõ các yêu cầu kỹ thuật và phạm vi triển khai, từ đó có cơ sở xác định phương án phù hợp trước khi trình cấp quản lý.\n\nChúng tôi trân trọng kính mời Quý công ty sắp xếp một buổi trao đổi hoặc demo trực tuyến để đi-sâu hơn vào chi tiết. \n\nKính mong nhận được phản hồi từ Quý công ty về thời gian phù hợp.\n\nTrân trọng,",
+    "provider": "gemini"
+  },
+  "note": "Kiểm tra tích hợp thực tế và rà soát thủ công nội dung; không phải thước đo độ chính xác tổng quát."
+}

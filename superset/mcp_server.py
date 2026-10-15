@@ -43,8 +43,8 @@ class SupersetMCPServer:
                 data = json.loads(resp.read().decode("utf-8"))
                 token = data.get("access_token", "")
                 return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        except Exception:
-            return {"Content-Type": "application/json"}
+        except Exception as exc:
+            raise RuntimeError("Không đăng nhập được Superset.") from exc
 
     def list_dashboards(self) -> List[Dict[str, Any]]:
         """List all published dashboards in Superset."""
@@ -64,23 +64,7 @@ class SupersetMCPServer:
                     })
                 return results
         except Exception as exc:
-            # Fallback to local defined dashboards if Superset service is offline
-            return [
-                {
-                    "id": 1,
-                    "title": "CRM Analytics — Tổng hợp kinh doanh & AI",
-                    "slug": "crm-analytics-dashboard",
-                    "url": f"{self.superset_url}/superset/dashboard/crm-analytics-dashboard/",
-                    "status": "published",
-                },
-                {
-                    "id": 2,
-                    "title": "CRM AI Intelligence — Phân tích Dữ liệu Thông minh & Dự báo (TH2)",
-                    "slug": "crm-ai-intelligence-dashboard",
-                    "url": f"{self.superset_url}/superset/dashboard/crm-ai-intelligence-dashboard/",
-                    "status": "published",
-                },
-            ]
+            raise RuntimeError("Không kết nối được Superset; chưa xác minh dashboard.") from exc
 
     def query_ai_insights(self, domain: str = "all") -> Dict[str, Any]:
         """Query synthesized AI insights directly from the analytical data mart."""
@@ -156,9 +140,10 @@ class SupersetMCPServer:
                     leads = pipe.process_lead_predictions()
                     t_counts = {}
                     for l in leads:
-                        t = l["tier"]
-                        t_counts[t] = t_counts.get(t, 0) + 1
-                    insights["lead_tiers"] = [{"tier": k, "count": v, "expected_won_revenue": 0.0} for k, v in t_counts.items()]
+                        item = t_counts.setdefault(l["tier"], {"tier": l["tier"], "count": 0, "expected_won_revenue": 0.0})
+                        item["count"] += 1
+                        item["expected_won_revenue"] += l["expected_won_value"]
+                    insights["lead_tiers"] = list(t_counts.values())
                 if domain in ("all", "sentiment"):
                     sents = pipe.process_sentiments()
                     r_counts = {}
@@ -177,24 +162,33 @@ class SupersetMCPServer:
             return {"status": "ERROR", "message": str(exc)}
 
     def execute_sql(self, sql_query: str) -> Dict[str, Any]:
-        """Execute safe read-only SQL query on the analytics schema."""
-        clean_sql = sql_query.strip()
-        lower_sql = clean_sql.lower()
-        if not lower_sql.startswith("select"):
-            return {"status": "ERROR", "message": "Only read-only SELECT queries are permitted."}
-
+        """Use the database read-only role, never Django's application credentials."""
+        import sqlparse
+        from django.conf import settings
+        from django.db import connection
+        statements = sqlparse.parse(sql_query)
+        if len(statements) != 1 or statements[0].get_type() != "SELECT":
+            return {"status": "ERROR", "message": "Chỉ cho phép một truy vấn SELECT chỉ đọc."}
+        if connection.vendor != "postgresql":
+            return {"status": "ERROR", "message": "SQL analytics yêu cầu PostgreSQL và role superset_ro."}
+        password = os.environ.get("SUPERSET_READONLY_PASSWORD", "")
+        if not password:
+            return {"status": "ERROR", "message": "Chưa cấu hình tài khoản analytics chỉ đọc."}
         try:
-            from django.db import connection
-            with connection.cursor() as cursor:
-                cursor.execute(clean_sql)
-                cols = [desc[0] for desc in cursor.description]
-                rows = cursor.fetchmany(100)
-                return {
-                    "status": "SUCCESS",
-                    "columns": cols,
-                    "rows_count": len(rows),
-                    "data": [dict(zip(cols, row)) for row in rows],
-                }
+            import psycopg
+            db = settings.DATABASES["default"]
+            with psycopg.connect(host=db["HOST"], port=db.get("PORT") or 5432,
+                                dbname=db["NAME"], user="superset_ro", password=password,
+                                connect_timeout=5) as reader:
+                with reader.cursor() as cursor:
+                    cursor.execute("SET TRANSACTION READ ONLY")
+                    cursor.execute("SET LOCAL statement_timeout = '5s'")
+                    cursor.execute("SET LOCAL search_path = analytics")
+                    cursor.execute(sql_query)
+                    cols = [desc[0] for desc in cursor.description]
+                    rows = cursor.fetchmany(100)
+                    return {"status": "SUCCESS", "columns": cols, "rows_count": len(rows),
+                            "data": [dict(zip(cols, row)) for row in rows]}
         except Exception as exc:
             return {"status": "ERROR", "message": str(exc)}
 
@@ -202,18 +196,34 @@ class SupersetMCPServer:
 def handle_mcp_rpc(request_json: str) -> str:
     """Processes JSON-RPC 2.0 requests for the Superset MCP protocol."""
     server = SupersetMCPServer()
+    req_id = None
     try:
         req = json.loads(request_json)
+        if not isinstance(req, dict) or req.get("jsonrpc") != "2.0" or not isinstance(req.get("method"), str):
+            return json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request"}})
         req_id = req.get("id", 1)
         method = req.get("method", "")
         params = req.get("params", {})
+        if not isinstance(params, dict):
+            return json.dumps({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32602, "message": "Invalid params"}})
 
+        if method == "initialize":
+            return json.dumps({"jsonrpc": "2.0", "id": req_id, "result": {
+                "protocolVersion": "2025-06-18", "capabilities": {"tools": {}},
+                "serverInfo": {"name": "crm-superset", "version": "1.1.0"}}})
+        if method.startswith("notifications/"):
+            return ""
+        if method == "ping":
+            return json.dumps({"jsonrpc": "2.0", "id": req_id, "result": {}})
         if method == "tools/list":
             return json.dumps({
                 "jsonrpc": "2.0",
                 "id": req_id,
                 "result": {
                     "tools": [
+                        {"name": "superset_trigger_pipeline", "description": "Làm mới dữ liệu dẫn xuất sau khi nhân viên xác nhận.",
+                         "inputSchema": {"type": "object", "required": ["confirm"], "properties": {"confirm": {"type": "boolean", "const": True}}},
+                         "annotations": {"readOnlyHint": False}},
                         {
                             "name": "superset_list_dashboards",
                             "description": "Danh sách các dashboard trên Apache Superset.",
@@ -243,8 +253,16 @@ def handle_mcp_rpc(request_json: str) -> str:
         elif method == "tools/call":
             tool_name = params.get("name", "")
             args = params.get("arguments", {})
+            if not isinstance(args, dict):
+                return json.dumps({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32602, "message": "Invalid arguments"}})
 
-            if tool_name == "superset_list_dashboards":
+            if tool_name == "superset_trigger_pipeline":
+                if args.get("confirm") is not True:
+                    res = {"status": "ERROR", "message": "Cần nhân viên xác nhận confirm=true trước khi làm mới dữ liệu."}
+                else:
+                    from crm.analytics.pipeline import AnalyticsPipeline
+                    res = AnalyticsPipeline().run_all()
+            elif tool_name == "superset_list_dashboards":
                 res = server.list_dashboards()
             elif tool_name == "superset_query_ai_insights":
                 res = server.query_ai_insights(domain=args.get("domain", "all"))
@@ -260,7 +278,8 @@ def handle_mcp_rpc(request_json: str) -> str:
             return json.dumps({
                 "jsonrpc": "2.0",
                 "id": req_id,
-                "result": {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False, default=str)}]},
+                "result": {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False, default=str)}],
+                           "isError": isinstance(res, dict) and res.get("status") == "ERROR"},
             })
 
         return json.dumps({
@@ -269,8 +288,10 @@ def handle_mcp_rpc(request_json: str) -> str:
             "error": {"code": -32601, "message": "Method not supported"},
         })
 
+    except json.JSONDecodeError:
+        return json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}})
     except Exception as e:
-        return json.dumps({"jsonrpc": "2.0", "id": 1, "error": {"code": -32603, "message": str(e)}})
+        return json.dumps({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32603, "message": str(e)}})
 
 
 if __name__ == "__main__":
@@ -283,5 +304,7 @@ if __name__ == "__main__":
         # Standard MCP Stdio Loop
         for line in sys.stdin:
             if line.strip():
-                print(handle_mcp_rpc(line))
-                sys.stdout.flush()
+                response = handle_mcp_rpc(line)
+                if response:
+                    print(response)
+                    sys.stdout.flush()

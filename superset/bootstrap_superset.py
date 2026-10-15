@@ -41,7 +41,7 @@ class SupersetApi:
             self.base_url + path, data=body, headers=headers, method=method
         )
         try:
-            with self.opener.open(request) as response:
+            with self.opener.open(request, timeout=20) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
@@ -61,9 +61,10 @@ class SupersetApi:
         key: str,
         extra: dict | None = None,
         update_existing: bool = True,
+        aliases: tuple[str, ...] = (),
     ) -> dict:
         for item in self.list(resource):
-            if item.get(key) == identity:
+            if item.get(key) in (identity, *aliases):
                 item_id = item["id"]
                 if not update_existing:
                     return item
@@ -85,8 +86,8 @@ DATASETS = [
     ("revenue_transactions", "Giao dịch doanh thu"),
     ("ai_lead_predictions", "Dự báo tiềm năng & xác suất chốt Lead (AI Win-Rate)"),
     ("ai_sentiment_churn", "Phân tích cảm xúc tương tác & cảnh báo Churn (NLP)"),
-    ("ai_customer_rfm_segments", "Phân khúc khách hàng đa chiều RFM K-Means"),
-    ("ai_revenue_forecast", "Dự báo doanh thu chuỗi thời gian 4 tháng tới (Prophet)"),
+    ("ai_customer_rfm_segments", "Phân nhóm RFM theo tâm tham chiếu cố định"),
+    ("ai_revenue_forecast", "Dự báo xu hướng tuyến tính, tối thiểu 3 tháng lịch sử"),
     ("ai_explainability_summary", "Giải thích trọng số đóng góp đặc trưng (XAI)"),
     ("ai_anomaly_alerts", "Cảnh báo bất thường vận hành & giao dịch"),
 ]
@@ -99,7 +100,13 @@ def sum_metric(column: str) -> dict:
         "column": {"column_name": column},
         "expressionType": "SIMPLE",
         "hasCustomMetric": False,
-        "label": f"SUM({column})",
+        "label": {
+            "customer_count": "Số khách hàng", "lead_count": "Số yêu cầu", "task_count": "Số việc",
+            "overdue_count": "Việc quá hạn", "won_revenue": "Doanh thu đã chốt",
+            "estimated_deal_value": "Giá trị hợp đồng demo", "expected_won_value": "Giá trị ước tính theo quy tắc",
+            "predicted_revenue": "Doanh thu dự báo", "upper_bound_95": "Cận trên ước lượng 95%",
+            "lower_bound_95": "Cận dưới ước lượng 95%", "importance_weight": "Tỷ trọng công thức",
+        }.get(column, column),
         "optionName": f"metric_sum_{column}",
     }
 
@@ -118,7 +125,7 @@ def count_metric(column: str | None = None) -> dict:
     return {
         "expressionType": "SQL",
         "sqlExpression": "COUNT(*)",
-        "label": "COUNT(*)",
+        "label": "Số lượng",
         "optionName": "metric_count_star",
     }
 
@@ -230,7 +237,8 @@ CHARTS = [
         },
     },
     {
-        "name": "AI — Phân cụm Khách hàng K-Means RFM",
+        "name": "AI — Phân nhóm Khách hàng RFM theo tâm tham chiếu",
+        "legacy_names": ["AI — Phân cụm Khách hàng K-Means RFM"],
         "dataset": "ai_customer_rfm_segments",
         "viz_type": "pie",
         "description": "Phân khúc khách hàng 4 cụm dựa trên Recency, Frequency, Monetary.",
@@ -241,10 +249,11 @@ CHARTS = [
         },
     },
     {
-        "name": "AI — Dự báo Doanh thu Chuỗi thời gian (Prophet Forecast)",
+        "name": "AI — Dự báo Doanh thu (Hồi quy tuyến tính)",
+        "legacy_names": ["AI — Dự báo Doanh thu Chuỗi thời gian (Prophet Forecast)"],
         "dataset": "ai_revenue_forecast",
         "viz_type": "echarts_timeseries_line",
-        "description": "Dự báo doanh thu các tháng tiếp theo kèm dải tin cậy 95% (Lower / Upper Bound).",
+        "description": "Hồi quy xu hướng tuyến tính và khoảng dự báo ước lượng 95%; chưa có bảo đảm độ chính xác ngoài mẫu.",
         "params": {
             "adhoc_filters": [], "color_scheme": "supersetColors", "x_axis": "forecast_date",
             "metrics": [sum_metric("predicted_revenue"), sum_metric("upper_bound_95"), sum_metric("lower_bound_95")],
@@ -255,7 +264,7 @@ CHARTS = [
         "name": "AI — Trọng số Đóng góp Đặc trưng (Explainable AI - XAI)",
         "dataset": "ai_explainability_summary",
         "viz_type": "echarts_timeseries_bar",
-        "description": "Mức độ đóng góp của từng đặc trưng (SHAP-style) vào quyết định chấm điểm của mô hình.",
+        "description": "Đóng góp tuyệt đối trung bình của các thành phần công thức, chuẩn hóa trên lead được phép phân tích; không phải SHAP.",
         "params": {
             "adhoc_filters": [], "color_scheme": "echartsColors", "x_axis": "feature_name",
             "metrics": [sum_metric("importance_weight")], "order_desc": True, "row_limit": 100,
@@ -338,7 +347,7 @@ def main() -> int:
         return 2
 
     api = SupersetApi(
-        os.environ.get("SUPERSET_URL", "http://127.0.0.1:8088"),
+        os.environ.get("SUPERSET_URL") or "http://127.0.0.1:" + os.environ.get("SUPERSET_HOST_PORT", "18088"),
         os.environ["SUPERSET_ADMIN_USERNAME"],
         os.environ["SUPERSET_ADMIN_PASSWORD"],
     )
@@ -391,7 +400,8 @@ def main() -> int:
             "params": json.dumps(params, separators=(",", ":")),
             "description": chart["description"],
         }
-        saved = api.upsert("chart", chart["name"], payload, key="slice_name")
+        saved = api.upsert("chart", chart["name"], payload, key="slice_name",
+                           aliases=tuple(chart.get("legacy_names", [])))
         c_id = saved["id"]
         chart_ids.append(c_id)
         if chart["name"].startswith("AI —"):
@@ -430,8 +440,11 @@ def main() -> int:
         },
         key="slug",
     )
-    for cid in ai_chart_ids:
-        api._request(f"/api/v1/chart/{cid}", "PUT", {"dashboards": [dashboard_2["id"]]})
+    for cid in chart_ids:
+        memberships = ([dashboard_1["id"]] if cid in chart_ids[:8] else [])
+        if cid in ai_chart_ids:
+            memberships.append(dashboard_2["id"])
+        api._request(f"/api/v1/chart/{cid}", "PUT", {"dashboards": memberships})
     print(f"DASHBOARD 2 id={dashboard_2['id']} slug=crm-ai-intelligence-dashboard")
 
     print("\n[SUCCESS] Bootstrap Superset hoàn tất!")

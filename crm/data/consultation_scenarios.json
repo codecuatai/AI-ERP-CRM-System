@@ -1,0 +1,36 @@
+{
+  "version": "2026-10-15",
+  "provenance": "Tình huống do nhóm biên soạn để kiểm thử CRM B2B. Mọi doanh nghiệp, trao đổi, ngân sách và địa chỉ .test đều là minh họa; không phải dữ liệu khách hàng thật hay tập kiểm định độc lập.",
+  "cases": [
+    {"id": "crm-sales", "company": "Minh họa An Phúc", "name": "Phụ trách kinh doanh An Phúc", "solution": "CRM", "consent": true, "expected_segment": "POTENTIAL", "request": "Đội sales 12 người đang dùng 4 bảng tính, bị trùng khách và quên lịch gọi lại. Cần demo CRM quản lý lịch sử tư vấn và giao việc; ngân sách dự kiến 30 triệu, phải trình giám đốc duyệt trước.", "chat": [{"role": "user", "content": "CRM có nhập được dữ liệu bảng tính và phân công lead cho 12 sales không?"}, {"role": "assistant", "content": "Cần xem mẫu cột dữ liệu và quy tắc phân công; nhân viên sẽ xác nhận phạm vi sau khảo sát."}, {"role": "user", "content": "Chi phí và thời gian thế nào? Chúng tôi chưa duyệt ngân sách chính thức."}]},
+    {"id": "warehouse-pos", "company": "Minh họa Kho Sông Xanh", "name": "Phụ trách vận hành Sông Xanh", "solution": "ERP", "consent": true, "expected_segment": "POTENTIAL", "request": "Doanh nghiệp có 3 kho và 2 quầy POS, khoảng 2.000 mã hàng. Tồn kho trên bảng tính lệch với quầy. Cần tư vấn kiểm kê bằng mã vạch, demo đối chiếu tồn và xuất nhập; chưa cam kết đồng bộ khi chưa kiểm tra API thiết bị.", "chat": [{"role": "user", "content": "Bên tôi có 3 kho và 2 quầy POS, cần quét mã vạch khi kiểm kê."}, {"role": "assistant", "content": "Nên khảo sát thiết bị và thống nhất cách đối chiếu tồn tại một kho trước."}, {"role": "user", "content": "Nếu chọn thí điểm một điểm bán thì chi phí bao nhiêu?"}]},
+    {"id": "backup-incident", "company": "Minh họa Hạ tầng Sao Mai", "name": "Phụ trách IT Sao Mai", "solution": "INFRASTRUCTURE", "consent": true, "expected_segment": "CHURN_RISK", "request": "Máy chủ bị lỗi, bản sao lưu gần nhất không khôi phục được. Chúng tôi không hài lòng và muốn hủy hợp đồng nếu không có phương án xử lý. Cần xác minh mất dữ liệu, ưu tiên khôi phục trước khi tư vấn mua thêm.", "chat": [{"role": "user", "content": "Máy chủ lỗi, chúng tôi không hài lòng vì bản backup không khôi phục được."}, {"role": "assistant", "content": "Cần nhân viên kỹ thuật xác minh bản sao, mức ảnh hưởng và mục tiêu khôi phục; chưa thể hứa thời gian xử lý."}]},
+    {"id": "integration-api", "company": "Minh họa Kết Nối Việt", "name": "Phụ trách hệ thống Kết Nối Việt", "solution": "INTEGRATION", "consent": true, "expected_segment": "POTENTIAL", "request": "Cần tư vấn tích hợp API giữa CRM và phần mềm POS hiện có để đồng bộ mã khách, tránh tạo trùng. Đã có tài liệu API sandbox, muốn demo một luồng tạo khách trước; chưa đồng ý viết lại phần mềm đang chạy.", "chat": [{"role": "user", "content": "Có thể tích hợp API giữa POS và CRM đang dùng không?"}, {"role": "assistant", "content": "Cần đối chiếu API, mã định danh và quyền truy cập sandbox để kiểm thử trước."}]},
+    {"id": "deferred-budget", "company": "Minh họa Thương mại Bình An", "name": "Phụ trách dự án Bình An", "solution": "CRM", "consent": true, "expected_segment": "HIBERNATING", "request": "Chúng tôi đã xem demo CRM nhưng chưa có ngân sách, xin tạm dừng trao đổi và hẹn lại quý sau. Không gửi báo giá thúc chốt trong tháng này.", "chat": [{"role": "user", "content": "Tạm dừng triển khai CRM vì chưa có ngân sách, quý sau hãy liên hệ lại."}]},
+    {"id": "ai-assistant", "company": "Minh họa Dịch vụ Mộc", "name": "Phụ trách CSKH Mộc", "solution": "AI", "consent": true, "expected_segment": "POTENTIAL", "request": "Muốn tìm hiểu AI tóm tắt yêu cầu và gợi ý email nháp cho nhóm chăm sóc. Có 200 tình huống đã ẩn danh để làm thí điểm. Cần nhân viên duyệt nội dung, không cho AI tự gửi email hoặc tự hứa giá.", "chat": [{"role": "user", "content": "Tư vấn chatbot AI tóm tắt nhu cầu và gợi ý email để nhân viên kiểm tra."}]},
+    {"id": "insufficient", "company": "Minh họa Hồ sơ mới", "name": "Đại diện hồ sơ mới", "solution": "OTHER", "consent": true, "expected_segment": "UNCLASSIFIED", "request": "Xin chào, tôi muốn trao đổi với một nhân viên. Hiện chưa cung cấp thêm thông tin về doanh nghiệp.", "chat": []},
+    {"id": "no-consent", "company": "Minh họa Riêng tư", "name": "Đại diện Riêng tư", "solution": "INFRASTRUCTURE", "consent": false, "expected_segment": null, "request": "Muốn được nhân viên tư vấn máy chủ và sao lưu nhưng không đồng ý phân tích AI nội dung này. Vẫn cần được tiếp nhận và gọi lại thủ công.", "chat": []}
+  ],
+  "sentiment_cases": [
+    ["Khách rất hài lòng, giải pháp phù hợp và hỗ trợ chuyên nghiệp.", "POSITIVE"],
+    ["Chúng tôi đồng ý ký hợp đồng sau buổi demo.", "POSITIVE"],
+    ["Ứng dụng ổn định và thao tác nhanh.", "POSITIVE"],
+    ["Cảm ơn, dự án thành công và đúng hạn.", "POSITIVE"],
+    ["Đã khắc phục lỗi, khách hài lòng.", "POSITIVE"],
+    ["Không còn lỗi trong lần kiểm tra này.", "POSITIVE"],
+    ["Tôi không hài lòng với dịch vụ.", "NEGATIVE"],
+    ["Hệ thống không tốt.", "NEGATIVE"],
+    ["Phần mềm chưa ổn định và khó dùng.", "NEGATIVE"],
+    ["Máy chủ chậm và thường xuyên treo.", "NEGATIVE"],
+    ["Rất thất vọng, muốn hủy vì mất dữ liệu.", "NEGATIVE"],
+    ["Tích hợp phức tạp, chi phí đắt và chờ lâu.", "NEGATIVE"],
+    ["Không phù hợp với quy trình hiện tại.", "NEGATIVE"],
+    ["Khách yêu cầu buổi khảo sát vào thứ hai.", "NEUTRAL"],
+    ["Xin gửi tài liệu API để đội IT đánh giá.", "NEUTRAL"],
+    ["Ngân sách đang trình phê duyệt nội bộ.", "NEUTRAL"],
+    ["Doanh nghiệp có 3 kho và 20 nhân viên.", "NEUTRAL"],
+    ["Đã tiếp nhận yêu cầu, chờ xác nhận lịch.", "NEUTRAL"],
+    ["Tốt quá, lại mất dữ liệu rồi.", "NEGATIVE"],
+    ["Hài lòng gì mà ngày nào cũng lỗi.", "NEGATIVE"]
+  ]
+}

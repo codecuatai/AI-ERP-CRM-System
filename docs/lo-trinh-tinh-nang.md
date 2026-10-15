@@ -25,32 +25,17 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 ## Các tính năng đã triển khai
 
-### Đã hoàn thành TH2: Hệ thống Phân tích Dữ liệu Thông minh tích hợp AI & Apache Superset (TH2)
+### Module TH2 đã triển khai; đang kiểm chứng chất lượng AI
 
-- **Kiến trúc Data Mart:** Tạo schema `analytics` tách rời khỏi dữ liệu tác nghiệp `crm`, cấp quyền đọc an toàn cho role `superset_ro`.
-- **6 Mô hình AI Phân tích & Dự báo Chuyên sâu:**
-  1. *Lead Win-Rate Model:* Chấm điểm và dự báo xác suất chuyển đổi Lead (HOT, WARM, COLD) kèm giá trị doanh thu kỳ vọng (`expected_won_value`).
-  2. *NLP Sentiment & Churn Risk Engine:* Phân tích sắc thái hội thoại tiếng Việt B2B (-1.0 đến +1.0) và cảnh báo rủi ro rời bỏ (`churn_risk`).
-  3. *K-Means RFM Segmentation:* Phân cụm khách hàng 4 cụm (Champions, Loyal, At-Risk, Hibernating) với Silhouette Score 0.582.
-  4. *Revenue Time-Series Forecast:* Dự báo doanh thu 4 tháng tới kèm dải tin cậy 95% (Lower/Upper bounds), MAE 8.4%.
-  5. *Explainable AI (XAI):* Giải thích đóng góp đặc trưng (Shapley-style feature attributions) cho quyết định của AI.
-  6. *Anomaly Detection Engine:* Phát hiện bất thường lead bị ngâm và giao dịch bất thường (Z-score).
-- **Apache Superset MCP Server:** Triển khai máy chủ Model Context Protocol hỗ trợ các tool: `superset_list_dashboards`, `superset_query_ai_insights`, `superset_execute_sql`, `superset_trigger_pipeline`.
-- **Superset Dashboards:** Tự động tạo 10 datasets, 12 biểu đồ và 2 dashboards:
-  1. `crm-analytics-dashboard`: Bảng điều khiển tổng hợp kinh doanh và AI.
-  2. `crm-ai-intelligence-dashboard`: Bảng điều khiển phân tích dữ liệu thông minh và dự báo (TH2).
-- **Báo cáo kỹ thuật đầy đủ:** Đã hoàn thiện tài liệu [Báo cáo Kỹ thuật TH2](bao-cao-ky-thuat-th2.md).
+- PostgreSQL có schema `analytics`, bốn view nghiệp vụ, sáu bảng phân tích và role `superset_ro` chỉ đọc. SQLite có biểu đồ CRM cục bộ.
+- Bootstrap REST tạo/cập nhật 10 dataset, 12 chart và 2 dashboard; đã kiểm tra truy vấn và hiển thị trực tiếp trên Superset.
+- MCP stdio có lifecycle cơ bản và bốn tool; SQL dùng connection `superset_ro`, không dùng quyền ứng dụng. Chưa có HTTP MCP hoặc tool tạo chart/dashboard.
+- Sáu phương pháp hiện tại: chấm điểm lead bằng công thức sigmoid, sentiment/churn từ lexicon, RFM theo tâm tham chiếu cố định, hồi quy tuyến tính doanh thu, đóng góp thành phần công thức, phát hiện bất thường bằng quy tắc/Z-score. Không mô tả thành Random Forest, K-Means đã huấn luyện, Prophet hoặc SHAP.
+- Đã sửa consent từng nội dung chat/phản hồi, dự báo đọc sai doanh thu, lỗi nút đồng bộ, form follow-up bị CSRF và tràn ngang mobile. Có 8 tình huống tư vấn B2B minh họa và bộ kiểm tra hồi quy.
+- Đánh giá hiện tính từ dữ liệu kiểm thử và backtest, không dùng số liệu ghi cứng. Bộ tình huống có dùng để sửa mô hình, chưa chứng minh hiệu quả trên khách hàng thật. Dự báo hiện chưa vượt baseline tháng trước.
+- Kết quả và giới hạn: [báo cáo kiểm thử](kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo kỹ thuật TH2](bao-cao-ky-thuat-th2.md).
 
-### Đã hoàn thành phần tích hợp dữ liệu: Apache Superset
-
-- Django có thể dùng PostgreSQL tùy chọn, SQLite vẫn là mặc định local.
-- Superset chạy riêng bằng Docker Compose, dùng database metadata riêng và tài khoản CRM chỉ đọc.
-- Lệnh `setup_superset_analytics` tạo schema view chỉ chứa chỉ số cần thiết, không lộ thông tin liên hệ/nội dung tương tác.
-- Seed thêm giao dịch doanh thu giả lập để demo biểu đồ theo thời gian; đây không phải nghiệp vụ kế toán hoặc dữ liệu doanh thu thật.
-- Docker Compose có service `superset-bootstrap` dùng REST API để tự đăng ký SQLAlchemy URI, bốn dataset, bốn chart và dashboard đã publish; có thể chạy lại bằng `python superset/bootstrap_superset.py`.
-- Lệnh `verify_superset_analytics` đối chiếu tổng khách hàng, lead, việc chăm sóc và doanh thu WON giữa bảng CRM và view analytics trước khi demo.
-
-**Bước demo trong Superset:** khởi động stack với `superset-bootstrap`, mở dashboard `crm-analytics-dashboard`, rồi chạy lệnh đối chiếu để xác nhận số liệu. Có thể chỉnh chart/dashboard trong UI; bootstrap sẽ khôi phục cấu hình chuẩn khi cần. Dữ liệu giao dịch là giả lập, không phải doanh thu thật.
+**Việc tiếp theo:** tập dữ liệu có nguồn/consent và nhãn độc lập; đánh giá dự báo ngoài mẫu với baseline; kiểm thử khả dụng với nhân viên thực tế; xử lý dependency frontend theo ràng buộc phiên bản.
 
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 
@@ -80,7 +65,7 @@ Tạo một hàng đợi giúp nhân viên biết nên chăm sóc ai trước th
 ### Đã hoàn thành một phần: Xuất CSV và báo cáo cơ bản
 
 - Xuất danh sách khách hàng theo bộ lọc hiện tại và xem báo cáo CRM.
-- Chưa có nhập CSV, xem trước hay báo lỗi theo dòng; đây là phần tiếp theo nếu cần nạp dữ liệu hàng loạt.
+- Đã có CLI `import_crm_customers` với `--dry-run`, kiểm tra toàn bộ file trước khi ghi, bỏ qua email trùng hoặc cập nhật có chủ đích; chưa có màn hình nhập CSV trong frontend.
 
 Đây là tính năng thực tế với nhóm người dùng không chuyên kỹ thuật. Nên bắt đầu bằng CSV, chưa cần hỗ trợ Excel nhiều sheet.
 
@@ -89,7 +74,7 @@ Tạo một hàng đợi giúp nhân viên biết nên chăm sóc ai trước th
 - Số khách hàng theo phân khúc và số khách mới trong 30 ngày gần đây.
 - Số yêu cầu tư vấn theo trạng thái.
 - Số việc chăm sóc theo trạng thái và tổng việc quá hạn.
-- Chưa có bộ lọc khoảng thời gian tùy chọn, nhóm theo nguồn, biểu đồ hay xuất báo cáo tổng hợp riêng.
+- Có biểu đồ ECharts trong CRM và dashboard Superset; frontend CRM chưa có bộ lọc thời gian tùy chọn hoặc xuất báo cáo tổng hợp riêng.
 
 Chỉ nên biểu diễn chỉ số mà dữ liệu hiện có hỗ trợ; chưa nên gọi đây là dự báo doanh thu nếu chưa có dữ liệu đơn hàng đáng tin cậy.
 
@@ -102,7 +87,7 @@ Chỉ nên biểu diễn chỉ số mà dữ liệu hiện có hỗ trợ; chưa
 | Đã làm | Wagtail CMS, Snippets và quyền nhóm | Chỉnh sửa trang chủ, tìm/lọc dữ liệu và cấp quyền theo vai trò |
 | Đã làm | Trợ lý soạn email có người duyệt | Tạo bản nháp; nhân viên kiểm tra và tự gửi ngoài hệ thống |
 | Đã làm | Hàng đợi khách hàng cần ưu tiên | Xem khách cần chăm sóc trước cùng lý do |
-| Đã làm một phần | CSV và báo cáo cơ bản | Xuất danh sách, xem số liệu; chưa hỗ trợ nhập CSV |
+| Đã làm một phần | CSV và báo cáo cơ bản | Xuất danh sách, xem số liệu; nhập CSV qua CLI, chưa có giao diện nhập |
 
 ## Kịch bản demo “đủ wow”
 

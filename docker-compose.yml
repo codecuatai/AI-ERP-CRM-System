@@ -187,6 +187,8 @@ services:
     volumes:
       - ./superset/bootstrap_superset.py:/app/bootstrap_superset.py:ro
     depends_on:
+      crm-web:
+        condition: service_healthy
       superset:
         condition: service_healthy
     command: ["python", "/app/bootstrap_superset.py"]

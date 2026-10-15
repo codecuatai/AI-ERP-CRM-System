@@ -1,0 +1,139 @@
+{
+  "datasets": 10,
+  "charts": 12,
+  "dashboards": [
+    {
+      "id": 2,
+      "slug": "crm-ai-intelligence-dashboard",
+      "published": true
+    },
+    {
+      "id": 1,
+      "slug": "crm-analytics-dashboard",
+      "published": true
+    }
+  ],
+  "chart_queries": [
+    {
+      "chart": "CRM — Khách hàng theo phân khúc",
+      "id": 1,
+      "status": "success",
+      "rows": 5,
+      "error": null
+    },
+    {
+      "chart": "CRM — Lead theo trạng thái",
+      "id": 2,
+      "status": "success",
+      "rows": 3,
+      "error": null
+    },
+    {
+      "chart": "CRM — Việc chăm sóc quá hạn",
+      "id": 3,
+      "status": "success",
+      "rows": 3,
+      "error": null
+    },
+    {
+      "chart": "CRM — Doanh thu đã chốt theo tháng",
+      "id": 4,
+      "status": "success",
+      "rows": 12,
+      "error": null
+    },
+    {
+      "chart": "AI — Phân bố Tiềm năng Lead (HOT / WARM / COLD)",
+      "id": 5,
+      "status": "success",
+      "rows": 2,
+      "error": null
+    },
+    {
+      "chart": "AI — Doanh thu Kỳ vọng theo Giải pháp (Expected Won)",
+      "id": 6,
+      "status": "success",
+      "rows": 6,
+      "error": null
+    },
+    {
+      "chart": "AI — Phân bổ Cảm xúc Tương tác (NLP Sentiment)",
+      "id": 7,
+      "status": "success",
+      "rows": 3,
+      "error": null
+    },
+    {
+      "chart": "AI — Cảnh báo Rủi ro Rời bỏ Khách hàng (Churn Risk)",
+      "id": 8,
+      "status": "success",
+      "rows": 3,
+      "error": null
+    },
+    {
+      "chart": "AI — Phân nhóm Khách hàng RFM theo tâm tham chiếu",
+      "id": 9,
+      "status": "success",
+      "rows": 1,
+      "error": null
+    },
+    {
+      "chart": "AI — Dự báo Doanh thu (Hồi quy tuyến tính)",
+      "id": 10,
+      "status": "success",
+      "rows": 4,
+      "error": null
+    },
+    {
+      "chart": "AI — Trọng số Đóng góp Đặc trưng (Explainable AI - XAI)",
+      "id": 11,
+      "status": "success",
+      "rows": 6,
+      "error": null
+    },
+    {
+      "chart": "AI — Cảnh báo Bất thường Vận hành (Anomaly Detection)",
+      "id": 12,
+      "status": "success",
+      "rows": 1,
+      "error": null
+    }
+  ],
+  "mcp_role": {
+    "status": "SUCCESS",
+    "columns": [
+      "role"
+    ],
+    "rows_count": 1,
+    "data": [
+      {
+        "role": "superset_ro"
+      }
+    ]
+  },
+  "mcp_source_table_access": {
+    "status": "ERROR",
+    "message": "permission denied for table crm_customer"
+  },
+  "mcp_stdio": {
+    "exit_code": 0,
+    "response_ids": [
+      1,
+      2,
+      3
+    ],
+    "initialization_ok": true
+  },
+  "browser": [
+    {
+      "slug": "crm-ai-intelligence-dashboard",
+      "chart_holders": 8,
+      "visible_errors": []
+    },
+    {
+      "slug": "crm-analytics-dashboard",
+      "chart_holders": 8,
+      "visible_errors": []
+    }
+  ]
+}

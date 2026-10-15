@@ -2,7 +2,7 @@
 
 import json
 import sys
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from superset.mcp_server import SupersetMCPServer, handle_mcp_rpc
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -28,17 +28,24 @@ class Command(BaseCommand):
         if options.get("test"):
             self.stdout.write("==> Đang kiểm thử Apache Superset MCP Server Tools...")
             
-            dashboards = server.list_dashboards()
+            try:
+                dashboards = server.list_dashboards()
+            except RuntimeError as exc:
+                raise CommandError(str(exc)) from exc
             self.stdout.write(self.style.SUCCESS(f"✔ [Tool: superset_list_dashboards]: Tìm thấy {len(dashboards)} dashboards:"))
             for d in dashboards:
                 self.stdout.write(f"   - {d['title']} ({d['url']})")
 
             insights = server.query_ai_insights()
+            if insights.get("status") != "SUCCESS":
+                raise CommandError(str(insights))
             self.stdout.write(self.style.SUCCESS(f"✔ [Tool: superset_query_ai_insights]: Trích xuất insights AI thành công:"))
             self.stdout.write(json.dumps(insights, indent=2, ensure_ascii=False, default=str))
 
             test_sql = "SELECT tier, count(*) as count FROM analytics.ai_lead_predictions GROUP BY tier"
             sql_res = server.execute_sql(test_sql)
+            if sql_res.get("status") != "SUCCESS":
+                raise CommandError(str(sql_res))
             self.stdout.write(self.style.SUCCESS(f"✔ [Tool: superset_execute_sql]: Chạy query thành công:"))
             self.stdout.write(json.dumps(sql_res, indent=2, ensure_ascii=False, default=str))
 
@@ -48,9 +55,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"✔ [JSON-RPC Protocol: tools/list]: Phản hồi chuẩn MCP thành công."))
             return
 
-        self.stdout.write("Khởi động Superset MCP Server ở chế độ Stdio...")
+        self.stderr.write("Khởi động Superset MCP Server ở chế độ Stdio...")
         import sys
         for line in sys.stdin:
             if line.strip():
-                self.stdout.write(handle_mcp_rpc(line))
-                self.stdout.flush()
+                response = handle_mcp_rpc(line)
+                if response:
+                    self.stdout.write(response)
+                    self.stdout.flush()

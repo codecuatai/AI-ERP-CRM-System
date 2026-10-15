@@ -7,7 +7,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 
-from django.db import connection
+from django.db import connection, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from crm.analytics.ai_engine import (
@@ -31,6 +32,13 @@ class AnalyticsPipeline:
         self.forecast_engine = RevenueForecastingEngine()
         self.xai_engine = ExplainableAIEngine()
         self.anomaly_engine = AnomalyDetectionEngine()
+
+    @staticmethod
+    def permitted_interactions():
+        return Interaction.objects.filter(
+            Q(ai_processing_consent=True)
+            | Q(ai_processing_consent__isnull=True, customer__lead_requests__isnull=True)
+        ).distinct()
 
     def run_all(self) -> Dict[str, Any]:
         """Runs all 6 AI workflows and returns statistical summary."""
@@ -65,10 +73,12 @@ class AnalyticsPipeline:
     # ─────────────────────────────────────────────────────────────────────────
     def process_lead_predictions(self) -> List[Dict[str, Any]]:
         results = []
-        leads = LeadRequest.objects.select_related("customer").all()
+        leads = LeadRequest.objects.select_related("customer").filter(
+            ai_processing_consent=True,
+        ).exclude(status=LeadRequest.Status.COMPLETED)
 
         for lead in leads:
-            interaction_count = lead.customer.interactions.count() if lead.customer else 0
+            interaction_count = self.permitted_interactions().filter(customer=lead.customer).count()
             has_phone = bool(lead.customer and lead.customer.phone)
             has_company = bool(lead.customer and lead.customer.company)
             priority_score = getattr(lead.customer, "ai_score", 50) if lead.customer else 50
@@ -82,6 +92,7 @@ class AnalyticsPipeline:
                 has_phone=has_phone,
                 has_company=has_company,
                 request_text_length=req_len,
+                customer_segment=lead.customer.ai_segment,
             )
 
             results.append({
@@ -102,11 +113,12 @@ class AnalyticsPipeline:
     # ─────────────────────────────────────────────────────────────────────────
     def process_sentiments(self) -> List[Dict[str, Any]]:
         results = []
-        interactions = Interaction.objects.select_related("customer").all()
+        interactions = self.permitted_interactions().select_related("customer")
 
         for inter in interactions:
             text = f"{inter.subject} {inter.content}"
-            days_ago = (timezone.now() - inter.occurred_at).days if inter.occurred_at else 0
+            latest = interactions.filter(customer_id=inter.customer_id).order_by("-occurred_at").first()
+            days_ago = max((timezone.now() - latest.occurred_at).days, 0) if latest else 0
             unresolved = CareTask.objects.filter(
                 customer=inter.customer, status__in=["TODO", "IN_PROGRESS"]
             ).count() if inter.customer else 0
@@ -136,13 +148,16 @@ class AnalyticsPipeline:
     # ─────────────────────────────────────────────────────────────────────────
     def process_rfm_segmentation(self) -> List[Dict[str, Any]]:
         results = []
-        customers = Customer.objects.all()
+        customers = Customer.objects.filter(
+            Q(lead_requests__isnull=True) | Q(lead_requests__ai_processing_consent=True)
+        ).distinct()
         now = timezone.now()
 
         for cust in customers:
-            last_inter = cust.interactions.order_by("-occurred_at").first()
+            allowed = self.permitted_interactions().filter(customer=cust)
+            last_inter = allowed.order_by("-occurred_at").first()
             recency = (now - last_inter.occurred_at).days if last_inter and last_inter.occurred_at else 60
-            freq = cust.interactions.count()
+            freq = allowed.count()
             monetary = float(cust.total_spent or Decimal("0"))
 
             res = self.rfm_model.segment(
@@ -167,11 +182,11 @@ class AnalyticsPipeline:
     # ─────────────────────────────────────────────────────────────────────────
     # 4. Revenue Time-Series Forecast
     # ─────────────────────────────────────────────────────────────────────────
-    def process_revenue_forecast(self) -> List[Dict[str, Any]]:
+    def revenue_history(self):
         # Fetch historical monthly revenue
         records = (
             SalesRecord.objects.filter(status="WON")
-            .values("closed_at")
+            .values("closed_at", "amount")
             .order_by("closed_at")
         )
 
@@ -186,6 +201,20 @@ class AnalyticsPipeline:
             monthly_dict[month_key] = monthly_dict.get(month_key, 0.0) + float(r.get("amount") or 0.0)
 
         history = sorted(monthly_dict.items(), key=lambda x: x[0])
+        if history:
+            # Months without WON transactions are observed zero revenue, not
+            # missing time steps that can be compressed by the regression.
+            start = history[0][0].year * 12 + history[0][0].month - 1
+            end = history[-1][0].year * 12 + history[-1][0].month - 1
+            history = []
+            for month in range(start, end + 1):
+                year, zero_month = divmod(month, 12)
+                key = date(year, zero_month + 1, 1)
+                history.append((key, monthly_dict.get(key, 0.0)))
+        return history
+
+    def process_revenue_forecast(self) -> List[Dict[str, Any]]:
+        history = self.revenue_history()
         forecast_pts = self.forecast_engine.forecast_next_months(history, months_ahead=4)
 
         return [
@@ -207,8 +236,10 @@ class AnalyticsPipeline:
         now = timezone.now()
 
         # Lead anomalies
-        for lead in LeadRequest.objects.all():
-            days_stalled = (now - lead.created_at).days if lead.created_at else 0
+        for lead in LeadRequest.objects.filter(ai_processing_consent=True).exclude(status=LeadRequest.Status.COMPLETED):
+            last_contact = self.permitted_interactions().filter(customer=lead.customer).order_by("-occurred_at").first()
+            since = max(lead.created_at, last_contact.occurred_at) if last_contact else lead.created_at
+            days_stalled = max((now - since).days, 0)
             score = getattr(lead.customer, "ai_score", 50) if lead.customer else 50
             alert = self.anomaly_engine.detect_lead_anomalies(
                 lead_id=lead.id,
@@ -256,18 +287,27 @@ class AnalyticsPipeline:
     # 6. Explainable AI Summary
     # ─────────────────────────────────────────────────────────────────────────
     def process_explainability(self) -> List[Dict[str, Any]]:
-        # Aggregate feature importance contributions across the pipeline
-        return [
-            {"feature_name": "Điểm ưu tiên nhu cầu khách hàng (Priority Score)", "importance_weight": 0.35, "category": "Nhu cầu"},
-            {"feature_name": "Tần suất và lịch sử tương tác chăm sóc", "importance_weight": 0.25, "category": "Vận hành"},
-            {"feature_name": "Nhóm giải pháp số lựa chọn (ERP/CRM/Cloud/POS)", "importance_weight": 0.18, "category": "Giải pháp"},
-            {"feature_name": "Thời gian phản hồi và mức độ cấp bách", "importance_weight": 0.12, "category": "Tốc độ"},
-            {"feature_name": "Tính đầy đủ của số điện thoại & thông tin doanh nghiệp", "importance_weight": 0.10, "category": "Chất lượng Lead"},
-        ]
+        totals = {}
+        for lead in LeadRequest.objects.filter(ai_processing_consent=True).exclude(
+            status=LeadRequest.Status.COMPLETED,
+        ).select_related("customer"):
+            values = self.win_rate_model.feature_contributions(
+                lead.customer.ai_score,
+                self.permitted_interactions().filter(customer=lead.customer).count(),
+                bool(lead.customer.phone), bool(lead.customer.company),
+                len(lead.request_text), lead.solution_interest,
+            )
+            for name, value in values.items():
+                totals[name] = totals.get(name, 0) + abs(value)
+        total = sum(totals.values())
+        return [{"feature_name": name, "importance_weight": round(value / total, 3),
+                 "category": "Đóng góp công thức, không phải SHAP"}
+                for name, value in totals.items()] if total else []
 
     # ─────────────────────────────────────────────────────────────────────────
     # Database Persistence to PostgreSQL Analytics Schema
     # ─────────────────────────────────────────────────────────────────────────
+    @transaction.atomic
     def persist_to_postgres(
         self,
         lead_results: List[Dict[str, Any]],
@@ -418,5 +458,6 @@ class AnalyticsPipeline:
                 """, (item["feature_name"], item["importance_weight"], item["category"]))
 
             # Grant read permissions to Superset read-only role
+            cursor.execute("GRANT USAGE ON SCHEMA analytics TO superset_ro")
             cursor.execute("GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO superset_ro")
             cursor.execute("GRANT USAGE ON ALL SEQUENCES IN SCHEMA analytics TO superset_ro")

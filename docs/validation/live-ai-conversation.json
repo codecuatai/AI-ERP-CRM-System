@@ -1,0 +1,22 @@
+{
+  "provenance": "Hội thoại minh họa và hồ sơ scenario.crm-sales; không có dữ liệu khách hàng thật. Không gửi email.",
+  "chat": [
+    {
+      "message": "Doanh nghiệp minh họa có 3 kho và 2 quầy POS, muốn kiểm kê bằng mã vạch.",
+      "reply": "Chào anh/chị, giải pháp kiểm kê mã vạch cho 3 kho và 2 quầy POS thuộc nghiệp vụ quản lý kho/POS của DigiFlow. \n\nĐể đề xuất phương án phù hợp, DigiFlow có thể hỗ trợ đồng bộ dữ liệu giữa các kho và quầy POS. Tuy nhiên, khả năng đáp ứng thực tế và thời gian thực cần được nhân viên kỹ thuật xác nhận dựa trên khảo sát cụ thể.\n\nAnh/chị vui lòng chia sẻ thêm:\n1. Doanh nghiệp đang dùng phần mềm hay thiết bị mã vạch nào chưa?\n2. Số lượng SKU sản phẩm cần quản lý khoảng bao nhiêu?\n\nAnh/chị có thể để lại yêu cầu chi tiết trong form liên hệ để nhân viên tư vấn hỗ trợ xác nhận thông tin.",
+      "suggested_solution": "ERP",
+      "provider": "gemini"
+    },
+    {
+      "message": "Chi phí bao nhiêu và thời gian triển khai bao lâu?",
+      "reply": "Về chi phí và thời gian triển khai cho hệ thống kho/POS với 3 kho và 2 quầy POS, DigiFlow hiện chưa có thông tin chính xác để báo giá và tiến độ do chưa có dữ liệu khảo sát thực tế. \n\nAnh/chị vui lòng để lại yêu cầu chi tiết trong form liên hệ để nhân viên tư vấn hỗ trợ khảo sát và xác nhận thông tin cụ thể.",
+      "suggested_solution": "ERP",
+      "provider": "gemini"
+    }
+  ],
+  "email_draft": {
+    "draft": "Kính gửi Quý công ty,\n\nCảm ơn Quý công ty đã quan tâm và đồng ý để chúng tôi phân tích nhu cầu ứng dụng giải pháp công nghệ trong thời gian qua. \n\nQua thông tin đã trao đổi, chúng tôi được biết hiện tại đội ngũ sales gồm 12 nhân sự đang sử dụng 4 bảng tính để quản lý dữ liệu, dẫn đến tình trạng trùng lặp khách hàng và bỏ sót lịch gọi lại. Để giải quyết các điểm nghẽn này, nhóm giải pháp CRM & chăm sóc khách hàng của chúng tôi có thể hỗ trợ quản lý tập trung lịch sử tư vấn và phân công công việc hiệu quả hơn.\n\nLiên quan đến mức ngân sách dự kiến khoảng 30 triệu đồng và việc cần trình Giám đốc phê duyệt, chúng tôi đề xuất sắp xếp một buổi trao đổi hoặc demo trực tuyến. Buổi làm việc này sẽ giúp chúng tôi khảo sát kỹ hơn các yêu cầu thực tế của đội ngũ, từ đó cung cấp thông tin chi tiết làm cơ sở báo giá chính xác và đánh giá khả năng triển khai phù hợp cho Quý công ty.\n\nKính mời Quý công ty cho biết thời gian thuận tiện để chúng tôi sắp xếp lịch trao đổi chi tiết.\n\nTrân trọng,",
+    "provider": "gemini"
+  },
+  "note": "Kiểm tra tích hợp thực tế và rà soát thủ công nội dung; không phải thước đo độ chính xác tổng quát."
+}

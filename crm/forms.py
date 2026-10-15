@@ -115,7 +115,7 @@ class PublicLeadRequestForm(forms.Form):
     )
     ai_processing_consent = forms.BooleanField(required=False, label="")
     website = forms.CharField(required=False, widget=forms.TextInput(attrs={"tabindex": "-1", "autocomplete": "off"}))
-    chat_history = forms.CharField(required=False, widget=forms.HiddenInput())
+    chat_history = forms.CharField(required=False, max_length=16000, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -3,18 +3,20 @@
 Provides 6 specialized AI models designed for B2B Digital Transformation CRM:
 1. LeadWinRateModel: Lead Scoring & Win-rate probability classifier.
 2. SentimentChurnEngine: Vietnamese B2B NLP sentiment & churn risk detection.
-3. RFMSegmentationModel: Customer segmentation using K-Means on RFM metrics.
+3. RFMSegmentationModel: RFM profile assignment to fixed reference centroids.
 4. RevenueForecastingEngine: Time-series revenue forecasting with 95% confidence intervals.
-5. ExplainableAIEngine: Shapley-inspired feature importance and decision explanation.
+5. ExplainableAIEngine: Formula contributions and a heuristic decision explanation.
 6. AnomalyDetectionEngine: Operational and transaction anomaly detection.
 """
 
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
+from crm.services.consultation import normalize_text
 
 
 @dataclass
@@ -75,13 +77,26 @@ class LeadWinRateModel:
         "CRM": 0.58,
         "ERP": 0.52,
         "POS": 0.65,
-        "INFRA": 0.48,
+        "INFRASTRUCTURE": 0.48,
+        "INTEGRATION": 0.45,
+        "AI": 0.40,
         "OTHER": 0.35,
     }
 
     @staticmethod
     def _sigmoid(z: float) -> float:
         return 1.0 / (1.0 + math.exp(-max(min(z, 15.0), -15.0)))
+
+    def feature_contributions(self, priority_score, interaction_count, has_phone, has_company,
+                              request_text_length, solution_interest, response_time_hours=2.0):
+        return {
+            "Điểm nhu cầu": 2.2 * min(max(priority_score, 0), 100) / 100.0,
+            "Tần suất tương tác": 1.8 * min(max(interaction_count, 0) / 5.0, 1.0),
+            "Thông tin liên hệ đầy đủ": 1.2 * (0.5 * bool(has_phone) + 0.5 * bool(has_company)),
+            "Mức chi tiết nhu cầu": 0.8 * min(max(request_text_length, 0) / 150.0, 1.0),
+            "Tốc độ phản hồi (giả định)": 0.9 * (1.0 if response_time_hours <= 4 else (0.5 if response_time_hours <= 24 else 0.2)),
+            "Nhóm giải pháp": (self.SOLUTION_BASE_RATES.get(solution_interest, 0.40) - 0.5) * 2,
+        }
 
     def predict(
         self,
@@ -93,28 +108,25 @@ class LeadWinRateModel:
         has_company: bool,
         request_text_length: int,
         response_time_hours: float = 2.0,
+        customer_segment: str = "",
     ) -> LeadPredictionResult:
-        base_rate = self.SOLUTION_BASE_RATES.get(solution_interest, 0.40)
         norm_priority = min(max(priority_score, 0), 100) / 100.0
 
         # Feature normalization
-        interact_feature = min(interaction_count / 5.0, 1.0)
         contact_quality = (0.5 if has_phone else 0.0) + (0.5 if has_company else 0.0)
-        text_richness = min(request_text_length / 150.0, 1.0)
         speed_factor = 1.0 if response_time_hours <= 4.0 else (0.5 if response_time_hours <= 24.0 else 0.2)
 
         # Linear combination logit
-        z = (
-            2.2 * norm_priority
-            + 1.8 * interact_feature
-            + 1.2 * contact_quality
-            + 0.8 * text_richness
-            + 0.9 * speed_factor
-            + (base_rate - 0.5) * 2.0
-            - 2.8  # intercept
-        )
+        z = sum(self.feature_contributions(
+            priority_score, interaction_count, has_phone, has_company,
+            request_text_length, solution_interest, response_time_hours,
+        ).values()) - 2.8
 
         win_prob = round(self._sigmoid(z), 3)
+        if customer_segment in {"HIBERNATING", "CHURN_RISK"}:
+            win_prob = min(win_prob, 0.25)
+        elif customer_segment == "UNCLASSIFIED":
+            win_prob = min(win_prob, 0.39)
 
         if win_prob >= 0.70:
             tier = "HOT"
@@ -128,7 +140,9 @@ class LeadWinRateModel:
             "CRM": 45_000_000.0,
             "ERP": 120_000_000.0,
             "POS": 35_000_000.0,
-            "INFRA": 85_000_000.0,
+            "INFRASTRUCTURE": 85_000_000.0,
+            "INTEGRATION": 60_000_000.0,
+            "AI": 50_000_000.0,
             "OTHER": 25_000_000.0,
         }
         estimated_val = deal_values.get(solution_interest, 30_000_000.0)
@@ -165,7 +179,7 @@ class SentimentChurnEngine:
 
     POSITIVE_LEXICON = {
         "hài lòng": 1.5, "đồng ý": 1.4, "tốt": 1.0, "xuất sắc": 1.8, "nhanh": 1.0,
-        "tiện lợi": 1.2, "ổn định": 1.1, "rất thích": 1.5, "chốt": 1.6, "ký": 1.5,
+        "tiện lợi": 1.2, "ổn định": 1.1, "rất thích": 1.5, "chốt hợp đồng": 1.6, "ký hợp đồng": 1.5,
         "hiệu quả": 1.3, "chuyên nghiệp": 1.4, "cảm ơn": 0.8, "phù hợp": 1.1,
         "thành công": 1.3, "đúng hạn": 1.0, "nhiệt tình": 1.1,
     }
@@ -186,16 +200,24 @@ class SentimentChurnEngine:
         days_since_last_contact: int = 0,
         unresolved_tasks_count: int = 0,
     ) -> SentimentResult:
-        text_lower = (content or "").lower()
+        text_lower = normalize_text(content)
         pos_score = 0.0
         neg_score = 0.0
 
-        for word, weight in self.POSITIVE_LEXICON.items():
-            if word in text_lower:
+        lexicon = {**self.POSITIVE_LEXICON, **self.NEGATIVE_LEXICON,
+                   "đã khắc phục lỗi": 1.2, "đã xử lý sự cố": 1.2}
+        phrases = "|".join(re.escape(word) for word in sorted(lexicon, key=len, reverse=True))
+        pattern = re.compile(
+            r"(?<!\w)(?P<neg>(?:không|chưa|chẳng|chả)(?:\s+\w+){0,2}\s+)?"
+            r"(?P<phrase>" + phrases + r")(?!\w)"
+        )
+        for match in pattern.finditer(text_lower):
+            weight = lexicon[match.group("phrase")]
+            if match.group("neg"):
+                weight = -weight
+            if weight > 0:
                 pos_score += weight
-
-        for word, weight in self.NEGATIVE_LEXICON.items():
-            if word in text_lower:
+            else:
                 neg_score += abs(weight)
 
         total_weights = pos_score + neg_score
@@ -222,7 +244,7 @@ class SentimentChurnEngine:
         # Churn risk determination
         churn_points = 0
         if sentiment_label == "NEGATIVE":
-            churn_points += 3
+            churn_points += 4 if any(phrase in text_lower for phrase in ("hủy hợp đồng", "mất dữ liệu", "không gia hạn")) else 3
         elif sentiment_label == "NEUTRAL":
             churn_points += 1
 
@@ -251,11 +273,11 @@ class SentimentChurnEngine:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. RFM CUSTOMER SEGMENTATION (K-MEANS CLUSTERING)
+# 3. RFM CUSTOMER SEGMENTATION (FIXED REFERENCE PROFILES)
 # ─────────────────────────────────────────────────────────────────────────────
 
 class RFMSegmentationModel:
-    """Segments B2B customers into 4 clusters using Recency, Frequency, Monetary metrics."""
+    """Assign RFM profiles to fixed reference centroids; no K-Means training."""
 
     CLUSTER_NAMES = {
         0: "Khách hàng Chiến lược (VIP)",
@@ -325,19 +347,8 @@ class RevenueForecastingEngine:
         historical_monthly_revenues: List[Tuple[date, float]],
         months_ahead: int = 4,
     ) -> List[ForecastPoint]:
-        if not historical_monthly_revenues:
-            # Fallback baseline for demo
-            base_date = date.today()
-            return [
-                ForecastPoint(
-                    forecast_date=date(base_date.year, ((base_date.month + i - 1) % 12) + 1, 1),
-                    predicted_revenue=150_000_000.0 + i * 15_000_000.0,
-                    lower_bound_95=120_000_000.0 + i * 12_000_000.0,
-                    upper_bound_95=180_000_000.0 + i * 18_000_000.0,
-                    trend_direction="TĂNG TRƯỞNG",
-                )
-                for i in range(1, months_ahead + 1)
-            ]
+        if len(historical_monthly_revenues) < 3 or months_ahead <= 0:
+            return []
 
         n = len(historical_monthly_revenues)
         xs = list(range(n))
@@ -364,7 +375,7 @@ class RevenueForecastingEngine:
 
         for step in range(1, months_ahead + 1):
             future_x = n - 1 + step
-            predicted = max(a + b * future_x, 10_000_000.0)
+            predicted = max(a + b * future_x, 0.0)
 
             # 95% Confidence interval (1.96 * SE * expansion_factor)
             expansion = math.sqrt(1.0 + (1.0 / n) + ((future_x - x_bar) ** 2 / den))
@@ -394,7 +405,7 @@ class RevenueForecastingEngine:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ExplainableAIEngine:
-    """Calculates feature impact factors (Shapley-style attribution) to explain AI predictions."""
+    """Relative contributions of four observed scoring features; not Shapley attribution."""
 
     @staticmethod
     def explain_lead_scoring(
@@ -403,46 +414,17 @@ class ExplainableAIEngine:
         solution_interest: str,
         has_verified_contact: bool,
     ) -> List[Dict[str, Any]]:
-        explanations = []
+        values = LeadWinRateModel().feature_contributions(
+            priority_score, interaction_count, has_verified_contact, has_verified_contact,
+            0, solution_interest,
+        )
+        selected = ["Điểm nhu cầu", "Tần suất tương tác", "Nhóm giải pháp", "Thông tin liên hệ đầy đủ"]
+        total = sum(abs(values[key]) for key in selected) or 1
+        return [{"feature": key, "impact_percentage": round(values[key] / total * 100, 1),
+                 "description": "Đóng góp trong bốn đặc trưng quan sát của công thức; không phải xác suất hoặc SHAP.",
+                 "direction": "POSITIVE" if values[key] > 0 else ("NEGATIVE" if values[key] < 0 else "NEUTRAL")}
+                for key in selected]
 
-        # 1. Điểm ưu tiên từ form
-        p_weight = (priority_score - 50) * 0.4
-        explanations.append({
-            "feature": "Điểm nhu cầu khách hàng",
-            "impact_percentage": round(p_weight, 1),
-            "description": f"Mức ưu tiên khai báo đạt {priority_score}/100",
-            "direction": "POSITIVE" if p_weight >= 0 else "NEGATIVE",
-        })
-
-        # 2. Số lượt trao đổi chăm sóc
-        i_weight = min(interaction_count * 8.0, 32.0)
-        explanations.append({
-            "feature": "Tần suất tương tác",
-            "impact_percentage": round(i_weight, 1),
-            "description": f"Đã thực hiện {interaction_count} phiên trao đổi ghi nhận",
-            "direction": "POSITIVE" if i_weight > 0 else "NEUTRAL",
-        })
-
-        # 3. Loại giải pháp quan tâm
-        sol_weights = {"CRM": 12.0, "ERP": 15.0, "POS": 18.0, "INFRA": 10.0, "OTHER": -5.0}
-        s_weight = sol_weights.get(solution_interest, 5.0)
-        explanations.append({
-            "feature": "Giải pháp quan tâm",
-            "impact_percentage": round(s_weight, 1),
-            "description": f"Giải pháp {solution_interest} có tỷ lệ phù hợp thị trường cao",
-            "direction": "POSITIVE" if s_weight >= 0 else "NEGATIVE",
-        })
-
-        # 4. Tính đầy đủ của thông tin liên hệ
-        c_weight = 15.0 if has_verified_contact else -15.0
-        explanations.append({
-            "feature": "Mức độ tin cậy thông tin",
-            "impact_percentage": round(c_weight, 1),
-            "description": "Số điện thoại/Công ty đã xác thực" if has_verified_contact else "Thiếu thông tin công ty hoặc số điện thoại",
-            "direction": "POSITIVE" if c_weight > 0 else "NEGATIVE",
-        })
-
-        return explanations
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -461,7 +443,7 @@ class AnomalyDetectionEngine:
         status: str,
     ) -> Optional[AnomalyAlert]:
         # High-value lead neglected
-        if priority_score >= 80 and days_stalled >= 5 and status not in ("WON", "LOST"):
+        if priority_score >= 80 and days_stalled >= 5 and status not in ("COMPLETED", "WON", "LOST"):
             return AnomalyAlert(
                 entity_type="LEAD",
                 entity_id=lead_id,

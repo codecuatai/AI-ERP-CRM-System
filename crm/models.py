@@ -76,9 +76,14 @@ class Interaction(models.Model):
     kind = models.CharField("Hình thức", max_length=10, choices=Kind.choices, default=Kind.OTHER)
     subject = models.CharField("Chủ đề", max_length=200)
     content = models.TextField("Nội dung trao đổi")
+    ai_processing_consent = models.BooleanField(
+        "Đồng ý AI cho nội dung trao đổi", null=True, blank=True, default=None,
+        help_text="Yêu cầu/chat/form công khai lưu consent riêng. Để trống cho trao đổi nội bộ.",
+    )
     occurred_at = models.DateTimeField("Thời điểm", auto_now_add=True)
 
-    panels = [FieldPanel("customer"), FieldPanel("kind"), FieldPanel("subject"), FieldPanel("content")]
+    panels = [FieldPanel("customer"), FieldPanel("kind"), FieldPanel("subject"), FieldPanel("content"),
+              FieldPanel("ai_processing_consent", read_only=True)]
 
     class Meta:
         ordering = ["-occurred_at"]
@@ -316,6 +321,16 @@ class CareTask(models.Model):
 
     def __str__(self):
         return f"{self.title} — {self.customer.full_name}"
+
+    def save(self, *args, **kwargs):
+        previous = self.completed_at
+        if self.status == self.Status.DONE:
+            self.completed_at = self.completed_at or timezone.now()
+        else:
+            self.completed_at = None
+        if kwargs.get("update_fields") is not None and previous != self.completed_at:
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {"completed_at"}
+        return super().save(*args, **kwargs)
 
 
 class SalesRecord(models.Model):

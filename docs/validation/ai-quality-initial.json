@@ -1,0 +1,261 @@
+{
+  "dataset_version": "2026-10-15",
+  "provenance": "Tình huống do nhóm biên soạn để kiểm thử CRM B2B. Mọi doanh nghiệp, trao đổi, ngân sách và địa chỉ .test đều là minh họa; không phải dữ liệu khách hàng thật hay tập kiểm định độc lập.",
+  "limitations": "Tập tình huống nhỏ do nhóm biên soạn, có dùng để sửa rules; không suy rộng độ chính xác ra khách hàng thật. Điểm lead chưa hiệu chuẩn xác suất. Chưa có nhãn WON/LOST để đo ROC-AUC.",
+  "sentiment": {
+    "sample_size": 20,
+    "accuracy": 0.95,
+    "macro_f1": 0.9500891265597148,
+    "cases": [
+      {
+        "text": "Khách rất hài lòng, giải pháp phù hợp và hỗ trợ chuyên nghiệp.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Chúng tôi đồng ý ký hợp đồng sau buổi demo.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Ứng dụng ổn định và thao tác nhanh.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Cảm ơn, dự án thành công và đúng hạn.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Đã khắc phục lỗi, khách hài lòng.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Không còn lỗi trong lần kiểm tra này.",
+        "expected": "POSITIVE",
+        "actual": "POSITIVE"
+      },
+      {
+        "text": "Tôi không hài lòng với dịch vụ.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Hệ thống không tốt.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Phần mềm chưa ổn định và khó dùng.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Máy chủ chậm và thường xuyên treo.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Rất thất vọng, muốn hủy vì mất dữ liệu.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Tích hợp phức tạp, chi phí đắt và chờ lâu.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Không phù hợp với quy trình hiện tại.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Khách yêu cầu buổi khảo sát vào thứ hai.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Xin gửi tài liệu API để đội IT đánh giá.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Ngân sách đang trình phê duyệt nội bộ.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Doanh nghiệp có 3 kho và 20 nhân viên.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Đã tiếp nhận yêu cầu, chờ xác nhận lịch.",
+        "expected": "NEUTRAL",
+        "actual": "NEUTRAL"
+      },
+      {
+        "text": "Tốt quá, lại mất dữ liệu rồi.",
+        "expected": "NEGATIVE",
+        "actual": "NEGATIVE"
+      },
+      {
+        "text": "Hài lòng gì mà ngày nào cũng lỗi.",
+        "expected": "NEGATIVE",
+        "actual": "NEUTRAL"
+      }
+    ]
+  },
+  "solution_intent": {
+    "sample_size": 8,
+    "correct": 8,
+    "cases": [
+      {
+        "case": "crm-sales",
+        "expected": "CRM",
+        "actual": "CRM"
+      },
+      {
+        "case": "warehouse-pos",
+        "expected": "ERP",
+        "actual": "ERP"
+      },
+      {
+        "case": "backup-incident",
+        "expected": "INFRASTRUCTURE",
+        "actual": "INFRASTRUCTURE"
+      },
+      {
+        "case": "integration-api",
+        "expected": "INTEGRATION",
+        "actual": "INTEGRATION"
+      },
+      {
+        "case": "deferred-budget",
+        "expected": "CRM",
+        "actual": "CRM"
+      },
+      {
+        "case": "ai-assistant",
+        "expected": "AI",
+        "actual": "AI"
+      },
+      {
+        "case": "insufficient",
+        "expected": "OTHER",
+        "actual": "OTHER"
+      },
+      {
+        "case": "no-consent",
+        "expected": "INFRASTRUCTURE",
+        "actual": "INFRASTRUCTURE"
+      }
+    ]
+  },
+  "customer_segments": {
+    "sample_size": 7,
+    "correct": 6,
+    "requested_provider": "stored",
+    "cases": [
+      {
+        "case": "crm-sales",
+        "expected": "POTENTIAL",
+        "actual": "HIBERNATING",
+        "score": 40,
+        "provider": "gemini",
+        "summary": "Khách hàng hiện đang đối mặt với bài toán nghiệp vụ cấp thiết trong việc quản lý đội ngũ sales gồm 12 nhân sự, hiện vận hành thủ công qua 4 bảng tính dẫn đến tình trạng trùng lặp khách hàng và bỏ sót lịch gọi lại. Nhu cầu chuyển đổi số tập trung vào giải pháp CRM và chăm sóc khách hàng, với các tính năng cốt lõi bao gồm quản lý lịch sử tư vấn, giao việc, nhập dữ liệu từ bảng tính và phân công lead. Tuy nhiên, khách hàng xác nhận rõ ràng rằng chưa duyệt ngân sách chính thức và chi phí cùng thời gian triển khai vẫn đang trong giai đoạn tìm hiểu, chưa có cam kết tài chính cụ thể.\n\nTiềm năng giá trị khách hàng gắn liền với quy mô 12 nhân sự sales và bài toán chuẩn hóa quy trình dữ liệu. Cơ hội mở rộng giải pháp (Cross-sell/Up-sell) hiện tại bị giới hạn bởi việc khách hàng chưa sẵn sàng về mặt ngân sách và cần phải trình giám đốc phê duyệt. Do yếu tố ngân sách chưa được thông qua và chưa có quyết định đầu tư rõ ràng, khách hàng được phân loại vào nhóm HIBERNATING theo đúng quy định bắt buộc.\n\nRủi ro vận hành và cạnh tranh nằm ở việc đội ngũ sales đang duy trì thói quen sử dụng bảng tính rời rạc, dễ dẫn đến việc trì hoãn quyết định đầu tư hoặc tiếp tục tìm kiếm các giải pháp thay thế giá rẻ hơn. Thiếu thông tin quan trọng cần làm rõ bao gồm: mẫu cấu trúc cột dữ liệu hiện tại trên bảng tính của khách hàng, quy tắc phân công lead cụ thể cho 12 sales, và thời hạn dự kiến trình giám đốc duyệt ngân sách.",
+        "recommendation": "Checklist 1: Khảo sát cấu trúc dữ liệu và quy tắc phân công lead\nHành động cụ thể: Đề nghị khách hàng cung cấp file mẫu bảng tính hiện tại (đã ẩn thông tin bảo mật) và làm rõ tiêu chí chia lead cho 12 nhân viên sales.\nMục tiêu: Thu thập đủ dữ liệu đầu vào để thiết kế phạm vi demo CRM chính xác.\nThời hạn khuyến nghị: Trong 24h\n\nChecklist 2: Chuẩn bị buổi demo tính năng cốt lõi theo nhu cầu\nHành động cụ thể: Xây dựng kịch bản demo tập trung trực tiếp vào khả năng nhập dữ liệu bảng tính, quản lý lịch sử tư vấn, chống trùng khách và tự động phân công lead.\nMục tiêu: Giải quyết trực diện nỗi đau trùng khách và quên lịch gọi lại của đội 12 sales.\nThời hạn khuyến nghị: Trong 3 ngày\n\nChecklist 3: Hỗ trợ tài liệu bảo vệ ngân sách trình giám đốc\nHành động cụ thể: Cung cấp tài liệu báo giá chi tiết, khung thời gian triển khai dự kiến và bài toán ROI sơ bộ để khách hàng dùng làm căn trình giám đốc phê duyệt.\nMục tiêu: Gỡ bỏ rào cản về ngân sách chưa được duyệt và thúc đẩy quyết định đầu tư.\nThời hạn khuyến nghị: Trong tuần này"
+      },
+      {
+        "case": "warehouse-pos",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 65,
+        "provider": "gemini",
+        "summary": "Khách hàng hiện đang gặp bài toán vận hành cốt lõi về quản lý kho và bán hàng với quy mô gồm 3 kho, 2 quầy POS và khoảng 2.000 mã hàng. Điểm đau lớn nhất được xác định là tình trạng sai lệch dữ liệu tồn kho giữa bảng tính thủ công và thực tế tại quầy, dẫn đến nhu cầu cấp thiết về giải pháp kiểm kê bằng mã vạch và quy trình đối chiếu xuất nhập tồn. Mặc dù có quan tâm rõ ràng đến giải pháp và chủ động hỏi về chi phí triển khai thí điểm tại một điểm bán, khách hàng vẫn tỏ ra thận trọng khi chưa cam kết đồng bộ hệ thống do chờ kiểm tra khả năng tích hợp API thiết bị.\n\nTiềm năng giá trị nằm ở việc giải quyết triệt để bài toán thất thoát và sai lệch kho hàng, mở ra cơ hội triển khai giải pháp cốt lõi cho toàn bộ hệ thống 3 kho và 2 quầy POS sau giai đoạn thí điểm thành công. Tuy nhiên, rủi ro vận hành và kỹ thuật nằm ở việc tương thích thiết bị mã vạch hiện có với hệ thống phần mềm và mức độ sẵn sàng của hạ tầng API. Do khách hàng chưa đề cập cụ thể về ngân sách tổng thể ngoại trừ việc hỏi chi phí thí điểm, cần làm rõ các yếu tố chi phí và kỹ thuật để thúc đẩy quyết định.\n\nDo thiếu thông tin về ngân sách cụ thể, thời hạn dự kiến triển khai và danh mục thiết bị mã vạch đang sử dụng, đội ngũ kinh doanh cần thực hiện các bước khảo sát kỹ thuật bổ sung để củng cố niềm tin và thúc đẩy khách hàng chuyển từ giai đoạn tìm hiểu sang thử nghiệm giải pháp.",
+        "recommendation": "Checklist 1: Khảo sát kỹ thuật và thiết bị hiện tại\nHành động cụ thể: Liên hệ khách hàng để thu thập thông tin chi tiết về các loại thiết bị mã vạch, máy POS đang sử dụng và kiểm tra khả năng tích hợp API.\nMục tiêu: Xác định chính xác phương án kỹ thuật và giải quyết các vướng mắc về khả năng đồng bộ thiết bị trước khi demo.\nThời hạn khuyến nghị: Trong 24h\n\nChecklist 2: Chuẩn bị buổi Demo đối chiếu tồn kho và xuất nhập\nHành động cụ thể: Xây dựng kịch bản demo tập trung vào quy trình quét mã vạch kiểm kê, đối chiếu tồn kho thực tế và xuất nhập cho phạm vi một kho theo đúng đề xuất ban đầu.\nMục tiêu: Giúp khách hàng trực tiếp trải nghiệm tính năng giải quyết đúng điểm đau lệch kho và làm rõ chi phí thí điểm.\nThời hạn khuyến nghị: Trong 3 ngày\n\nChecklist 3: Báo giá phương án thí điểm một điểm bán\nHành động cụ thể: Lập bảng báo giá chi tiết cho phạm vi thí điểm tại một kho và quầy POS đi kèm theo đúng yêu cầu đã hỏi của khách hàng.\nMục tiêu: Cung cấp thông tin tài chính minh bạch để khách hàng xem xét và phê duyệt bước triển khai thử nghiệm.\nThời hạn khuyến nghị: Trong tuần này"
+      },
+      {
+        "case": "backup-incident",
+        "expected": "CHURN_RISK",
+        "actual": "CHURN_RISK",
+        "score": 35,
+        "provider": "rules",
+        "summary": "Nội dung được phép phân tích có dấu hiệu không hài lòng hoặc ngừng sử dụng. Cần xác minh nguyên nhân và ưu tiên xử lý trước khi đề xuất bán thêm. Ngữ cảnh gần nhất: Máy chủ bị lỗi, bản sao lưu gần nhất không khôi phục được. Chúng tôi không hài lòng và muốn hủy hợp đồng nếu không có phương án xử lý. Cần xác minh mất dữ liệu, ưu tiên khôi phục trước khi tư vấn mua thêm.",
+        "recommendation": "Checklist 1: Xác minh vấn đề và mức độ ảnh hưởng\nHành động cụ thể: Liên hệ người phụ trách, ghi rõ sự cố, dữ liệu bị ảnh hưởng và mong muốn xử lý.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Trong 24 giờ.\n\nChecklist 2: Thống nhất phương án hỗ trợ\nHành động cụ thể: Chuyển thông tin đã xác minh cho nhân viên phụ trách; thống nhất bước xử lý và lịch cập nhật, không tự cam kết SLA.\nMục tiêu: Xác minh và theo dõi nhu cầu khách hàng.\nThời hạn khuyến nghị: Sau khi xác minh."
+      },
+      {
+        "case": "integration-api",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 60,
+        "provider": "gemini",
+        "summary": "Khách hàng hiện có nhu cầu nghiệp vụ cụ thể về việc tích hợp hệ thống, cụ thể là kết nối API giữa CRM và phần mềm POS hiện tại nhằm đồng bộ mã khách hàng và ngăn chặn việc tạo trùng lặp dữ liệu. Khách hàng đã chủ động cung cấp tài liệu API sandbox và bày tỏ mong muốn thực hiện một buổi demo kiểm thử luồng tạo khách hàng thực tế, tuy nhiên có ranh giới rõ ràng là chưa đồng ý viết lại phần mềm POS đang vận hành.\n\nTiềm năng giá trị khách hàng nằm ở việc giải quyết bài toán vận hành cốt lõi này, qua đó tạo tiền đề để mở rộng các giải pháp tự động hóa dữ liệu sâu hơn khi niềm tin được thiết lập. Hiện tại, dữ liệu chưa đề cập đến ngân sách hay khả năng mua cụ thể, do đó cần tiếp cận theo hướng kỹ thuật và thực tế.\n\nRủi ro vận hành và kỹ thuật cần lưu ý là tính tương thích của API giữa hai hệ thống POS và CRM, cũng như việc khách hàng có thể chần chừ nếu quá trình demo kiểm thử gặp lỗi hoặc phát sinh yêu cầu chỉnh sửa phần mềm POS hiện có. Cần làm rõ thêm thông tin về hạ tầng POS hiện tại và quy mô dữ liệu cần đồng bộ.",
+        "recommendation": "Checklist 1: Chuẩn bị kịch bản demo kỹ thuật\nHành động cụ thể: Phối hợp với đội ngũ kỹ thuật để thiết lập và chạy thử luồng tạo khách hàng trên môi trường sandbox dựa trên tài liệu API khách hàng đã cung cấp.\nMục tiêu: Chứng minh khả năng tích hợp thành công giữa CRM và POS theo đúng yêu cầu đồng bộ mã khách.\nThời hạn khuyến nghị: Trong 3 ngày\n\nChecklist 2: Tổ chức buổi demo trực tuyến\nHành động cụ thể: Lên lịch hẹn với khách hàng để trình diễn trực tiếp luồng tạo khách trên sandbox, đồng thời lắng nghe phản hồi và làm rõ các giới hạn không can thiệp vào mã nguồn POS hiện tại.\nMục tiêu: Tạo sự tin tưởng về năng lực kỹ thuật và giải quyết triệt để nỗi lo trùng lặp dữ liệu của khách hàng.\nThời hạn khuyến nghị: Trong tuần này\n\nChecklist 3: Thu thập thông tin bổ sung về hạ tầng\nHành động cụ thể: Đặt câu hỏi khảo sát về loại phần mềm POS đang dùng, dung lượng dữ liệu khách hàng hiện tại và các mốc thời gian mong muốn hoàn thành tích hợp.\nMục tiêu: Bổ sung dữ liệu còn thiếu để xây dựng kế hoạch triển khai chi tiết và phù hợp với thực tế.\nThời hạn khuyến nghị: Trong 24h sau buổi demo"
+      },
+      {
+        "case": "deferred-budget",
+        "expected": "HIBERNATING",
+        "actual": "HIBERNATING",
+        "score": 15,
+        "provider": "gemini",
+        "summary": "Khách hàng hiện tại đang ở trạng thái tạm dừng triển khai hệ thống CRM và chăm sóc khách hàng do chưa sắp xếp được nguồn ngân sách cho dự án chuyển đổi số ở thời điểm hiện tại. Dựa trên các dữ liệu đã được khách hàng đồng ý xác nhận, nhu cầu ban đầu có tồn tại thông qua việc đã xem demo sản phẩm, tuy nhiên yếu tố ngân sách đang là rào cản lớn nhất khiến tiến trình bị đình trệ và đẩy khách hàng vào nhóm tạm nghỉ.\n\nTiềm năng giá trị và cơ hội mở rộng giải pháp (Cross-sell/Up-sell) tạm thời chưa thể khai thác ngay trong giai đoạn này do khách hàng đã chủ động yêu cầu tạm dừng trao đổi và hẹn lại vào quý sau. Mọi nỗ lực thúc đẩy bán hàng hay gửi báo giá chốt hợp đồng lúc này không phù hợp với nhu cầu thực tế và có thể gây áp lực không cần thiết cho mối quan hệ.\n\nRủi ro vận hành và cạnh tranh cần lưu ý là khách hàng có thể tiếp cận các giải pháp CRM thay thế trên thị trường trong thời gian tạm hoãn. Cần duy trì sự hiện diện ôn hòa, tôn trọng tuyệt đối mốc thời gian quý sau mà khách hàng đã đề xuất, đồng thời cần chủ động thu thập thêm thông tin về kế hoạch ngân sách dự kiến của họ khi thời điểm tái kết nối đến gần.",
+        "recommendation": "Checklist 1: Ghi nhận và tôn trọng quyết định tạm dừng\nHành động cụ thể: Cập nhật trạng thái khách hàng trên hệ thống CRM thành tạm nghỉ (Hibernating/Tạm hoãn), ghi chú rõ mốc thời gian quý sau theo đúng yêu cầu và tuyệt đối không gửi bất kỳ tài liệu báo giá hay thông tin thúc chốt nào trong tháng này.\nMục tiêu: Tôn trọng trải nghiệm của khách hàng, tránh làm phiền và duy trì thiện cảm cho lần kết nối tương lai.\nThời hạn khuyến nghị: Trong 24h\n\nChecklist 2: Thiết lập lịch nhắc nhở tái kết nối\nHành động cụ thể: Tạo lịch hẹn tự động trên hệ thống nội bộ để nhắc nhở đội ngũ kinh doanh quay lại tương tác với khách hàng vào đầu quý sau theo đúng cam kết.\nMục tiêu: Đảm bảo không bỏ sót cơ hội khi khách hàng bước vào chu kỳ lập ngân sách mới.\nThời hạn khuyến nghị: Trước khi kết thúc tháng này\n\nChecklist 3: Thu thập thêm thông tin chuẩn bị cho quý sau\nHành động cụ thể: Cần làm rõ với quản lý nội bộ xem liệu có cần chuẩn bị các bản tin cập nhật tính năng mới của CRM để gửi dưới dạng bản tin giá trị gia tăng (không mang tính bán hàng) trong thời gian tạm hoãn hay không.\nMục tiêu: Duy trì mức độ nhận diện thương hiệu vừa phải mà không vi phạm yêu cầu tạm dừng trao đổi.\nThời hạn khuyến nghị: Trong tuần này"
+      },
+      {
+        "case": "ai-assistant",
+        "expected": "POTENTIAL",
+        "actual": "POTENTIAL",
+        "score": 60,
+        "provider": "gemini",
+        "summary": "Khách hàng hiện có nhu cầu cụ thể về giải pháp AI & tự động hóa, tập trung vào việc ứng dụng AI để tóm tắt yêu cầu và gợi ý email nháp cho đội ngũ chăm sóc khách hàng. Doanh nghiệp đã chuẩn bị sẵn 200 tình huống ẩn danh để phục vụ cho việc thí điểm giải pháp, thể hiện mức độ quan tâm nghiêm túc và có sự chuẩn bị dữ liệu ban đầu. Về vận hành, khách hàng đặt yêu cầu kiểm soát chặt chẽ bằng cách bắt buộc nhân viên phải duyệt nội dung trước khi gửi, hoàn toàn không cho phép AI tự động gửi email hay cam kết giá cả với bên ngoài.\n\nTiềm năng giá trị nằm ở khả năng triển khai gói giải pháp AI ứng dụng hẹp (narrow AI) cho bộ phận chăm sóc khách hàng. Cơ hội mở rộng (Cross-sell/Up-sell) phụ thuộc vào hiệu quả của giai đoạn thí điểm 200 tình huống. Nếu giải pháp chứng minh được năng suất xử lý công việc và độ chính xác, khách hàng có thể mở rộng quy mô sang toàn bộ hệ thống support hoặc tích hợp sâu hơn vào quy trình CRM.\n\nTuy nhiên, hiện tại ngữ cảnh chưa cung cấp thông tin về ngân sách, quy mô tổng thể của doanh nghiệp hay khung thời gian ra quyết định, dẫn đến điểm số tiềm năng ở mức trung bình. Rủi ro vận hành chủ yếu là yêu cầu kiểm soát nội dung khắt khe, đòi hỏi giải pháp AI phải có độ chính xác cao trong khâu tóm tắt và gợi ý để không làm mất thời gian kiểm duyệt của nhân viên.",
+        "recommendation": "Checklist 1: Xác nhận thông tin và phạm vi thí điểm\nHành động cụ thể: Liên hệ khách hàng để làm rõ chi tiết kỹ thuật về 200 tình huống ẩn danh đã chuẩn bị và thống nhất tiêu chí đánh giá thành công (KPIs) cho giai đoạn thí điểm AI tóm tắt và gợi ý email.\nMục tiêu: Đảm bảo hai bên có chung góc nhìn về phạm vi triển khai và điều kiện kỹ thuật cần thiết.\nThời hạn khuyến nghị: Trong 24h\n\nChecklist 2: Xây dựng cấu hình kiểm soát và quy trình duyệt nội dung\nHành động cụ thể: Phối hợp với đội ngũ kỹ thuật thiết kế cơ chế phân quyền, đảm bảo tính năng kiểm duyệt bắt buộc của nhân viên trước khi email được gửi đi, triệt tiêu hoàn toàn khả năng tự động hóa không có sự giám sát.\nMục tiêu: Đáp ứng tuyệt đối yêu cầu bảo mật và kiểm soát vận hành của khách hàng.\nThời hạn khuyến nghị: Trong 3 ngày\n\nChecklist 3: Thu thập thông tin bổ sung về ngân sách và thời hạn\nHành động cụ thể: Trao đổi trực tiếp để tìm hiểu về khung ngân sách dự kiến và mốc thời gian khách hàng mong muốn bắt đầu chạy thử nghiệm 200 tình huống.\nMục tiêu: Hoàn thiện bức tranh dữ liệu CRM để có cơ sở nâng hạng phân khúc khách hàng.\nThời hạn khuyến nghị: Trong tuần này"
+      },
+      {
+        "case": "insufficient",
+        "expected": "UNCLASSIFIED",
+        "actual": "UNCLASSIFIED",
+        "score": 10,
+        "provider": "gemini",
+        "summary": "Hiện trạng bài toán nghiệp vụ và nhu cầu chuyển đổi số thực tế của khách hàng đang ở mức chưa xác định rõ ràng, do khách hàng mới chỉ đưa ra yêu cầu chung chung muốn trao đổi trực tiếp với nhân viên mà chưa cung cấp thêm bất kỳ thông tin chi tiết nào về doanh nghiệp cũng như bài toán cụ thể cần giải quyết.\n\nTiềm năng giá trị khách hàng và cơ hội mở rộng giải pháp hiện không thể đánh giá chính xác do thiếu hoàn toàn dữ liệu về quy mô, ngân sách và định hướng đầu tư công nghệ. Mọi suy đoán về khả năng mua sắm hay cross-sell/up-sell ở giai đoạn này đều thiếu cơ sở thực tiễn.\n\nĐánh giá rủi ro vận hành cần lưu ý lớn nhất là việc thiếu hụt thông tin đầu vào, dẫn đến nguy cơ mất kết nối hoặc không đáp ứng kịp thời kỳ vọng của khách hàng khi họ chủ động yêu cầu hỗ trợ. Cần nhanh chóng thu thập thêm dữ liệu thông qua tương tác trực tiếp để làm rõ nhu cầu.",
+        "recommendation": "Checklist 1: Liên hệ kết nối trực tiếp\nHành động cụ thể: Nhân viên kinh doanh tiến hành gọi điện hoặc nhắn tin theo thông tin liên hệ để chào hỏi, xác nhận yêu cầu và lắng nghe trực tiếp nhu cầu cần trao đổi của khách hàng.\nMục tiêu: Thiết lập kênh giao tiếp hai chiều và tạo ấn tượng chuyên nghiệp ban đầu.\nThời hạn khuyến nghị: Trong 24h\n\nChecklist 2: Thu thập thông tin doanh nghiệp và bài toán\nHành động cụ thể: Đặt các câu hỏi mở trong quá trình trao đổi để tìm hiểu về quy mô doanh nghiệp, lĩnh vực hoạt động và khó khăn thực tế mà khách hàng đang gặp phải trong vận hành.\nMục tiêu: Làm rõ bài toán nghiệp vụ để có cơ sở phân loại khách hàng và đề xuất giải pháp phù hợp.\nThời hạn khuyến nghị: Trong 3 ngày\n\nChecklist 3: Cập nhật hồ sơ CRM và đề xuất bước tiếp theo\nHành động cụ thể: Dựa trên thông tin thu thập được từ cuộc trao đổi, tiến hành cập nhật dữ liệu vào hệ thống CRM, đánh giá lại phân khúc khách hàng và lên lịch hẹn demo giải pháp nếu có nhu cầu rõ ràng.\nMục tiêu: Chuẩn hóa dữ liệu khách hàng và định hướng lộ trình chăm sóc tiếp theo.\nThời hạn khuyến nghị: Trong tuần này"
+      }
+    ]
+  },
+  "revenue_backtest": {
+    "sample_size": 4,
+    "unit": "VND",
+    "mae": 4431953.4625,
+    "naive_mae": 3500000.0,
+    "cases": [
+      {
+        "month": "2026-07-01",
+        "actual": 18500000.0,
+        "prediction": 13946428.57,
+        "naive_previous_month": 22000000.0
+      },
+      {
+        "month": "2026-08-01",
+        "actual": 15000000.0,
+        "prediction": 16250000.0,
+        "naive_previous_month": 18500000.0
+      },
+      {
+        "month": "2026-09-01",
+        "actual": 11500000.0,
+        "prediction": 16333333.33,
+        "naive_previous_month": 15000000.0
+      },
+      {
+        "month": "2026-10-01",
+        "actual": 8000000.0,
+        "prediction": 15090909.09,
+        "naive_previous_month": 11500000.0
+      }
+    ],
+    "note": "Rolling origin, tối đa 4 tháng; cần ít nhất 4 tháng lịch sử. Nguồn giao dịch có thể là dữ liệu demo."
+  }
+}

@@ -89,3 +89,34 @@ jobs:
       - name: Build CSS
         working-directory: tailwind
         run: npm run css:build
+
+  analytics-postgresql:
+    name: Analytics · PostgreSQL and reader permissions
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: crm
+          POSTGRES_USER: crm_app
+          POSTGRES_PASSWORD: isolated-ci-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U crm_app -d crm"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_DATABASE_URL: postgresql://crm_app:isolated-ci-password@127.0.0.1:5432/crm
+      SUPERSET_READONLY_PASSWORD: isolated-reader-password
+      PGPASSWORD: isolated-ci-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Create isolated analytics reader
+        run: psql -h 127.0.0.1 -U crm_app -d crm -c "CREATE ROLE superset_ro LOGIN PASSWORD 'isolated-reader-password'"
+      - name: Test analytics and consent with PostgreSQL
+        run: python manage.py test crm.test_ai_analytics crm.test_quality_regressions --verbosity=2

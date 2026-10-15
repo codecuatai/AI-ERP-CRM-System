@@ -21,6 +21,20 @@ class EmailDraftServiceTests(TestCase):
         self.assertIn("Kính gửi", result["draft"])
         self.assertIn("nhu cầu", result["draft"])
 
+    @override_settings(GEMINI_API_KEY="")
+    def test_all_goals_tones_and_lengths_work_and_only_use_consented_context(self):
+        from crm.services.email_draft_service import GOALS
+        LeadRequest.objects.create(customer=self.customer, request_text="CONTEXT_ALLOWED 12 nhân viên", ai_processing_consent=True)
+        LeadRequest.objects.create(customer=self.customer, request_text="PRIVATE_NOT_ALLOWED", ai_processing_consent=False)
+        for goal in GOALS:
+            for tone in ("formal", "friendly"):
+                with self.subTest(goal=goal, tone=tone):
+                    drafts = [create_email_draft(self.customer, goal, tone, length)["draft"] for length in ("ngắn", "vừa", "chi tiết")]
+                    self.assertLess(len(drafts[0]), len(drafts[1]))
+                    self.assertLess(len(drafts[1]), len(drafts[2]))
+                    self.assertIn("CONTEXT_ALLOWED", drafts[1])
+                    self.assertTrue(all("PRIVATE_NOT_ALLOWED" not in draft for draft in drafts))
+
     @override_settings(GEMINI_API_KEY="configured")
     @patch("google.genai.Client")
     def test_unconsented_public_lead_is_never_sent_to_gemini(self, client_class):
@@ -56,3 +70,12 @@ class EmailDraftServiceTests(TestCase):
         self.assertNotIn(self.customer.full_name, prompt)
         self.assertNotIn(self.customer.email, prompt)
         self.assertNotIn(self.customer.company, prompt)
+
+    @override_settings(GEMINI_API_KEY="configured")
+    @patch("google.genai.Client")
+    def test_unverified_commercial_commitments_fall_back_to_reviewable_draft(self, client_class):
+        client_class.return_value.models.generate_content.return_value = SimpleNamespace(
+            text="Chúng tôi có các gói giải pháp phù hợp ngân sách và cam kết triển khai ngay.")
+        result = create_email_draft(self.customer, "quote")
+        self.assertEqual(result["provider"], "rules")
+        self.assertNotIn("có các gói", result["draft"])

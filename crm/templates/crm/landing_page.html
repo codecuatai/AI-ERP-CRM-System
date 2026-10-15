@@ -86,6 +86,7 @@
             </a>
           </div>
 
+          <p class="text-xs text-slate-500">Các số liệu trên trang giới thiệu là minh họa cho bản demo.</p>
           <!-- Proof Metrics with Digital Counters -->
           <div class="pt-6 border-t border-slate-200/80 grid grid-cols-3 gap-6 text-left">
             <div>
@@ -918,7 +919,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Tự động đồng bộ lịch sử hội thoại sang Form điền thông tin
+  let attachChatHistory = true;
+  let chatIsSending = false;
+  let modalOpener = null;
+
   function syncChatToForm() {
+    if (!attachChatHistory) { if (chatHistoryInput) chatHistoryInput.value = ""; return; }
     if (chatHistory && chatHistory.length > 0) {
       if (chatHistoryInput) {
         chatHistoryInput.value = JSON.stringify(chatHistory);
@@ -942,6 +948,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const data = {
         history: chatHistory,
+        attach: attachChatHistory,
         solution: detectedSolution,
         timestamp: Date.now()
       };
@@ -968,7 +975,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       if (Array.isArray(data.history) && data.history.length > 0) {
-        chatHistory = data.history;
+        attachChatHistory = data.attach !== false;
+        chatHistory = data.history.filter(item => item && ["user", "assistant"].includes(item.role) && typeof item.content === "string").slice(-12);
         detectedSolution = data.solution || "";
 
         // Hiển thị lại các tin nhắn đã lưu
@@ -997,6 +1005,7 @@ document.addEventListener("DOMContentLoaded", function () {
       localStorage.removeItem(CHAT_STORAGE_KEY);
     } catch (e) {}
     chatHistory = [];
+    attachChatHistory = true;
     detectedSolution = "";
     if (chatHistoryInput) chatHistoryInput.value = "";
     if (chatSavedHint) {
@@ -1069,6 +1078,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Clear AI context on form
   if (btnClearAiContext) {
     btnClearAiContext.addEventListener("click", function () {
+      attachChatHistory = false;
+      saveChatStorage();
       if (chatHistoryInput) chatHistoryInput.value = "";
       if (aiContextBadge) {
         aiContextBadge.classList.add("hidden");
@@ -1082,7 +1093,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Send message to AI endpoint
   async function sendMessage(text) {
-    if (!text || !text.trim()) return;
+    if (!text || !text.trim() || chatIsSending) return;
+    chatIsSending = true;
     text = text.trim();
     appendUserMessage(text);
     chatHistory.push({ role: "user", content: text });
@@ -1092,11 +1104,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (chatSubmitBtn) chatSubmitBtn.disabled = true;
 
     const indicator = showTypingIndicator();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 18000);
 
     try {
       const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || "";
       const res = await fetch("{% url 'crm:ai_chat_consultant' %}", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
@@ -1119,14 +1134,18 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.suggested_solution && data.suggested_solution !== "OTHER") {
         detectedSolution = data.suggested_solution;
       }
-      appendBotMessage(formatMessageText(reply));
+      appendBotMessage(formatMessageText(reply) + `<p class="text-xs text-slate-500 mt-2">Nguồn: ${data.provider === "gemini" ? "Google Gemini" : "Tư vấn cục bộ"} · Nhân viên xác nhận giá và tiến độ sau khảo sát.</p>`);
       chatHistory.push({ role: "assistant", content: reply });
       saveChatStorage();
 
     } catch (err) {
       if (indicator) indicator.remove();
       if (chatSubmitBtn) chatSubmitBtn.disabled = false;
-      appendBotMessage("Xin lỗi anh/chị, kết nối hiện đang gián đoạn. Anh/chị có thể chuyển sang tab 'Điền form' để chuyên viên DigiFlow liên hệ hỗ trợ trực tiếp nhé!");
+      appendBotMessage("Kết nối đang gián đoạn. Anh/chị có thể thử lại hoặc chuyển sang tab Điền form để nhân viên hỗ trợ.");
+    } finally {
+      clearTimeout(timeoutId);
+      chatIsSending = false;
+      if (chatSubmitBtn) chatSubmitBtn.disabled = false;
     }
   }
 
@@ -1155,8 +1174,9 @@ document.addEventListener("DOMContentLoaded", function () {
   function openModal(preferredSolution, preferredTab) {
     if (!modal) return;
     if (preferredSolution && solutionSelect) {
-      solutionSelect.value = preferredSolution;
+      solutionSelect.value = preferredSolution === "POS" ? "ERP" : preferredSolution;
     }
+    modalOpener = document.activeElement;
     modal.style.display = "flex";
     modal.classList.add("is-active");
     document.body.style.overflow = "hidden";
@@ -1173,6 +1193,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.style.display = "none";
     modal.classList.remove("is-active");
     document.body.style.overflow = "";
+    if (modalOpener && modalOpener.focus) modalOpener.focus();
     if (window.location.hash === "#lien-he" || window.location.hash === "#trao-doi" || window.location.hash === "#tu-van-ai") {
       history.replaceState(null, document.title, window.location.pathname + window.location.search);
     }
@@ -1199,6 +1220,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.addEventListener("keydown", function (e) {
+    if (e.key === "Tab" && modal && modal.style.display === "flex") {
+      const items = [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([type="hidden"]), select, textarea')].filter(el => el.offsetParent !== null && el.tabIndex >= 0);
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    }
     if (e.key === "Escape" && modal && modal.style.display === "flex") {
       closeModal();
     }
