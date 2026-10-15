@@ -494,7 +494,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Tải ảnh PNG</span>
         </button>
-        <button type="button" onclick="closeLightbox()"
+        <button type="button" id="closeLightboxBtn" onclick="closeLightbox()" aria-label="Đóng"
                 class="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-50">✕</button>
       </div>
     </div>
@@ -779,8 +779,9 @@
   }
 
   function closeLightbox(e) {
-    if (e && e.target !== e.currentTarget) return;
+    if (e && e.currentTarget && e.target && e.currentTarget.id === 'lightboxModal' && e.target !== e.currentTarget) return;
     const modal = document.getElementById('lightboxModal');
+    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('open');
     if (lightboxChart) {

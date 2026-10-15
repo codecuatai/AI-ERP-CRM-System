@@ -249,14 +249,17 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.page.get_by_role("button", name="Làm mới dữ liệu phân tích").click()
         self.page.get_by_text("Đã cập nhật phân tích:", exact=False).wait_for()
         self.assertTrue(self.page.evaluate("typeof echarts !== 'undefined'"))
-        with self.page.expect_download() as downloaded:
+        with self.page.expect_download(timeout=20000) as downloaded:
             self.page.get_by_title("Tải ảnh PNG", exact=True).first.click()
         self.assertTrue(downloaded.value.suggested_filename.endswith(".png"))
         self.page.get_by_title("Xem to", exact=True).first.click()
         self.assertTrue(self.page.locator("#lightboxModal").is_visible())
         self.page.locator("#lightboxModal button").last.click()
-        with self.page.expect_download() as downloaded:
-            self.page.get_by_role("link", name="Xuất CSV", exact=True).click()
+        self.page.locator("#lightboxModal").wait_for(state="hidden")
+        csv_link = self.page.get_by_role("link", name="Xuất CSV", exact=True)
+        csv_link.scroll_into_view_if_needed()
+        with self.page.expect_download(timeout=20000) as downloaded:
+            csv_link.click()
         self.assertTrue(downloaded.value.suggested_filename.endswith(".csv"))
 
     def test_follow_up_send_reply_once_revoke_and_expire(self):
