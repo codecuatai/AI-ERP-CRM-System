@@ -51,6 +51,7 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 - [Kiểm thử thủ công](#kiểm-thử-thủ-công)
 - [Giới hạn và hướng phát triển](#giới-hạn-và-hướng-phát-triển)
 - [Roadmap tính năng chi tiết](docs/lo-trinh-tinh-nang.md)
+- [Kế hoạch Agile và cách áp dụng theo từng giai đoạn](docs/ke-hoach-agile.md)
 - [Hướng dẫn cho AI agent](AGENTS.md)
 - [Checklist trước khi nộp](#checklist-trước-khi-nộp)
 
