@@ -8,7 +8,7 @@
 <script src="{% static 'crm/vendor/superset-embedded-sdk.js' %}" defer></script>
 <script src="{% static 'crm/js/superset-report.js' %}" defer></script>
 <style>
-  #supersetEmbedMount iframe { width: 100%; height: 100%; border: 0; }
+  .superset-chart-mount iframe { width: 100%; height: 100%; border: 0; }
   .chart-canvas {
     width: 100%;
     height: 320px;
@@ -152,242 +152,9 @@
 </section>
 
 <!-- REPORT NAVIGATION TABS -->
-<div class="flex items-center justify-between border-b border-slate-200 mb-6 pb-2">
-  <div class="flex items-center gap-2">
-    <button type="button" onclick="switchReportTab('charts')" id="tab-btn-charts"
-            class="report-tab-btn active inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-      <span>Biểu đồ AI từ dữ liệu CRM</span>
-    </button>
-    <button type="button" onclick="switchReportTab('tables')" id="tab-btn-tables"
-            class="report-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span>Bảng tổng hợp CRM truyền thống</span>
-    </button>
-    <button type="button" onclick="switchReportTab('superset-live')" id="tab-btn-superset-live"
-            class="report-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-      <span>Superset Live Workspace</span>
-    </button>
-  </div>
-  <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-    <span>{% if analytics.has_ai_datamart %}Nguồn: Data Mart PostgreSQL{% else %}Nguồn: dữ liệu CRM, tính bằng quy tắc cục bộ{% endif %}</span>
-  </div>
-</div>
-
-<!-- ============================================================== -->
-<!-- TAB 1: BIỂU ĐỒ TRÍCH XUẤT SUPERSET & AI STUDIO (MAIN WORKSPACE) -->
-<!-- ============================================================== -->
-<div id="tab-content-charts" class="space-y-6">
-  {% include "crm/includes/report_insights.html" %}
-
-  <!-- CẢNH BÁO BẤT THƯỜNG TỔNG HỢP (NẾU CÓ) -->
-  {% if analytics.anomalies %}
-  <section class="rounded-xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm">
-    <div class="flex items-start gap-3">
-      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500 text-white font-bold text-sm">!</span>
-      <div class="flex-1">
-        <h3 class="text-sm font-bold text-amber-900">Cảnh báo Bất thường Vận hành từ Mô hình Anomaly Detection</h3>
-        <div class="mt-1.5 grid grid-cols-1 md:grid-cols-2 gap-2">
-          {% for a in analytics.anomalies %}
-            <div class="flex items-center gap-2 text-xs text-amber-800 bg-white/80 p-2 rounded-lg border border-amber-200/60">
-              <span class="px-1.5 py-0.5 rounded font-bold uppercase text-[9px] {% if a.severity == 'HIGH' %}bg-red-100 text-red-700{% else %}bg-amber-100 text-amber-700{% endif %}">
-                {{ a.severity }}
-              </span>
-              <span class="truncate">{{ a.description }}</span>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- GRID 6 BIỂU ĐỒ TRÍCH XUẤT CHÍNH -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <!-- CHART 1: LEAD TIỀM NĂNG WIN-RATE -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Phân bố Tiềm năng Lead (Win-Rate Tier)</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">Superset Chart 5</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Mô hình AI Win-Rate Classifier (HOT: P &ge; 70%, WARM: 40-69%, COLD &lt; 40%)</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartLeadTier', 'superset-lead-tier.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartLeadTier', 'Phân bố Tiềm năng Lead (Win-Rate Tier)')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartLeadTier" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Tổng giá trị kỳ vọng: <strong class="text-indigo-600">{{ total_expected_revenue|format_currency }}</strong></span>
-        <span class="text-emerald-600 font-semibold">{{ hot_leads_count }} Lead HOT cần ưu tiên</span>
-      </div>
-    </article>
-
-    <!-- CHART 2: DOANH THU KỲ VỌNG THEO GIẢI PHÁP -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Doanh thu Kỳ vọng theo Giải pháp</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">Superset Chart 6</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">So sánh Giá trị dự kiến vs Giá trị kỳ vọng sau xác suất thắng</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartSolutions', 'superset-expected-won-solutions.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartSolutions', 'Doanh thu Kỳ vọng theo Giải pháp')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartSolutions" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Dataset: <code class="text-indigo-600 font-mono">ai_lead_predictions</code></span>
-        <span>Phân loại B2B Chuyển đổi số</span>
-      </div>
-    </article>
-
-    <!-- CHART 3: DỰ BÁO DOANH THU PROPHET (4 THÁNG TỚI) -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Dự báo doanh thu có đối chiếu baseline</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">Superset Chart 10</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Dự báo 4 tháng tới; ít hơn 18 tháng lịch sử dùng mức tháng cuối. Dải sai số tham khảo chưa được hiệu chuẩn độ bao phủ.</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartForecast', 'superset-revenue-forecast.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartForecast', 'Dự báo doanh thu có đối chiếu baseline')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartForecast" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Khoảng dự báo ước lượng; chưa kiểm định độ bao phủ</span>
-        <span>Xu hướng: {{ analytics.forecast.0.trend|default:"Chưa đủ dữ liệu" }}</span>
-      </div>
-    </article>
-
-    <!-- CHART 4: CẢM XÚC NLP & CẢNH BÁO CHURN RISK -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Phân tích Cảm xúc & Rủi ro Rời bỏ (Churn)</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">Superset Chart 7 & 8</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Phân tích sắc thái ngôn từ B2B và độ trễ liên hệ</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartSentimentChurn', 'superset-sentiment-churn.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartSentimentChurn', 'Phân tích Cảm xúc & Rủi ro Rời bỏ (Churn)')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartSentimentChurn" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Nhãn cảm xúc tính từ các nội dung được phép dùng</span>
-        <span>Rủi ro theo tương tác: {% for risk in analytics.churn_risk %}{{ risk.level }}: {{ risk.count }}{% if not forloop.last %} · {% endif %}{% empty %}Chưa có dữ liệu{% endfor %}</span>
-      </div>
-    </article>
-
-    <!-- CHART 5: PHÂN CỤM KHÁCH HÀNG K-MEANS RFM -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Phân cụm Khách hàng RFM theo tâm tham chiếu</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-50 text-purple-700 border border-purple-200">Superset Chart 9</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Phân khúc 4 cụm dựa trên Recency, Frequency và Monetary</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartRfm', 'superset-rfm-clusters.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartRfm', 'Phân cụm Khách hàng RFM theo tâm tham chiếu')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartRfm" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Phân nhóm theo tâm tham chiếu cố định; chưa huấn luyện K-Means</span>
-        <span>K = 4 Cụm hành vi</span>
-      </div>
-    </article>
-
-    <!-- CHART 6: TRỌNG SỐ ĐÓNG GÓP ĐẶC TRƯNG (EXPLAINABLE AI) -->
-    <article class="chart-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
-      <div>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-base font-bold text-slate-900">Trọng số Đặc trưng Quyết định (Explainable AI)</h3>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-50 text-amber-700 border border-amber-200">Superset Chart 11</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Mức độ đóng góp của từng yếu tố vào quyết định phân hạng Lead</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('chartXai', 'superset-xai-feature-importance.png')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-            <button type="button" title="Xem to" onclick="openLightbox('chartXai', 'Trọng số Đặc trưng Quyết định (Explainable AI)')"
-                    class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-            </button>
-          </div>
-        </div>
-        <div id="chartXai" class="chart-canvas mt-3"></div>
-      </div>
-      <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Phương pháp: <strong class="text-amber-600">Đóng góp thành phần công thức</strong></span>
-        <span>Minh bạch hóa thuật toán AI</span>
-      </div>
-    </article>
-
-  </div>
+<div class="flex flex-wrap gap-2 border-b border-slate-200 mb-6 pb-3">
+  <button type="button" onclick="switchReportTab('superset-live')" id="tab-btn-superset-live" class="report-tab-btn active rounded-xl px-4 py-2 text-sm font-semibold">Superset Live Workspace</button>
+  <button type="button" onclick="switchReportTab('tables')" id="tab-btn-tables" class="report-tab-btn rounded-xl px-4 py-2 text-sm font-semibold text-slate-600">Bảng tổng hợp CRM</button>
 </div>
 
 <!-- ============================================================== -->
@@ -449,55 +216,39 @@
 </div>
 
 <!-- ============================================================== -->
-<!-- TAB 3: SUPERSET LIVE WORKSPACE (EMBEDDED) -->
-<!-- ============================================================== -->
-<div id="tab-content-superset-live" class="hidden space-y-4">
-  <div class="rounded-2xl bg-slate-900 p-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+<!-- SUPERSET LIVE WORKSPACE: mỗi biểu đồ đi cùng nhận xét ngay bên dưới -->
+<div id="tab-content-superset-live" class="space-y-5" data-session-url="{% url 'crm:superset_guest_session' %}">
+  <div class="rounded-2xl bg-slate-900 p-5 text-white flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-base font-bold">Superset Live Workspace</h2>
+      <p class="mt-1 text-xs text-slate-300">Mỗi biểu đồ có phần phân tích ngay bên dưới. Khi kết nối gián đoạn, biểu đồ CRM tự thay thế tại cùng vị trí.</p>
+    </div>
+    <button type="button" id="supersetEmbedRetry" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Tải lại biểu đồ</button>
+  </div>
+  <p id="supersetEmbedStatus" role="status" aria-live="polite" class="text-sm text-slate-600">Đang kết nối Superset…</p>
+  <p class="text-xs text-slate-500">Nhận xét theo quy tắc từ {% if analytics.has_ai_datamart %}dữ liệu analytics đang lưu{% else %}dữ liệu CRM hiện tại{% endif %} lúc tải trang; không thay đổi theo bộ lọc trong từng biểu đồ. Dùng “Làm mới dữ liệu phân tích” để cập nhật rồi tải lại trang.</p>
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+    {% for chart in live_charts %}
+    <article class="live-chart-card min-w-0 rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" data-chart-key="{{ chart.key }}">
+      <header class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
+        <h3 class="text-base font-bold text-slate-900">{{ chart.title }}</h3>
+        <span data-chart-source class="text-xs text-slate-500">Đang tải Superset…</span>
+      </header>
+      <div class="superset-chart-mount" style="height: 420px;"></div>
+      <div class="local-chart-fallback p-4" hidden>
+        <div id="{{ chart.local_id }}" class="chart-canvas"></div>
       </div>
-      <div>
-        <h3 class="text-base font-bold">Dashboard Apache Superset trực tiếp</h3>
-        <p class="text-xs text-slate-400">Xem và lọc biểu đồ ngay trong CRM, không cần đăng nhập Superset riêng. Mở tab riêng khi cần biên tập.</p>
+      <div class="flex items-center gap-3 px-4 pb-3 text-xs">
+        <button type="button" title="Tải ảnh PNG" onclick="downloadChartImage('{{ chart.local_id }}', '{{ chart.key }}.png')" class="text-indigo-600">Tải ảnh dữ liệu CRM</button>
+        <button type="button" title="Xem to" onclick="openLightbox('{{ chart.local_id }}', '{{ chart.title }}')" class="text-indigo-600">Phóng to dữ liệu CRM</button>
       </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <a href="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/" target="_blank" rel="noopener"
-         class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow">
-        <span>Mở AI Intelligence Tab</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>
-      <a href="{{ superset_url }}/superset/dashboard/crm-analytics-dashboard/" target="_blank" rel="noopener"
-         class="inline-flex items-center gap-2 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition">
-        <span>Mở Analytics Tab</span>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>
-    </div>
+      <section class="chart-analysis border-t border-slate-100 bg-slate-50 p-4" aria-label="Phân tích {{ chart.title }}">
+        <h4 class="text-xs font-bold uppercase tracking-wide text-indigo-600">Phân tích biểu đồ</h4>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ chart.insight }}</p>
+      </section>
+    </article>
+    {% endfor %}
   </div>
-
-  <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <p id="supersetEmbedStatus" role="status" aria-live="polite" class="text-sm text-slate-600">Đang chuẩn bị dashboard…</p>
-    <div class="mt-3 flex flex-wrap gap-3">
-      <button type="button" id="supersetEmbedRetry" class="btn-secondary text-xs">Tải lại dashboard</button>
-      <button type="button" onclick="switchReportTab('charts')" class="btn-secondary text-xs">Xem biểu đồ CRM</button>
-    </div>
-  </div>
-  <div id="supersetEmbedMount" data-session-url="{% url 'crm:superset_guest_session' %}" class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" style="height: 900px;" aria-label="Dashboard Superset nhúng">
-  </div>
-  <section id="supersetLocalFallback" hidden class="space-y-4" aria-label="Biểu đồ CRM thay thế khi Superset gián đoạn">
-    <h3 class="text-base font-bold text-slate-900">Biểu đồ từ dữ liệu CRM</h3>
-    <p class="text-sm text-slate-600">Superset đang gián đoạn. Các biểu đồ dưới đây được vẽ trong CRM từ nguồn số liệu của trang báo cáo.</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Mức ưu tiên lead</h4><div data-fallback-chart="chartLeadTier" class="chart-canvas"></div></div>
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Nhu cầu theo giải pháp</h4><div data-fallback-chart="chartSolutions" class="chart-canvas"></div></div>
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Dự báo doanh thu</h4><div data-fallback-chart="chartForecast" class="chart-canvas"></div></div>
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Cảm xúc và rủi ro</h4><div data-fallback-chart="chartSentimentChurn" class="chart-canvas"></div></div>
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Nhóm chăm sóc RFM</h4><div data-fallback-chart="chartRfm" class="chart-canvas"></div></div>
-      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Đóng góp vào điểm ưu tiên</h4><div data-fallback-chart="chartXai" class="chart-canvas"></div></div>
-    </div>
-  </section>
-  {% include "crm/includes/report_insights.html" %}
 </div>
 
 <!-- ============================================================== -->
@@ -711,6 +462,21 @@
       chartInstances['chartXai'] = cXai;
     }
 
+    for (const [id, rows, key, title] of [
+      ['chartChurn', chartData.churn_risk || [], 'level', 'Lượt tương tác'],
+      ['chartAnomalies', chartData.anomaly_summary || [], 'severity', 'Cảnh báo'],
+    ]) {
+      const element = document.getElementById(id);
+      if (!element) continue;
+      const chart = echarts.init(element);
+      chart.setOption({tooltip: {trigger: 'axis', renderMode: 'richText'},
+        grid: {left: 45, right: 15, top: 25, bottom: 35},
+        xAxis: {type: 'category', data: rows.map(row => row[key])},
+        yAxis: {type: 'value', minInterval: 1},
+        series: [{type: 'bar', name: title, data: rows.map(row => row.count), itemStyle: {color: '#6366f1'}}]});
+      chartInstances[id] = chart;
+    }
+
     Object.values(chartInstances).forEach(chart => {
       const hasData = (chart.getOption().series || []).some(series => (series.data || []).length > 0);
       if (!hasData) chart.setOption({title: {text: 'Chưa có dữ liệu được phép phân tích', left: 'center', top: 'center', textStyle: {fontSize: 12, color: '#64748b'}}});
@@ -723,48 +489,36 @@
 
   // Chuyển tab báo cáo
   function switchReportTab(tabName) {
-    if (arguments[0] === 'superset-live') {
-      window.loadSupersetReport?.();
+    tabName = tabName === 'tables' ? 'tables' : 'superset-live';
+    for (const name of ['tables', 'superset-live']) {
+      document.getElementById('tab-content-' + name).classList.toggle('hidden', name !== tabName);
+      document.getElementById('tab-btn-' + name).classList.toggle('active', name === tabName);
     }
-
-    document.querySelectorAll('.report-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('tab-content-charts').classList.add('hidden');
-    document.getElementById('tab-content-tables').classList.add('hidden');
-    document.getElementById('tab-content-superset-live').classList.add('hidden');
-
-    document.getElementById('tab-btn-' + tabName).classList.add('active');
-    document.getElementById('tab-content-' + tabName).classList.remove('hidden');
     try { localStorage.setItem('crm-report-tab', tabName); } catch (_) {}
-
-    if (tabName === 'charts') {
-      setTimeout(() => {
-        Object.values(chartInstances).forEach(c => c && c.resize && c.resize());
-      }, 50);
-    }
+    if (tabName === 'superset-live') window.loadSupersetReport?.();
   }
 
-  window.renderReportFallback = () => {
-    document.querySelectorAll('[data-fallback-chart]').forEach(element => {
-      const source = chartInstances[element.dataset.fallbackChart];
-      if (!source) return;
-      const chart = echarts.getInstanceByDom(element) || echarts.init(element);
-      chart.setOption(source.getOption(), true);
-      chart.resize();
-    });
+  window.resizeLocalReportChart = card => {
+    const element = card.querySelector('.chart-canvas');
+    echarts.getInstanceByDom(element)?.resize();
   };
-  window.addEventListener('resize', () => {
-    if (!document.getElementById('supersetLocalFallback').hidden) window.renderReportFallback();
-  });
 
   // Tải ảnh PNG cho 1 biểu đồ
   function downloadChartImage(chartDomId, filename) {
     const chart = chartInstances[chartDomId];
     if (!chart) return;
-    const url = chart.getDataURL({
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-10000px;width:800px;height:400px';
+    document.body.appendChild(container);
+    const exported = echarts.init(container);
+    exported.setOption({...chart.getOption(), animation: false});
+    const url = exported.getDataURL({
       type: 'png',
       pixelRatio: 2,
       backgroundColor: '#ffffff'
     });
+    exported.dispose();
+    container.remove();
     const a = document.createElement('a');
     a.href = url;
     a.download = filename || 'superset-chart.png';
@@ -781,7 +535,9 @@
       { id: 'chartForecast', name: '03-superset-revenue-forecast.png' },
       { id: 'chartSentimentChurn', name: '04-superset-sentiment-churn-risk.png' },
       { id: 'chartRfm', name: '05-superset-kmeans-rfm-clusters.png' },
-      { id: 'chartXai', name: '06-superset-explainable-ai-features.png' }
+      { id: 'chartXai', name: '06-superset-explainable-ai-features.png' },
+      { id: 'chartChurn', name: '07-churn-risk.png' },
+      { id: 'chartAnomalies', name: '08-anomalies.png' }
     ];
     let count = 0;
     list.forEach((item, index) => {
@@ -831,7 +587,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     let selected = 'superset-live';
     try { selected = localStorage.getItem('crm-report-tab') || selected; } catch (_) {}
-    if (['charts', 'tables', 'superset-live'].includes(selected)) switchReportTab(selected);
+    switchReportTab(selected);
   });
 </script>
 

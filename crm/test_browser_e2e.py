@@ -254,7 +254,7 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.page.get_by_role("button", name="Làm mới dữ liệu phân tích").click()
         self.page.get_by_text("Đã cập nhật phân tích:", exact=False).wait_for()
         self.assertTrue(self.page.evaluate("typeof echarts !== 'undefined'"))
-        self.page.locator("#tab-btn-charts").click()
+        self.page.locator("#tab-btn-superset-live").click()
         with self.page.expect_download(timeout=20000) as downloaded:
             self.page.get_by_title("Tải ảnh PNG", exact=True).first.click()
         self.assertTrue(downloaded.value.suggested_filename.endswith(".png"))

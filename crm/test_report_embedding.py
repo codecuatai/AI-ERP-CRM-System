@@ -9,7 +9,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from crm.services.report_insights import report_insights
-from crm.services.superset_embed import guest_session
+from crm.services.superset_embed import LIVE_CHARTS, guest_session
 
 
 class ReportInsightTests(SimpleTestCase):
@@ -18,7 +18,7 @@ class ReportInsightTests(SimpleTestCase):
         self.assertIn("Chưa đủ lịch sử", text)
         self.assertIn("Không xem thiếu dữ liệu", text)
         self.assertNotIn("nan", text)
-        self.assertEqual(len(report_insights({})), 6)
+        self.assertEqual(len(report_insights({})), 8)
 
     def test_commentary_uses_counts_correct_units_and_forecast_direction(self):
         rows = report_insights({
@@ -32,20 +32,25 @@ class ReportInsightTests(SimpleTestCase):
         })
         self.assertIn("2/5", rows[0]["text"])
         self.assertIn("40%", rows[0]["text"])
-        self.assertIn("giảm", rows[2]["text"])
-        self.assertIn("1.000.000 VNĐ đến 0 VNĐ", rows[2]["text"])
-        self.assertIn("3/3 lượt tương tác", rows[3]["text"])
+        self.assertIn("giảm", rows[5]["text"])
+        self.assertIn("1.000.000 VNĐ đến 0 VNĐ", rows[5]["text"])
+        self.assertIn("3/3 lượt tương tác", rows[2]["text"])
         self.assertIn("cùng một khách hàng", rows[3]["text"])
 
     @patch("crm.services.superset_embed.superset_api")
     def test_token_is_scoped_to_fixed_dashboard_without_contact_information(self, factory):
         api = factory.return_value
-        api._request.side_effect = [{"result": {"id": 4}}, {"result": {"uuid": "fixed-uuid"}}, {"token": "short-token"}]
+        api.base_url = "http://isolated-token-test"
+        from django.core.cache import cache
+        cache.clear()
+        api._request.side_effect = [item for chart in LIVE_CHARTS for item in
+            ({"result": {"id": 4}}, {"result": {"uuid": "fixed-" + chart["key"]}})] + [{"token": "short-token"}]
         from types import SimpleNamespace
         result = guest_session(SimpleNamespace(pk=9, email="private@example.test"))
-        self.assertEqual(result, {"id": "fixed-uuid", "token": "short-token"})
+        self.assertEqual(len(result["widgets"]), 8)
+        self.assertEqual(result["token"], "short-token")
         payload = api._request.call_args.args[2]
-        self.assertEqual(payload["resources"], [{"type": "dashboard", "id": "fixed-uuid"}])
+        self.assertEqual(payload["resources"], [{"type": "dashboard", "id": "fixed-" + chart["key"]} for chart in LIVE_CHARTS])
         self.assertNotIn("private@example.test", str(payload))
 
     @patch.dict("os.environ", {"SUPERSET_EMBED_ALLOWED_ORIGINS": "*"})
@@ -91,6 +96,9 @@ class ReportEmbeddingPermissionTests(TestCase):
         self.assertNotContains(response, "sensitive", status_code=503)
         self.assertIn("no-store", response.headers["Cache-Control"])
         report = self.client.get(reverse("crm:report"))
-        self.assertContains(report, "Phân tích biểu đồ và gợi ý chăm sóc")
+        self.assertContains(report, 'class="chart-analysis ', count=8)
+        self.assertNotContains(report, 'id="tab-btn-charts"')
+        self.assertNotContains(report, 'id="tab-content-charts"')
+        self.assertContains(report, 'class="superset-chart-mount"', count=8)
         self.assertContains(report, "superset-embedded-sdk.js")
         self.assertNotContains(report, "supersetLiveFrame")

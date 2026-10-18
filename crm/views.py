@@ -121,6 +121,8 @@ def _get_report_analytics_context(today):
                         FROM analytics.ai_anomaly_alerts ORDER BY id LIMIT 5
                     """)
                     data["anomalies"] = [{"entity_type": r[0], "severity": r[1], "description": r[2]} for r in cursor.fetchall()]
+                    cursor.execute("SELECT severity, count(*) FROM analytics.ai_anomaly_alerts GROUP BY severity")
+                    data["anomaly_summary"] = [{"severity": r[0], "count": r[1]} for r in cursor.fetchall()]
     except Exception as exc:
         data["has_ai_datamart"] = False
         logger.debug("Analytics datamart query failed/skipped: %s", exc)
@@ -151,7 +153,9 @@ def _get_report_analytics_context(today):
         data["churn_risk"] = [{"level": key, "count": count} for key, count in Counter(x["churn_risk_level"] for x in sentiments).items()]
         data["rfm_clusters"] = [{"cluster": key, "count": count} for key, count in Counter(x["cluster_name"] for x in pipe.process_rfm_segmentation()).items()]
         data["xai"] = [{"feature": x["feature_name"], "weight": x["importance_weight"]} for x in pipe.process_explainability()]
-        data["anomalies"] = pipe.process_anomalies()[:5]
+        alerts = pipe.process_anomalies()
+        data["anomalies"] = alerts[:5]
+        data["anomaly_summary"] = [{"severity": key, "count": count} for key, count in Counter(item["severity"] for item in alerts).items()]
     data["data_source"] = "postgresql_datamart" if data["has_ai_datamart"] else "crm_live_rules"
 
     data["chart_json"] = json.dumps(data)
@@ -446,6 +450,8 @@ def crm_report(request):
     start_date = today - timedelta(days=30)
     analytics_data = _get_report_analytics_context(today)
     from .services.report_insights import report_insights
+    from .services.superset_embed import LIVE_CHARTS
+    insights = report_insights(analytics_data)
 
     context = {
         "customer_total": Customer.objects.count(),
@@ -471,7 +477,8 @@ def crm_report(request):
         "can_sync_analytics": request.user.has_perm("crm.analyze_customer"),
         "total_expected_revenue": analytics_data.get("total_expected_revenue", 0),
         "hot_leads_count": analytics_data.get("hot_leads_count", 0),
-        "report_insights": report_insights(analytics_data),
+        "report_insights": insights,
+        "live_charts": [{**chart, "insight": insight["text"]} for chart, insight in zip(LIVE_CHARTS, insights)],
     }
     return render(request, "crm/report.html", context)
 

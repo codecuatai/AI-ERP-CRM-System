@@ -1,6 +1,6 @@
 {
-  "verified_at": "2026-10-18T16:58:27.541739+07:00",
-  "scope": "Local Docker Superset 6.0.0, Chromium desktop/mobile; temporary CRM sessions only; no independent Superset login.",
+  "verified_at": "2026-10-18T17:11:36.782027+07:00",
+  "scope": "Unified Superset Live Workspace: eight lazy-loaded, scoped single-chart dashboards with commentary immediately below each chart; Chromium desktop/mobile; local Docker Superset 6.0.0.",
   "backend": {
     "command": "python manage.py test",
     "database": "isolated SQLite test database",
@@ -26,33 +26,37 @@
   "live_embedding": [
     {
       "origin": "localhost",
-      "chart_queries": 16,
+      "chart_queries": 11,
       "all_queries_ok": true,
+      "live_cards": 8,
+      "analysis_below_each_chart": true,
+      "legacy_chart_tab_removed": true,
       "independent_superset_login": false,
       "remembered_tab": true,
       "outage_fallback": true,
       "mobile_overflow": false,
       "unrelated_dashboard_denied": true,
-      "untrusted_origin_denied": true,
-      "automatic_renewal_accelerated_timer": true
+      "untrusted_origin_denied": true
     },
     {
       "origin": "127.0.0.1",
-      "chart_queries": 16,
+      "chart_queries": 12,
       "all_queries_ok": true,
+      "live_cards": 8,
+      "analysis_below_each_chart": true,
+      "legacy_chart_tab_removed": true,
       "independent_superset_login": false,
       "remembered_tab": true,
       "outage_fallback": true,
       "mobile_overflow": false,
       "unrelated_dashboard_denied": true,
-      "untrusted_origin_denied": true,
-      "automatic_renewal_accelerated_timer": true
+      "untrusted_origin_denied": true
     }
   ],
   "limitations": [
-    "Token renewal was checked by accelerating the first SDK renewal timer; server JWT expiry remains five minutes. This is not a long-duration load test.",
-    "Narrative uses full report aggregates at page load, not interactive iframe filters.",
-    "Chart snapshots and screenshots remain under ignored artifacts/report-embedding/.",
-    "No model or seed changes. Not a production multi-tenant RLS evaluation."
+    "Current browser verification checks rendering, per-chart commentary placement, scoped access, navigation and outage fallback. It is not a long-duration token renewal or load test.",
+    "Commentary uses full report aggregates at page load, not interactive iframe filter/legend selections.",
+    "Screenshots remain under ignored artifacts/report-embedding/.",
+    "No model or seed changes. Eight managed embedding dashboards reuse existing charts; canonical dashboards and chart memberships are preserved."
   ]
 }

@@ -20,9 +20,9 @@ def report_insights(data):
     solutions = data.get("solutions", [])
     labels = dict(LeadRequest.SolutionInterest.choices)
     if solutions:
-        top = max(solutions, key=lambda row: row["count"])
-        solution_text = (f"{labels.get(top['solution'], top['solution'])} là một trong các nhóm có nhiều yêu cầu nhất, "
-                         f"với {top['count']} yêu cầu. Nên chuẩn bị kịch bản khảo sát và demo cho nhóm này. "
+        top = max(solutions, key=lambda row: row["expected_won"])
+        solution_text = (f"{labels.get(top['solution'], top['solution'])} có giá trị cơ hội quy đổi lớn nhất, "
+                         f"ở mức {money(top['expected_won'])} từ {top['count']} yêu cầu. Nên xác minh nhu cầu và giá trị hợp đồng của nhóm này. "
                          "Giá trị cơ hội trên biểu đồ dùng mức hợp đồng giả định, không phải doanh thu đã ghi nhận.")
     else:
         solution_text = "Chưa có dữ liệu để so sánh nhu cầu giữa các nhóm giải pháp; chưa thể chọn nhóm cần tập trung."
@@ -42,11 +42,6 @@ def report_insights(data):
     interactions = sum(row["count"] for row in sentiments)
     negative = sum(row["count"] for row in sentiments if row["label"] == "NEGATIVE")
     high = sum(row["count"] for row in data.get("churn_risk", []) if row["level"] == "HIGH")
-    insights.append({"title": "Cảm xúc và nguy cơ cần chăm sóc", "text": (
-        f"Có {negative}/{interactions} lượt tương tác mang cảm xúc tiêu cực và {high} lượt được đánh dấu rủi ro HIGH. "
-        "Các lượt có thể thuộc cùng một khách hàng. Nên đọc nội dung và kiểm tra việc chưa xử lý trước khi liên hệ; cảnh báo chưa chứng minh khách sẽ rời bỏ."
-        if interactions else "Chưa có tương tác được phép phân tích để nhận xét cảm xúc hoặc rủi ro. Không xem thiếu dữ liệu là dấu hiệu khách hàng hài lòng."
-    )})
     clusters = data.get("rfm_clusters", [])
     if clusters:
         largest = max(clusters, key=lambda row: row["count"])
@@ -63,4 +58,27 @@ def report_insights(data):
     else:
         feature_text = "Chưa có đóng góp đặc trưng để giải thích điểm. Chưa thể kết luận yếu tố nào ảnh hưởng nhiều nhất."
     insights.append({"title": "Giải thích điểm ưu tiên", "text": feature_text})
-    return insights
+    sentiment_text = (
+        f"Có {negative}/{interactions} lượt tương tác mang cảm xúc tiêu cực ({negative / interactions:.0%}). "
+        "Nên đọc nội dung để xác minh vấn đề và mức độ ảnh hưởng trước khi phản hồi. Không xem nhãn cảm xúc là kết luận khách sẽ rời bỏ."
+        if interactions else "Chưa có tương tác được phép phân tích. Không xem thiếu dữ liệu là dấu hiệu khách hàng hài lòng."
+    )
+    churn_total = sum(row["count"] for row in data.get("churn_risk", []))
+    churn_text = (
+        f"Có {high}/{churn_total} lượt tương tác được đánh dấu rủi ro HIGH. Các lượt có thể thuộc cùng một khách hàng. "
+        "Ưu tiên kiểm tra phản hồi tiêu cực, thời gian chưa liên hệ và việc còn mở; chưa thể khẳng định khách sẽ rời bỏ."
+        if churn_total else "Chưa có dữ liệu đánh giá rủi ro. Cần bổ sung lịch sử tương tác được phép phân tích trước khi xác định đối tượng cần chăm sóc."
+    )
+    alerts = data.get("anomaly_summary", [])
+    alert_total = sum(row["count"] for row in alerts)
+    high_alerts = sum(row["count"] for row in alerts if row["severity"] == "HIGH")
+    anomaly_text = (
+        f"Phát hiện {alert_total} cảnh báo, trong đó {high_alerts} cảnh báo mức HIGH. "
+        "Kiểm tra lead bị bỏ quên và giao dịch lệch ngưỡng trước khi xử lý; cảnh báo không đồng nghĩa giao dịch gian lận."
+        if alert_total else "Chưa ghi nhận cảnh báo bất thường trong dữ liệu đang phân tích. Điều này không bảo đảm mọi giao dịch hoặc quy trình đều không có rủi ro."
+    )
+    return [insights[0], insights[1],
+            {"title": "Cảm xúc tương tác", "text": sentiment_text},
+            {"title": "Rủi ro cần chăm sóc", "text": churn_text},
+            insights[3], insights[2], insights[4],
+            {"title": "Cảnh báo bất thường", "text": anomaly_text}]

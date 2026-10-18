@@ -9,6 +9,8 @@ from __future__ import annotations
 import http.cookiejar
 import json
 import os
+import re
+import html
 from pathlib import Path
 import sys
 import urllib.error
@@ -29,6 +31,21 @@ class SupersetApi:
             {"username": username, "password": password, "provider": "db", "refresh": True},
             auth=False,
         )["access_token"]
+        self.csrf = self._request("/api/v1/security/csrf_token/")["result"]
+
+    def login_web_session(self, username, password):
+        """Bind the owner identity for Superset 6 dashboard creation commands."""
+        with self.opener.open(self.base_url + "/login/", timeout=self.timeout) as response:
+            form = response.read().decode("utf-8")
+        match = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', form)
+        if not match:
+            raise RuntimeError("Superset login form is unavailable")
+        body = urllib.parse.urlencode({"username": username, "password": password,
+                                      "csrf_token": html.unescape(match.group(1))}).encode()
+        request = urllib.request.Request(self.base_url + "/login/", data=body)
+        with self.opener.open(request, timeout=self.timeout) as response:
+            if "/login" in response.url:
+                raise RuntimeError("Superset service session login failed")
         self.csrf = self._request("/api/v1/security/csrf_token/")["result"]
 
     def _request(self, path: str, method: str = "GET", payload: dict | None = None, *, auth: bool = True):

@@ -1,96 +1,118 @@
-/* Embedded SDK owns guest-token renewal; credentials stay on the CRM server. */
+/* Each live chart and its commentary share one CRM card. */
 (() => {
-  let dashboard = null;
-  let loading = false;
-  let loaded = false;
-  const unavailable = 'Chưa tải được dashboard Superset. Nhận xét vẫn hiển thị ở trên; bạn có thể xem biểu đồ CRM hoặc thử kết nối lại.';
+  const states = new Map();
+  let sessionData = null;
+  let fetchedAt = 0;
+  let pendingSession = null;
+  let observer = null;
+  const cards = () => [...document.querySelectorAll('.live-chart-card')];
   const status = () => document.getElementById('supersetEmbedStatus');
 
   async function session() {
-    const mount = document.getElementById('supersetEmbedMount');
-    const response = await fetch(mount.dataset.sessionUrl, {
-      credentials: 'same-origin', cache: 'no-store',
-      headers: {Accept: 'application/json'}, signal: AbortSignal.timeout(25000),
-    });
-    if (!response.ok || response.redirected) throw new Error('session unavailable');
-    return response.json();
+    if (sessionData && performance.now() - fetchedAt < 240000) return sessionData;
+    if (!pendingSession) {
+      pendingSession = (async () => {
+        const response = await fetch(document.getElementById('tab-content-superset-live').dataset.sessionUrl, {
+          credentials: 'same-origin', cache: 'no-store', headers: {Accept: 'application/json'},
+          signal: AbortSignal.timeout(25000),
+        });
+        if (!response.ok || response.redirected) throw new Error('session unavailable');
+        sessionData = await response.json();
+        fetchedAt = performance.now();
+        return sessionData;
+      })().finally(() => { pendingSession = null; });
+    }
+    return pendingSession;
   }
 
   function within(promise, milliseconds) {
     let timeout;
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('embed timeout')), milliseconds); }),
-    ]).finally(() => clearTimeout(timeout));
+    return Promise.race([promise, new Promise((_, reject) => {
+      timeout = setTimeout(() => reject(new Error('embed timeout')), milliseconds);
+    })]).finally(() => clearTimeout(timeout));
   }
 
-  window.loadSupersetReport = async (force = false) => {
-    if (loading || (loaded && !force)) return;
-    loading = true;
-    loaded = false;
-    dashboard?.unmount();
-    dashboard = null;
-    const root = document.getElementById('supersetEmbedMount');
-    root.hidden = false;
-    document.getElementById('supersetLocalFallback').hidden = true;
+  function updateStatus() {
+    const all = [...states.values()];
+    const live = all.filter(state => state.live).length;
+    const fallback = all.filter(state => state.fallback).length;
+    status().textContent = fallback
+      ? `${live} biểu đồ Superset đã kết nối; ${fallback} biểu đồ đang dùng dữ liệu CRM thay thế. Phân tích nằm ngay dưới từng biểu đồ.`
+      : `Đã kết nối ${live} biểu đồ Superset. Các biểu đồ còn lại tải khi bạn cuộn đến.`;
+  }
+
+  async function loadCard(card) {
+    const key = card.dataset.chartKey;
+    if (states.has(key)) return;
+    const state = {live: false, fallback: false, dashboard: null, abandoned: false};
+    states.set(key, state);
+    const mount = card.querySelector('.superset-chart-mount');
     const attempt = document.createElement('div');
     attempt.style.height = '100%';
-    root.replaceChildren(attempt);
-    status().textContent = 'Đang kết nối dashboard Superset…';
-    const retry = document.getElementById('supersetEmbedRetry');
-    retry.disabled = true;
-    let abandoned = false;
+    mount.replaceChildren(attempt);
+    mount.hidden = false;
+    card.querySelector('.local-chart-fallback').hidden = true;
     try {
       const initial = await session();
-      let firstToken = initial.token;
+      if (state.abandoned) return;
+      const widget = initial.widgets.find(item => item.key === key);
+      if (!widget) throw new Error('widget not configured');
       const pending = window.supersetEmbeddedSdk.embedDashboard({
-        id: initial.id, supersetDomain: initial.domain, mountPoint: attempt,
-        iframeTitle: 'Dashboard AI CRM — Apache Superset', referrerPolicy: 'strict-origin',
-        dashboardUiConfig: {hideTitle: true, filters: {expanded: false}},
-        fetchGuestToken: async () => {
-          if (firstToken) { const token = firstToken; firstToken = null; return token; }
-          try {
-            const refreshed = await session();
-            status().textContent = 'Đã kết nối Superset. Phiên xem được gia hạn tự động.';
-            return refreshed.token;
-          } catch (error) {
-            status().textContent = 'Kết nối đang gián đoạn hoặc phiên CRM đã hết hạn. Hệ thống đang thử gia hạn; bạn có thể tải lại trang.';
-            throw error;
-          }
-        },
+        id: widget.id, supersetDomain: initial.domain, mountPoint: attempt,
+        iframeTitle: card.querySelector('h3').textContent + ' — Superset', referrerPolicy: 'strict-origin',
+        dashboardUiConfig: {hideTitle: true, filters: {visible: false}},
+        fetchGuestToken: async () => (await session()).token,
       });
-      pending.then(instance => { if (abandoned) instance.unmount(); }, () => {});
-      dashboard = await within(pending, 30000);
-      // A frame load alone also fires for blocked/error pages. Require a response
-      // from Superset's embedded app before reporting an established connection.
-      await within(dashboard.getScrollSize(), 20000);
-      status().textContent = 'Đã kết nối Superset. Phiên xem được gia hạn tự động khi bạn đang đăng nhập CRM.';
-      loaded = true;
+      pending.then(instance => { if (state.abandoned) instance.unmount(); }, () => {});
+      state.dashboard = await within(pending, 30000);
+      await within(state.dashboard.getScrollSize(), 20000);
+      if (state.abandoned) return;
+      state.live = true;
+      card.querySelector('[data-chart-source]').textContent = 'Superset trực tiếp';
     } catch (_) {
-      abandoned = true;
-      dashboard?.unmount();
-      dashboard = null;
-      attempt.remove();
-      root.hidden = true;
-      document.getElementById('supersetLocalFallback').hidden = false;
-      window.renderReportFallback?.();
-      status().textContent = unavailable;
-    } finally {
-      loading = false;
-      retry.disabled = false;
+      if (state.abandoned) return;
+      state.abandoned = true;
+      state.dashboard?.unmount();
+      mount.replaceChildren();
+      mount.hidden = true;
+      card.querySelector('.local-chart-fallback').hidden = false;
+      window.resizeLocalReportChart?.(card);
+      state.fallback = true;
+      card.querySelector('[data-chart-source]').textContent = 'Dữ liệu CRM (Superset gián đoạn)';
     }
+    updateStatus();
+  }
+
+  function reset() {
+    observer?.disconnect();
+    for (const state of states.values()) {
+      state.abandoned = true;
+      state.dashboard?.unmount();
+    }
+    states.clear();
+  }
+
+  window.loadSupersetReport = (force = false) => {
+    if (observer && !force) {
+      cards().filter(card => card.querySelector('.local-chart-fallback').hidden === false).forEach(card => window.resizeLocalReportChart?.(card));
+      return;
+    }
+    reset();
+    if (force) { sessionData = null; fetchedAt = 0; }
+    observer = new IntersectionObserver(entries => {
+      entries.filter(entry => entry.isIntersecting).forEach(entry => {
+        observer.unobserve(entry.target);
+        loadCard(entry.target);
+      });
+    }, {rootMargin: '300px'});
+    cards().forEach(card => observer.observe(card));
   };
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('supersetEmbedRetry')?.addEventListener('click', () => window.loadSupersetReport(true));
+    document.getElementById('supersetEmbedRetry')?.addEventListener('click', () => window.location.reload());
   });
-  window.addEventListener('pagehide', () => {
-    dashboard?.unmount();
-    dashboard = null;
-    loaded = false;
-  });
+  window.addEventListener('resize', () => cards().filter(card => !card.querySelector('.local-chart-fallback').hidden).forEach(card => window.resizeLocalReportChart?.(card)));
+  window.addEventListener('pagehide', () => observer?.disconnect());
   window.addEventListener('pageshow', event => {
-    if (event.persisted && !document.getElementById('tab-content-superset-live').classList.contains('hidden')) {
-      window.loadSupersetReport();
-    }
+    if (event.persisted) window.loadSupersetReport(true);
   });
 })();
