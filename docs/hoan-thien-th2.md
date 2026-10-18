@@ -55,8 +55,8 @@ Ngưỡng 18 tháng là chính sách vận hành thận trọng, không phải �
 2. Có Gemini/rules và nhiều phương pháp phân tích; có phép đo tái lập, ca sai và fallback.
 3. Có kết nối Superset, **MCP tạo chart/dashboard đã kiểm tra trực tiếp**, không còn chỉ đọc.
 4. Dashboard đọc kết quả từ analytics; đã kiểm tra query và render, không dựng số liệu mẫu để thay dữ liệu thiếu.
-5. Có báo cáo kiến trúc, luồng, phương pháp, kiểm thử và giới hạn chất lượng.
-6. Có nhiều phương pháp và đề xuất mở rộng; việc cộng điểm thuộc tiêu chí chấm của giảng viên.
+5. Có [báo cáo kỹ thuật, mục 5](bao-cao-ky-thuat-th2.md#5-đánh-giá-có-thể-tái-lập), bổ sung 18/10/2026: nguồn/nhãn/số mẫu; truy vết dữ liệu đến từng bảng analytics và cách đọc dashboard; công thức Accuracy, Macro-F1, MAE; so sánh baseline, fallback, minh chứng, lệnh tái lập và điều kiện nghiệm thu. Chưa có kiểm định trên dữ liệu thực tế độc lập.
+6. Có [đề xuất AI, mục 7](bao-cao-ky-thuat-th2.md#7-đề-xuất-nhiều-mô-hình-và-phương-pháp-ứng-dụng-ai--mục-6): bảy bài toán với mô hình ứng viên, dữ liệu/nhãn, baseline, metric và ứng dụng dashboard; ba hướng sáng tạo và lộ trình qua năm bước có điều kiện quyết định. Các mô hình mới là đề xuất chưa triển khai; việc cộng điểm thuộc tiêu chí chấm của giảng viên.
 
 Như lựa chọn của người dùng, 8 hồ sơ bổ sung vẫn là tình huống B2B minh họa, không phải dữ liệu khách hàng thật. Nếu đề bài bắt buộc nguồn dữ liệu thực tế độc lập, cần có dữ liệu được phép sử dụng và kiểm định tiếp; không đổi nhãn dữ liệu giả thành thật để đánh dấu hoàn thành.
 

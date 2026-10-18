@@ -57,6 +57,8 @@ Khách gửi form → LeadRequest → Nhân viên gửi email hỏi thêm
 
 ## Kiểm thử mở rộng và đánh giá AI (15/10/2026)
 
+Bổ sung ngày **18/10/2026** cho hai yêu cầu cuối TH2: [mục 5 của báo cáo kỹ thuật](docs/bao-cao-ky-thuat-th2.md#5-đánh-giá-có-thể-tái-lập) giải thích nguồn dữ liệu, luồng đến dashboard, công thức metric, kết quả, lệnh tái lập và điều kiện nghiệm thu; [mục 7](docs/bao-cao-ky-thuat-th2.md#7-đề-xuất-nhiều-mô-hình-và-phương-pháp-ứng-dụng-ai--mục-6) đề xuất bảy bài toán/mô hình ứng viên cùng dữ liệu, baseline, cách đánh giá, ba hướng sáng tạo và lộ trình thử nghiệm. Đây là bổ sung báo cáo và thiết kế; các mô hình mới chưa được triển khai, kết quả hiện có vẫn từ dữ liệu minh họa.
+
 Đợt khắc phục bổ sung đã có MCP tạo biểu đồ/dashboard, dự báo mặc định baseline khi thiếu bằng chứng, Tailwind 4.3.3 và kiểm thử Chromium/Firefox/WebKit cùng SMTP cục bộ. Trạng thái hiện tại và bằng chứng: [hoàn thiện TH2](docs/hoan-thien-th2.md). Báo cáo E2E ban đầu vẫn được giữ để đối chiếu trước/sau.
 
 Đã bổ sung kiểm thử browser cho chat nhiều lượt, form lỗi/không consent, tìm kiếm, tạo/sửa/hoàn tất việc, email nháp có người xác nhận, follow-up gửi/trả lời một lần/thu hồi/hết hạn, xuất CSV/PNG, báo cáo desktop/mobile và tạo/sửa khách hàng trong Wagtail. Browser luôn chạy trên database test do `StaticLiveServerTestCase` quản lý.

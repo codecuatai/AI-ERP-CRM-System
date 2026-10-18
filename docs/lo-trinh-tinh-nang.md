@@ -38,6 +38,8 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 **Việc tiếp theo:** tập dữ liệu có nguồn/consent và nhãn độc lập; đánh giá dự báo ngoài mẫu với baseline; kiểm thử khả dụng với nhân viên thực tế; duy trì audit dependency.
 
+Bổ sung thiết kế ngày **18/10/2026**, chưa triển khai mô hình mới: [báo cáo kỹ thuật mục 7](bao-cao-ky-thuat-th2.md#7-đề-xuất-nhiều-mô-hình-và-phương-pháp-ứng-dụng-ai--mục-6) mô tả các ứng viên cho lead, sentiment, churn, phân cụm, dự báo, bất thường và RAG; mỗi hướng có dữ liệu cần thu, baseline, metric và ứng dụng BI. Ưu tiên hoàn thành dữ liệu/nhãn độc lập trước thử mô hình đơn giản, sau đó mới quyết định tích hợp. Theo dõi model version/batch, giao diện phản hồi nhãn và thí điểm lợi ích kinh doanh vẫn là công việc đề xuất, chưa đánh dấu hoàn thành.
+
 ### Đã hoàn thành: Trợ lý soạn email có người duyệt
 
 AI tạo bản nháp email theo mục tiêu chăm sóc và dữ liệu được phép dùng trong luồng hiện tại; nhân viên có thể sửa, sao chép hoặc bỏ bản nháp. Không nên mô tả rằng tính năng luôn sử dụng lịch sử tương tác gần đây: email draft giới hạn ngữ cảnh theo service và consent.
