@@ -17,8 +17,9 @@ import urllib.request
 
 
 class SupersetApi:
-    def __init__(self, base_url: str, username: str, password: str) -> None:
+    def __init__(self, base_url: str, username: str, password: str, *, timeout: int = 20) -> None:
         self.base_url = base_url.rstrip("/")
+        self.timeout = timeout
         self.opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
         )
@@ -41,7 +42,7 @@ class SupersetApi:
             self.base_url + path, data=body, headers=headers, method=method
         )
         try:
-            with self.opener.open(request, timeout=20) as response:
+            with self.opener.open(request, timeout=self.timeout) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")

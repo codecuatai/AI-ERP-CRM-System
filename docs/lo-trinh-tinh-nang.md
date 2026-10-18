@@ -35,6 +35,7 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 - Đánh giá tính từ dữ liệu kiểm thử và backtest, không dùng số liệu ghi cứng. Bộ tình huống có dùng để sửa mô hình, chưa chứng minh hiệu quả trên khách hàng thật. Dữ liệu demo hiện chọn baseline, MAE 3,5 triệu VNĐ thay vì hồi quy 4,43 triệu; không suy rộng ra tương lai.
 - Tailwind đã nâng lên 4.3.3 và watcher 2.6.0, audit npm/Python không còn cảnh báo đã biết tại thời điểm kiểm tra. Browser E2E có Chromium/Firefox/WebKit; SMTP gửi và bị từ chối được kiểm tra qua loopback. Chi tiết: [hoàn thiện TH2](hoan-thien-th2.md).
 - Kết quả và giới hạn: [báo cáo kiểm thử](kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo kỹ thuật TH2](bao-cao-ky-thuat-th2.md).
+- Nhúng dashboard AI bằng Embedded SDK và guest token có hạn/tự gia hạn sau kiểm tra quyền CRM; không cần đăng nhập Superset riêng. Trang nhớ tab, chuyển sang biểu đồ CRM khi Superset lỗi và thêm nhận xét tiếng Việt theo số liệu tổng hợp. Nhận xét theo quy tắc, không theo bộ lọc tương tác của iframe; quyền xem vẫn là toàn bộ analytics, chưa có RLS theo nhân viên. Cách cấu hình và kiểm tra: [README](../README.md#hiển-thị-superset-ngay-trong-trang-báo-cáo).
 
 **Việc tiếp theo:** tập dữ liệu có nguồn/consent và nhãn độc lập; đánh giá dự báo ngoài mẫu với baseline; kiểm thử khả dụng với nhân viên thực tế; duy trì audit dependency.
 

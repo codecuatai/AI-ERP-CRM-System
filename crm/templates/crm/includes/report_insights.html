@@ -1,0 +1,12 @@
+<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-label="Phân tích biểu đồ">
+  <h3 class="text-base font-bold text-slate-900">Phân tích biểu đồ và gợi ý chăm sóc</h3>
+  <p class="mt-2 text-xs text-slate-500">Nhận xét tự động bằng quy tắc từ {% if analytics.has_ai_datamart %}dữ liệu analytics đang lưu{% else %}dữ liệu CRM hiện tại{% endif %}, tại thời điểm tải trang. Phạm vi là toàn bộ dữ liệu; nhận xét không đổi theo bộ lọc bên trong Superset. Làm mới dữ liệu phân tích rồi tải lại trang để cập nhật.</p>
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for insight in report_insights %}
+    <article class="rounded-xl bg-slate-50 p-4">
+      <h4 class="text-sm font-semibold text-slate-900">{{ insight.title }}</h4>
+      <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ insight.text }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>

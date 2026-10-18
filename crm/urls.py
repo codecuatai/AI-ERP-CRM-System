@@ -13,6 +13,7 @@ urlpatterns = [
     path("customers/<int:pk>/soan-email/", views.customer_email_draft, name="customer_email_draft"),
     path("uu-tien/", views.priority_customer_list, name="priority_customers"),
     path("bao-cao/", views.crm_report, name="report"),
+    path("bao-cao/superset-session/", views.superset_guest_session, name="superset_guest_session"),
     path("bao-cao/dong-bo-ai/", views.sync_ai_analytics_pipeline, name="sync_ai_analytics"),
     path("customers/xuat-csv/", views.export_customers_csv, name="export_customers_csv"),
     path("viec/", views.care_task_list, name="care_tasks"),

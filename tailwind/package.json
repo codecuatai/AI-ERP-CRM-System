@@ -2,14 +2,17 @@
   "name": "ai-crm-interface",
   "private": true,
   "scripts": {
-    "css:build": "tailwindcss -i ./src/input.css -c ./tailwind.config.js -o ../crm/static/crm/css/app.css --minify",
+    "css:build": "node copy-superset-sdk.cjs && tailwindcss -i ./src/input.css -c ./tailwind.config.js -o ../crm/static/crm/css/app.css --minify",
     "css:watch": "tailwindcss -i ./src/input.css -c ./tailwind.config.js -o ../crm/static/crm/css/app.css --watch"
   },
   "devDependencies": {
-    "tailwindcss": "4.3.3",
-    "@tailwindcss/cli": "4.3.3"
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
   },
   "overrides": {
     "@parcel/watcher": "2.6.0"
+  },
+  "dependencies": {
+    "@superset-ui/embedded-sdk": "0.4.0"
   }
 }

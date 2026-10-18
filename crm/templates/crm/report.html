@@ -5,7 +5,10 @@
 {% block extra_head %}
 <!-- Apache ECharts (Engine chính của Apache Superset) -->
 <script src="{% static 'crm/vendor/echarts.min.js' %}"></script>
+<script src="{% static 'crm/vendor/superset-embedded-sdk.js' %}" defer></script>
+<script src="{% static 'crm/js/superset-report.js' %}" defer></script>
 <style>
+  #supersetEmbedMount iframe { width: 100%; height: 100%; border: 0; }
   .chart-canvas {
     width: 100%;
     height: 320px;
@@ -177,6 +180,7 @@
 <!-- TAB 1: BIỂU ĐỒ TRÍCH XUẤT SUPERSET & AI STUDIO (MAIN WORKSPACE) -->
 <!-- ============================================================== -->
 <div id="tab-content-charts" class="space-y-6">
+  {% include "crm/includes/report_insights.html" %}
 
   <!-- CẢNH BÁO BẤT THƯỜNG TỔNG HỢP (NẾU CÓ) -->
   {% if analytics.anomalies %}
@@ -454,8 +458,8 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
       </div>
       <div>
-        <h3 class="text-base font-bold">Không gian làm việc Trực tiếp Apache Superset (Cổng 18088)</h3>
-        <p class="text-xs text-slate-400">Bạn có thể thao tác drill-down, đổi bộ lọc, viết SQL trên Data Mart hoặc mở sang tab riêng biệt.</p>
+        <h3 class="text-base font-bold">Dashboard Apache Superset trực tiếp</h3>
+        <p class="text-xs text-slate-400">Xem và lọc biểu đồ ngay trong CRM, không cần đăng nhập Superset riêng. Mở tab riêng khi cần biên tập.</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -472,10 +476,28 @@
     </div>
   </div>
 
-  <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" style="height: 750px;">
-    <iframe id="supersetLiveFrame" src="about:blank" data-src="{{ superset_url }}/superset/dashboard/crm-ai-intelligence-dashboard/?standalone=true" loading="lazy"
-            class="w-full h-full border-0" title="Superset AI Intelligence Live Dashboard"></iframe>
+  <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p id="supersetEmbedStatus" role="status" aria-live="polite" class="text-sm text-slate-600">Đang chuẩn bị dashboard…</p>
+    <div class="mt-3 flex flex-wrap gap-3">
+      <button type="button" id="supersetEmbedRetry" class="btn-secondary text-xs">Tải lại dashboard</button>
+      <button type="button" onclick="switchReportTab('charts')" class="btn-secondary text-xs">Xem biểu đồ CRM</button>
+    </div>
   </div>
+  <div id="supersetEmbedMount" data-session-url="{% url 'crm:superset_guest_session' %}" class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm" style="height: 900px;" aria-label="Dashboard Superset nhúng">
+  </div>
+  <section id="supersetLocalFallback" hidden class="space-y-4" aria-label="Biểu đồ CRM thay thế khi Superset gián đoạn">
+    <h3 class="text-base font-bold text-slate-900">Biểu đồ từ dữ liệu CRM</h3>
+    <p class="text-sm text-slate-600">Superset đang gián đoạn. Các biểu đồ dưới đây được vẽ trong CRM từ nguồn số liệu của trang báo cáo.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Mức ưu tiên lead</h4><div data-fallback-chart="chartLeadTier" class="chart-canvas"></div></div>
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Nhu cầu theo giải pháp</h4><div data-fallback-chart="chartSolutions" class="chart-canvas"></div></div>
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Dự báo doanh thu</h4><div data-fallback-chart="chartForecast" class="chart-canvas"></div></div>
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Cảm xúc và rủi ro</h4><div data-fallback-chart="chartSentimentChurn" class="chart-canvas"></div></div>
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Nhóm chăm sóc RFM</h4><div data-fallback-chart="chartRfm" class="chart-canvas"></div></div>
+      <div class="rounded-xl bg-white p-4"><h4 class="text-sm font-semibold">Đóng góp vào điểm ưu tiên</h4><div data-fallback-chart="chartXai" class="chart-canvas"></div></div>
+    </div>
+  </section>
+  {% include "crm/includes/report_insights.html" %}
 </div>
 
 <!-- ============================================================== -->
@@ -702,8 +724,7 @@
   // Chuyển tab báo cáo
   function switchReportTab(tabName) {
     if (arguments[0] === 'superset-live') {
-      const frame = document.getElementById('supersetLiveFrame');
-      if (frame && frame.getAttribute('src') === 'about:blank') frame.src = frame.dataset.src;
+      window.loadSupersetReport?.();
     }
 
     document.querySelectorAll('.report-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -713,6 +734,7 @@
 
     document.getElementById('tab-btn-' + tabName).classList.add('active');
     document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+    try { localStorage.setItem('crm-report-tab', tabName); } catch (_) {}
 
     if (tabName === 'charts') {
       setTimeout(() => {
@@ -720,6 +742,19 @@
       }, 50);
     }
   }
+
+  window.renderReportFallback = () => {
+    document.querySelectorAll('[data-fallback-chart]').forEach(element => {
+      const source = chartInstances[element.dataset.fallbackChart];
+      if (!source) return;
+      const chart = echarts.getInstanceByDom(element) || echarts.init(element);
+      chart.setOption(source.getOption(), true);
+      chart.resize();
+    });
+  };
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('supersetLocalFallback').hidden) window.renderReportFallback();
+  });
 
   // Tải ảnh PNG cho 1 biểu đồ
   function downloadChartImage(chartDomId, filename) {
@@ -793,6 +828,11 @@
   document.addEventListener('keydown', event => { if (event.key === 'Escape') closeLightbox(); });
   // Khởi động khi DOM sẵn sàng
   document.addEventListener('DOMContentLoaded', initCharts);
+  document.addEventListener('DOMContentLoaded', () => {
+    let selected = 'superset-live';
+    try { selected = localStorage.getItem('crm-report-tab') || selected; } catch (_) {}
+    if (['charts', 'tables', 'superset-live'].includes(selected)) switchReportTab(selected);
+  });
 </script>
 
 {% endblock %}

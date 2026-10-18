@@ -1,0 +1,58 @@
+{
+  "verified_at": "2026-10-18T16:58:27.541739+07:00",
+  "scope": "Local Docker Superset 6.0.0, Chromium desktop/mobile; temporary CRM sessions only; no independent Superset login.",
+  "backend": {
+    "command": "python manage.py test",
+    "database": "isolated SQLite test database",
+    "tests": 138,
+    "skipped": 6,
+    "result": "OK"
+  },
+  "browser_e2e": {
+    "command": "RUN_BROWSER_E2E=1 python manage.py test crm.test_browser_e2e",
+    "tests": 5,
+    "browser": "chromium",
+    "result": "OK",
+    "database": "isolated SQLite test database"
+  },
+  "checks": {
+    "django_check": "OK",
+    "migration_check": "No changes detected",
+    "frontend_build": "OK",
+    "npm_audit": "0 vulnerabilities",
+    "javascript_syntax": "OK",
+    "git_diff_check": "OK"
+  },
+  "live_embedding": [
+    {
+      "origin": "localhost",
+      "chart_queries": 16,
+      "all_queries_ok": true,
+      "independent_superset_login": false,
+      "remembered_tab": true,
+      "outage_fallback": true,
+      "mobile_overflow": false,
+      "unrelated_dashboard_denied": true,
+      "untrusted_origin_denied": true,
+      "automatic_renewal_accelerated_timer": true
+    },
+    {
+      "origin": "127.0.0.1",
+      "chart_queries": 16,
+      "all_queries_ok": true,
+      "independent_superset_login": false,
+      "remembered_tab": true,
+      "outage_fallback": true,
+      "mobile_overflow": false,
+      "unrelated_dashboard_denied": true,
+      "untrusted_origin_denied": true,
+      "automatic_renewal_accelerated_timer": true
+    }
+  ],
+  "limitations": [
+    "Token renewal was checked by accelerating the first SDK renewal timer; server JWT expiry remains five minutes. This is not a long-duration load test.",
+    "Narrative uses full report aggregates at page load, not interactive iframe filters.",
+    "Chart snapshots and screenshots remain under ignored artifacts/report-embedding/.",
+    "No model or seed changes. Not a production multi-tenant RLS evaluation."
+  ]
+}

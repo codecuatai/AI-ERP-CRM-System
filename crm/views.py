@@ -21,7 +21,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .forms import CareTaskForm, EmailDraftForm, LeadFollowUpComposeForm, LeadFollowUpResponseForm, PublicLeadRequestForm
 from .models import AIAnalysis, CareTask, Customer, Interaction, LeadFollowUp, LeadFollowUpResponse, LeadRequest
@@ -445,6 +445,7 @@ def crm_report(request):
     today = timezone.localdate()
     start_date = today - timedelta(days=30)
     analytics_data = _get_report_analytics_context(today)
+    from .services.report_insights import report_insights
 
     context = {
         "customer_total": Customer.objects.count(),
@@ -470,8 +471,26 @@ def crm_report(request):
         "can_sync_analytics": request.user.has_perm("crm.analyze_customer"),
         "total_expected_revenue": analytics_data.get("total_expected_revenue", 0),
         "hot_leads_count": analytics_data.get("hot_leads_count", 0),
+        "report_insights": report_insights(analytics_data),
     }
     return render(request, "crm/report.html", context)
+
+
+@login_required
+@permission_required("crm.access_crm", raise_exception=True)
+@never_cache
+@require_GET
+def superset_guest_session(request):
+    from .context_processors import crm_links
+    from .services.superset_embed import guest_session
+
+    try:
+        result = guest_session(request.user)
+    except Exception as exc:
+        # Do not return upstream errors: they may contain server/configuration details.
+        logger.warning("Superset embedding unavailable (%s)", type(exc).__name__)
+        return JsonResponse({"error": "Chưa kết nối được dashboard Superset. Bạn vẫn có thể xem biểu đồ CRM và phần nhận xét."}, status=503)
+    return JsonResponse({**result, "domain": crm_links(request)["superset_url"]})
 
 
 @login_required

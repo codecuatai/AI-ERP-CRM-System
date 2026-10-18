@@ -142,6 +142,11 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.playwright = sync_playwright().start()
         self.browser = launch_browser(self.playwright)
         self.context = self.browser.new_context(viewport={"width": 1440, "height": 1000}, accept_downloads=True)
+        # This suite uses only the isolated CRM test database. Live Superset is
+        # verified separately by scripts/verify_report_embedding.py.
+        self.context.route("**/crm/bao-cao/superset-session/", lambda route: route.fulfill(
+            status=503, content_type="application/json", body='{"error":"isolated test"}'
+        ))
         self.context.tracing.start(screenshots=True, snapshots=True)
         self.page = self.context.new_page()
         self.page.set_default_timeout(10000)
@@ -249,6 +254,7 @@ class CRMFeatureBrowserTests(StaticLiveServerTestCase):
         self.page.get_by_role("button", name="Làm mới dữ liệu phân tích").click()
         self.page.get_by_text("Đã cập nhật phân tích:", exact=False).wait_for()
         self.assertTrue(self.page.evaluate("typeof echarts !== 'undefined'"))
+        self.page.locator("#tab-btn-charts").click()
         with self.page.expect_download(timeout=20000) as downloaded:
             self.page.get_by_title("Tải ảnh PNG", exact=True).first.click()
         self.assertTrue(downloaded.value.suggested_filename.endswith(".png"))

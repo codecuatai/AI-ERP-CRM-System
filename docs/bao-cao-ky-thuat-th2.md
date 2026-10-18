@@ -52,6 +52,8 @@ Bootstrap quản lý 12 chart và hai dashboard có 8 chart mỗi dashboard (có
 
 ![Dashboard AI kiểm tra trực tiếp](validation/crm-ai-intelligence-dashboard.png)
 
+Bổ sung tích hợp ngày 18/10/2026: trang báo cáo CRM dùng Embedded SDK cục bộ và endpoint `bao-cao/superset-session/` kiểm tra quyền `crm.access_crm` để cấp guest token cho đúng dashboard AI. Token hết hạn sau 5 phút, SDK tự xin lại; không chuyển mật khẩu Superset xuống trình duyệt và không cần cookie đăng nhập Superset. `frame-ancestors` và cấu hình embedded giới hạn origin CRM. Đây là cấp quyền xem dashboard cố định, chưa là SSO cho toàn bộ giao diện quản trị Superset hoặc phân quyền dữ liệu theo nhân viên. Sáu nhận xét theo quy tắc được tính từ cùng tập tổng hợp của báo cáo lúc tải trang; không tự thay đổi theo bộ lọc trong iframe. Nếu Superset lỗi, vùng dashboard hiện biểu đồ ECharts và giữ phần nhận xét; không gọi Gemini hay tự ghi dữ liệu để tạo nhận xét. Hướng dẫn cấu hình và script kiểm tra nằm trong README.
+
 ## 5. Đánh giá có thể tái lập
 
 Lệnh `evaluate_ai_quality` tính kết quả từ từng tình huống và rolling-origin backtest, không in số liệu ghi cứng. Nguồn là bộ minh họa do nhóm biên soạn, có dùng để sửa prompt/rules, không phải tập kiểm định độc lập hoặc dữ liệu khách hàng thật.

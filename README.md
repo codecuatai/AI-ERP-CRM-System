@@ -86,7 +86,7 @@ Tám hồ sơ mới mang email `scenario.*@consultation.test` và tên công ty 
 
 Xem [báo cáo kiểm thử và đánh giá AI](docs/kiem-thu-e2e-va-danh-gia-ai.md), [báo cáo TH2 đã đối chiếu mã nguồn](docs/bao-cao-ky-thuat-th2.md) và [kết quả kiểm tra Superset trực tiếp](docs/validation/superset-live.json).
 
-Trong CRM, nút **Làm mới dữ liệu phân tích** chạy pipeline sau khi nhân viên xác nhận bằng POST và có quyền phân tích AI. Sau khi cập nhật CRM hoặc phân tích từng khách, dùng nút này trước khi làm mới biểu đồ Superset. Tab báo cáo CRM dùng ECharts cục bộ; tab Superset trực tiếp yêu cầu đăng nhập Superset. `SUPERSET_PUBLIC_URL` có thể đổi địa chỉ liên kết/iframe cho người dùng. Không có SSO tự động.
+Trong CRM, nút **Làm mới dữ liệu phân tích** chạy pipeline sau khi nhân viên xác nhận bằng POST và có quyền phân tích AI. Sau khi cập nhật CRM hoặc phân tích từng khách, dùng nút này trước khi làm mới biểu đồ Superset. Trang báo cáo mặc định mở **Superset trực tiếp**, nhớ tab người dùng chọn, nhúng bằng Embedded SDK và guest token tự gia hạn; người có quyền `crm.access_crm` không cần đăng nhập Superset riêng. Khi dịch vụ lỗi, trang tự hiển thị sáu biểu đồ ECharts từ dữ liệu CRM và cho phép thử kết nối lại. Bên dưới dashboard có sáu nhận xét tiếng Việt theo quy tắc, tính từ số liệu lúc tải trang; nhận xét không đổi theo bộ lọc bên trong Superset và không gọi Gemini. `SUPERSET_PUBLIC_URL` là địa chỉ trình duyệt truy cập; `SUPERSET_URL` là địa chỉ server CRM gọi API (Docker: `http://superset:8088`).
 
 ## Tính năng chính
 
@@ -203,7 +203,7 @@ Sau khi hoàn tất khởi động:
 - Đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` (mặc định: `admin` / `admin`).
 - **Dashboard 1 (Tổng hợp Kinh doanh & AI):** [http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/)
 - **Dashboard 2 (Phân tích Dữ liệu Thông minh & Dự báo TH2):** [http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/)
-- **Trực quan hóa & Trích xuất Biểu đồ Superset trực tiếp trong CRM:** [http://127.0.0.1:8000/crm/bao-cao/](http://127.0.0.1:8000/crm/bao-cao/) (Không cần mở cổng 18088, hỗ trợ tải ảnh PNG 1-click & phóng to Lightbox).
+- **Báo cáo và dashboard ngay trong CRM:** [http://127.0.0.1:8000/crm/bao-cao/](http://127.0.0.1:8000/crm/bao-cao/). Tab Superset cần trình duyệt kết nối được cổng Superset; tab biểu đồ CRM hỗ trợ tải PNG, phóng to và hoạt động khi Superset gián đoạn.
 - **Tài liệu Báo cáo Kỹ thuật TH2:** Xem [Báo cáo Kỹ thuật TH2](docs/bao-cao-ky-thuat-th2.md).
 - **Kịch bản Quay Video Demo TH2 (3 - 5 phút):** Xem [Kịch bản Demo Video TH2](docs/kich-ban-quay-video-demo-th2.md).
 
@@ -219,9 +219,34 @@ python manage.py setup_superset_analytics
 # 3. Tạo/cập nhật 10 dataset, 12 chart, 2 dashboard:
 python superset/bootstrap_superset.py
 
-# 4. Kiểm thử Apache Superset MCP Server:
+# 4. Bật nhúng dashboard AI (chạy sau bootstrap; có thể chạy lại):
+python manage.py setup_superset_embedding
+
+# 5. Kiểm thử Apache Superset MCP Server:
 python manage.py run_superset_mcp --test
 ```
+
+#### Hiển thị Superset ngay trong trang báo cáo
+
+Với Docker đang chạy, áp dụng cấu hình nhúng bằng:
+
+```powershell
+docker compose up -d --no-deps superset crm-web
+docker compose exec crm-web python manage.py setup_superset_embedding
+```
+
+`SUPERSET_EMBED_ALLOWED_ORIGINS` phải khớp scheme/host/port của CRM, mặc định `http://localhost:8000,http://127.0.0.1:8000`. Khi đổi domain/cổng, cập nhật biến này, tạo lại hai container trên và chạy lại command. Superset giữ CSP và CSRF; `frame-ancestors` chỉ cho phép các origin cấu hình, không mở dashboard công khai. Endpoint cấp token kiểm tra đăng nhập và quyền CRM, chỉ cấp quyền xem dashboard AI cố định, gửi phản hồi `no-store`; khóa và mật khẩu server không đưa vào JavaScript. SDK phiên bản 0.4.0 được build thành static cục bộ, không phụ thuộc CDN.
+
+Tài khoản cấp token lấy từ `SUPERSET_EMBED_USERNAME` / `SUPERSET_EMBED_PASSWORD`; để trống dùng tài khoản bootstrap demo. Khi triển khai thật, cấu hình tài khoản dịch vụ riêng có quyền đọc dashboard, đọc cấu hình embedded và `can_grant_guest_token`, cùng origin HTTPS cụ thể. Người xem dashboard có quyền xem toàn bộ analytics CRM, tương ứng phạm vi trang báo cáo hiện tại; chưa có phân tách dữ liệu theo nhân viên/doanh nghiệp. Tab biên tập Superset mở riêng vẫn yêu cầu tài khoản Superset. Guest token mặc định có hạn 5 phút và được SDK xin lại khi phiên CRM còn hợp lệ; không bảo đảm dịch vụ luôn sẵn sàng nếu Docker/network dừng.
+
+Kiểm tra trình duyệt tích hợp (Docker có sẵn dashboard và superuser; chỉ tạo/xóa phiên đăng nhập kiểm tra, không ghi hồ sơ khách):
+
+```powershell
+$env:PYTHONIOENCODING = "utf-8"
+python scripts/verify_report_embedding.py
+```
+
+Ảnh và kết quả được lưu trong `artifacts/report-embedding/`. Với kiểm thử backend độc lập, chạy `python manage.py test crm.test_report_embedding`. Bộ browser CRM trên database test giả lập Superset gián đoạn; script riêng ở trên kiểm tra Superset thật.
 
 ### 6. Phát triển giao diện Tailwind CSS qua Docker
 
