@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
@@ -297,7 +298,7 @@ class AnalyticsPipeline:
     # 6. Explainable AI Summary
     # ─────────────────────────────────────────────────────────────────────────
     def process_explainability(self) -> List[Dict[str, Any]]:
-        totals = {}
+        totals: Dict[str, float] = defaultdict(float)
         for lead in LeadRequest.objects.filter(ai_processing_consent=True).exclude(
             status=LeadRequest.Status.COMPLETED,
         ).select_related("customer"):
@@ -309,7 +310,7 @@ class AnalyticsPipeline:
                 response_time_hours=self.measured_response_hours(lead),
             )
             for name, value in values.items():
-                totals[name] = totals.get(name, 0) + abs(value)
+                totals[name] += abs(float(value))
         total = sum(totals.values())
         return [{"feature_name": name, "importance_weight": round(value / total, 3),
                  "category": "Đóng góp công thức, không phải SHAP"}

@@ -4,6 +4,11 @@ Ngày đối chiếu mã nguồn và kiểm thử: **15/10/2026**. Ứng dụng 
 
 ## 1. Kiến trúc và luồng dữ liệu
 
+![Kiến trúc luồng dữ liệu CRM B2B - AI - PostgreSQL - Superset MCP](images/kientruc-luong-dulieu-crm-ai-superset.png)
+
+<details>
+<summary>Xem cấu trúc sơ đồ dạng mã nguồn Mermaid</summary>
+
 ```mermaid
 flowchart LR
     A[Form tư vấn và tác nghiệp CRM] --> B[(PostgreSQL public)]
@@ -17,6 +22,7 @@ flowchart LR
     H --> I[AIAnalysis: lịch sử và kết quả mới nhất]
     I --> B
 ```
+</details>
 
 CRM Docker dùng PostgreSQL 16; môi trường local có thể dùng SQLite. Metadata Superset nằm ở database riêng. Superset đọc bốn view nghiệp vụ (`customer_monthly`, `lead_pipeline`, `care_task_summary`, `revenue_transactions`) và sáu bảng kết quả (`ai_lead_predictions`, `ai_sentiment_churn`, `ai_customer_rfm_segments`, `ai_revenue_forecast`, `ai_anomaly_alerts`, `ai_explainability_summary`).
 
@@ -38,11 +44,15 @@ Gemini tư vấn giữ ngữ cảnh nhiều lượt và có timeout/fallback; pr
 
 ## 3. Consent và phân quyền
 
+![Kiến trúc bảo mật dữ liệu, consent và phân quyền](images/so-do-bao-mat-consent-phan-quyen.png)
+
 Lead và từng phản hồi lưu consent AI riêng. Migration `0009` bổ sung consent nullable cho `Interaction`, tránh dùng nhầm hội thoại chưa được phép. Hồ sơ công khai chỉ đưa nhu cầu/phản hồi/chat có consent vào phân tích; chat cũ chưa rõ consent được loại. Prompt hồ sơ công khai lược bỏ trường tên/email/điện thoại của hồ sơ; người nhập vẫn cần tránh đưa dữ liệu nhạy cảm trực tiếp vào nội dung tự do.
 
 MCP SQL mở connection riêng bằng `superset_ro`, chỉ nhận một SELECT, đặt transaction read-only và statement timeout. Kiểm tra thực tế xác nhận đọc được analytics và bị từ chối khi đọc `public.crm_customer`. Form follow-up dùng token hash, hạn dùng, một lần trả lời, thu hồi và `strict-origin` để giữ kiểm tra CSRF nhưng không gửi đường dẫn token qua Referer.
 
 ## 4. Superset và MCP
+
+![Kiến trúc máy chủ Apache Superset MCP](images/kien-truc-superset-mcp-agent.png)
 
 `superset/bootstrap_superset.py` dùng REST API để đăng ký 10 dataset, tạo/cập nhật 12 chart và hai dashboard: `crm-analytics-dashboard`, `crm-ai-intelligence-dashboard`. Chart AI dùng chung giữ đủ liên kết với cả hai dashboard. Tên phương pháp phản ánh code thực tế; bootstrap nhận diện tên cũ khi đổi tên để không tạo bản trùng.
 
@@ -113,6 +123,8 @@ Các công thức dùng để đọc báo cáo:
 - `Tỷ lệ fallback = số dòng rules / số hồ sơ đủ điều kiện được yêu cầu chạy Gemini`; phải báo thêm số `not_run`. Với `stored`, cần biết lịch sử chạy trước đó để xác định yêu cầu provider ban đầu.
 
 ### 5.4. Kết quả thực nghiệm và diễn giải
+
+![Bảng đánh giá thực nghiệm định lượng mô hình AI và backtest](images/bieu-do-danh-gia-ai-thuc-nghiem.png)
 
 | Phép đo | Kết quả đã lưu | Minh chứng | Kết luận được phép rút ra |
 |---|---|---|---|
@@ -190,6 +202,8 @@ Không cần triển khai đồng thời cả danh mục. Ưu tiên thử TF-IDF
 3. **Đánh giá lợi ích hành động:** sau kiểm định offline, thí điểm có kiểm soát hàng đợi hiện tại và hàng đợi đề xuất trên nhóm tương đương; đo thời gian xử lý, tỷ lệ việc hoàn tất và tỷ lệ chuyển đổi trong cùng cửa sổ. Chỉ kết luận hiệu quả kinh doanh khi thiết kế và số mẫu đủ; tương quan điểm cao với WON chưa chứng minh AI gây tăng doanh thu.
 
 ### 7.3. Lộ trình thực hiện và cổng quyết định
+
+![Lộ trình 5 bước triển khai AI và cổng kiểm soát quyết định](images/lo-trinh-5-buoc-ai-decision-gates.png)
 
 | Bước | Sản phẩm bàn giao đề xuất | Điều kiện chuyển bước |
 |---|---|---|

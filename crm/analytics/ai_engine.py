@@ -88,8 +88,16 @@ class LeadWinRateModel:
     def _sigmoid(z: float) -> float:
         return 1.0 / (1.0 + math.exp(-max(min(z, 15.0), -15.0)))
 
-    def feature_contributions(self, priority_score, interaction_count, has_phone, has_company,
-                              request_text_length, solution_interest, response_time_hours=None):
+    def feature_contributions(
+        self,
+        priority_score: int,
+        interaction_count: int,
+        has_phone: bool,
+        has_company: bool,
+        request_text_length: int,
+        solution_interest: str,
+        response_time_hours: Optional[float] = None,
+    ) -> Dict[str, float]:
         speed = (1.0 if response_time_hours <= 4 else (0.5 if response_time_hours <= 24 else 0.2)) if response_time_hours is not None else 0.0
         return {
             "Điểm nhu cầu": 2.2 * min(max(priority_score, 0), 100) / 100.0,
