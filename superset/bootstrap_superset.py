@@ -303,17 +303,19 @@ CHARTS = [
 ]
 
 
-def create_grid_position(chart_slice_ids: list[int], api: SupersetApi) -> dict:
-    """Builds a responsive 2-column grid layout position dictionary for Superset dashboard."""
+def create_grid_position(chart_slice_ids: list[int], api: SupersetApi, *, columns: int = 2) -> dict:
+    """Build a Superset grid with one or two charts per row."""
+    if columns not in (1, 2):
+        raise ValueError("Dashboard grid supports one or two columns")
     position = {"DASHBOARD_VERSION_KEY": "v2"}
     position["ROOT_ID"] = {"id": "ROOT_ID", "type": "ROOT", "children": ["GRID_ID"]}
     position["GRID_ID"] = {"id": "GRID_ID", "type": "GRID", "parents": ["ROOT_ID"], "children": []}
 
     rows = []
-    for i in range(0, len(chart_slice_ids), 2):
-        row_id = f"ROW-AUTO-{i // 2 + 1}"
+    for i in range(0, len(chart_slice_ids), columns):
+        row_id = f"ROW-AUTO-{i // columns + 1}"
         rows.append(row_id)
-        pair = chart_slice_ids[i : i + 2]
+        pair = chart_slice_ids[i : i + columns]
         children = []
 
         position[row_id] = {
@@ -338,7 +340,7 @@ def create_grid_position(chart_slice_ids: list[int], api: SupersetApi) -> dict:
                     "uuid": chart_detail.get("uuid", ""),
                     "sliceName": chart_detail.get("slice_name", ""),
                     "height": 50,
-                    "width": 6,
+                    "width": 12 // columns,
                 },
             }
 

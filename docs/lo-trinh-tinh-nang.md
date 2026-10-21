@@ -29,6 +29,7 @@ Các mục trên là phạm vi hiện tại, không phải roadmap mới. Chi ti
 
 - PostgreSQL có schema `analytics`, bốn view nghiệp vụ, sáu bảng phân tích và role `superset_ro` chỉ đọc. SQLite có biểu đồ CRM cục bộ.
 - Bootstrap REST tạo/cập nhật 10 dataset, 12 chart và 2 dashboard; đã kiểm tra truy vấn và hiển thị trực tiếp trên Superset.
+- Bộ mở rộng riêng tạo thêm 20 chart và 1 dashboard Superset từ các dataset analytics sẵn có; không thêm model, dữ liệu seed hay quy trình AI mới.
 - MCP stdio có bảy tool, gồm khám phá dataset/cột, tạo chart và dashboard có xác nhận; SQL dùng `superset_ro`. Chưa có HTTP MCP. Đã kiểm tra tạo thật, gọi lại không trùng, quyền truy cập và render trên Superset.
 - Sáu phương pháp hiện tại: chấm điểm lead bằng công thức sigmoid, sentiment/churn từ lexicon, RFM theo tâm tham chiếu cố định, dự báo baseline/tuyến tính/trung bình với kiểm định quá khứ, đóng góp công thức, bất thường theo quy tắc/Z-score. Không mô tả thành Random Forest, K-Means đã huấn luyện, Prophet hoặc SHAP.
 - Đã sửa consent từng nội dung chat/phản hồi, dự báo đọc sai doanh thu, lỗi nút đồng bộ, form follow-up bị CSRF và tràn ngang mobile. Có 8 tình huống tư vấn B2B minh họa và bộ kiểm tra hồi quy.
