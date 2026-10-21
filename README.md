@@ -203,6 +203,7 @@ Sau khi hoàn tất khởi động:
 - Đăng nhập bằng `SUPERSET_ADMIN_USERNAME` và `SUPERSET_ADMIN_PASSWORD` (mặc định: `admin` / `admin`).
 - **Dashboard 1 (Tổng hợp Kinh doanh & AI):** [http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-analytics-dashboard/)
 - **Dashboard 2 (Phân tích Dữ liệu Thông minh & Dự báo TH2):** [http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/](http://127.0.0.1:18088/superset/dashboard/crm-ai-intelligence-dashboard/)
+- **Dashboard 20 biểu đồ mở rộng:** [http://127.0.0.1:18088/superset/dashboard/crm-20-bieu-do-mo-rong/](http://127.0.0.1:18088/superset/dashboard/crm-20-bieu-do-mo-rong/). Các biểu đồ dùng dữ liệu CRM và AI analytics hiện có; giao dịch và một phần dữ liệu minh họa là dữ liệu demo.
 - **Báo cáo và dashboard ngay trong CRM:** [http://127.0.0.1:8000/crm/bao-cao/](http://127.0.0.1:8000/crm/bao-cao/). Tab Superset cần trình duyệt kết nối được cổng Superset; Workspace hợp nhất hỗ trợ tải PNG/phóng to dữ liệu CRM và vẽ biểu đồ dự phòng khi Superset gián đoạn.
 - **Tài liệu Báo cáo Kỹ thuật TH2:** Xem [Báo cáo Kỹ thuật TH2](docs/bao-cao-ky-thuat-th2.md).
 - **Kịch bản Quay Video Demo TH2 (3 - 5 phút):** Xem [Kịch bản Demo Video TH2](docs/kich-ban-quay-video-demo-th2.md).
@@ -218,6 +219,9 @@ python manage.py setup_superset_analytics
 
 # 3. Tạo/cập nhật 10 dataset, 12 chart, 2 dashboard:
 python superset/bootstrap_superset.py
+
+# 3a. Tạo/cập nhật thêm 20 chart trong dashboard riêng (chạy sau bước 3):
+python superset/bootstrap_20_charts.py
 
 # 4. Bật nhúng dashboard AI (chạy sau bootstrap; có thể chạy lại):
 python manage.py setup_superset_embedding
@@ -479,6 +483,8 @@ python manage.py run_superset_mcp --test
 ```
 
 Bootstrap dùng REST API để đăng ký **10 dataset, 12 chart, 2 dashboard**. Chạy lại sẽ cập nhật cấu hình chuẩn; tên chart cũ được nhận diện để đổi tên mà không tạo bản trùng. Bốn chart AI dùng chung được gắn đủ cả hai dashboard. Đây là thao tác có thể cập nhật bố cục đã chỉnh thủ công, nên chỉ chủ động chạy khi muốn khôi phục cấu hình chuẩn.
+
+Chạy `python superset/bootstrap_20_charts.py` sau bootstrap chuẩn để tạo thêm **20 chart và 1 dashboard** `crm-20-bieu-do-mo-rong`. Lệnh có thể chạy lại mà không tạo bản trùng; chỉ cập nhật các chart do lệnh này quản lý và giữ liên kết dashboard khác. Biểu đồ bao gồm khách hàng, yêu cầu tư vấn, việc chăm sóc, giao dịch demo và bảng phân tích AI; các xác suất/điểm là kết quả quy tắc hiện tại, không phải tỷ lệ thực đo. Dashboard mở trực tiếp trong Superset và cần đăng nhập Superset; chưa được nhúng vào tám thẻ của trang báo cáo CRM.
 
 MCP chạy bằng `python manage.py run_superset_mcp`, hỗ trợ `initialize`, notification khởi tạo, `ping`, `tools/list`, `tools/call` qua stdio. Có bảy tool: danh sách dashboard, danh sách dataset/cột, insights AI, SQL chỉ đọc bằng `superset_ro`, chạy pipeline, tạo biểu đồ và tạo dashboard. Ba thao tác thay đổi yêu cầu `confirm=true` sau khi người dùng xác nhận. MCP gọi API Superset có CSRF để tạo chart/dashboard từ dataset CRM analytics đã đăng ký; không nhận biểu thức SQL tùy ý cho metric. Khi Superset offline, server báo lỗi. Chưa có HTTP MCP.
 
